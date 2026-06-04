@@ -301,4 +301,33 @@ CREATE INDEX IF NOT EXISTS idx_observations_identity ON observations(team_id, ag
 -- B1: session-level identity on sdk_sessions equivalent (server_sessions already has agent_id/agent_type)
 ALTER TABLE server_sessions ADD COLUMN IF NOT EXISTS actor_id TEXT;
 ALTER TABLE server_sessions ADD COLUMN IF NOT EXISTS agent_tool_id TEXT;
+
+-- A3: code_provenance — per-edit file/line linkage from user prompt to changed lines.
+CREATE TABLE IF NOT EXISTS code_provenance (
+  id TEXT PRIMARY KEY,
+  project_id TEXT,
+  team_id TEXT,
+  actor_id TEXT,
+  agent_tool_id TEXT,
+  agent_id TEXT,
+  session_id TEXT,
+  user_prompt_id TEXT,
+  observation_id TEXT,
+  file_path TEXT NOT NULL,
+  line_start INTEGER NOT NULL,
+  line_end INTEGER NOT NULL,
+  symbol_qualified_name TEXT,
+  symbol_kind TEXT,
+  signature_hash TEXT,
+  line_offset_from_symbol_start INTEGER,
+  old_content_hash TEXT,
+  new_content_hash TEXT,
+  commit_sha TEXT,
+  stale BOOLEAN NOT NULL DEFAULT FALSE,
+  occurred_at_epoch BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_prov_file_line ON code_provenance(file_path, line_start, line_end);
+CREATE INDEX IF NOT EXISTS idx_prov_symbol ON code_provenance(file_path, symbol_qualified_name);
+CREATE INDEX IF NOT EXISTS idx_prov_prompt ON code_provenance(user_prompt_id);
+CREATE INDEX IF NOT EXISTS idx_prov_project ON code_provenance(team_id, project_id, occurred_at_epoch);
 `;

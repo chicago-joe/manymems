@@ -31,6 +31,7 @@ async function dispatchToWorker(
       cwd: input.cwd,
       agentId: input.agentId,
       agentType: input.agentType,
+      editChanges: input.editChanges,
     },
   );
 

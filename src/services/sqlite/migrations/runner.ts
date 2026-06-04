@@ -39,6 +39,7 @@ export class MigrationRunner {
     this.createServerOwnedTables();
     this.rebuildPendingMessagesForFinalQueueSchema();
     this.addIdentityAndVisibilityColumns();
+    this.createCodeProvenanceTable();
   }
 
   private initializeSchema(): void {
@@ -1062,6 +1063,52 @@ export class MigrationRunner {
 
     this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(35, new Date().toISOString());
     logger.debug('DB', 'Migration 35: identity + visibility columns applied');
+  }
+
+  private createCodeProvenanceTable(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(36) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const existing = this.db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='code_provenance'").all() as TableNameRow[];
+    if (existing.length === 0) {
+      logger.debug('DB', 'Creating code_provenance table (migration 36)');
+
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS code_provenance (
+          id TEXT PRIMARY KEY,
+          project TEXT NOT NULL,
+          team_id TEXT,
+          actor_id TEXT,
+          agent_tool_id TEXT,
+          agent_id TEXT,
+          session_id TEXT,
+          user_prompt_id INTEGER,
+          observation_id INTEGER,
+          file_path TEXT NOT NULL,
+          line_start INTEGER NOT NULL,
+          line_end INTEGER NOT NULL,
+          symbol_qualified_name TEXT,
+          symbol_kind TEXT,
+          signature_hash TEXT,
+          line_offset_from_symbol_start INTEGER,
+          old_content_hash TEXT,
+          new_content_hash TEXT,
+          commit_sha TEXT,
+          stale INTEGER NOT NULL DEFAULT 0,
+          occurred_at_epoch INTEGER NOT NULL
+        )
+      `);
+
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_file_line ON code_provenance(file_path, line_start, line_end)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_symbol ON code_provenance(file_path, symbol_qualified_name)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_prompt ON code_provenance(user_prompt_id)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_session ON code_provenance(session_id)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_project ON code_provenance(project, occurred_at_epoch)');
+
+      logger.debug('DB', 'code_provenance table created');
+    }
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(36, new Date().toISOString());
   }
 
   private rebuildPendingMessagesForFinalQueueSchema(): void {

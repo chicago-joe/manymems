@@ -9,8 +9,10 @@ import { isProjectExcluded } from '../../../utils/project-filter.js';
 import { SettingsDefaultsManager } from '../../../shared/SettingsDefaultsManager.js';
 import { USER_SETTINGS_PATH } from '../../../shared/paths.js';
 import { getProjectContext } from '../../../utils/project-name.js';
-import { normalizePlatformSource } from '../../../shared/platform-source.js';
+import { normalizePlatformSource, platformSourceToAgentToolId } from '../../../shared/platform-source.js';
 import { PrivacyCheckValidator } from '../validation/PrivacyCheckValidator.js';
+import type { EditChange } from '../../provenance/extract-line-range.js';
+import { editChangeToProvenanceRecord } from '../../provenance/store.js';
 import { EventEmitter } from 'events';
 
 export interface SummaryStoredEvent {
@@ -92,6 +94,7 @@ export interface ObservationPayload {
   agentId?: string;
   agentType?: string;
   toolUseId?: string;
+  editChanges?: EditChange[];
 }
 
 export async function ingestObservation(payload: ObservationPayload): Promise<IngestResult> {
@@ -174,6 +177,31 @@ export async function ingestObservation(payload: ObservationPayload): Promise<In
     agentType: typeof payload.agentType === 'string' ? payload.agentType : undefined,
     toolUseId: typeof payload.toolUseId === 'string' ? payload.toolUseId : undefined,
   });
+
+  // A3: persist intent->code provenance for edit events. Runs after the
+  // observation is queued; failures are non-fatal (provenance is additive and
+  // must never block the capture path).
+  if (payload.editChanges && payload.editChanges.length > 0 && project) {
+    try {
+      const promptId = store.resolveProvenancePromptId(payload.contentSessionId, promptNumber);
+      const occurredAt = Date.now();
+      const records = payload.editChanges.map(change =>
+        editChangeToProvenanceRecord(change, {
+          project,
+          session_id: payload.contentSessionId,
+          user_prompt_id: promptId,
+          agent_tool_id: platformSourceToAgentToolId(platformSource),
+          agent_id: typeof payload.agentId === 'string' ? payload.agentId : null,
+          occurred_at_epoch: occurredAt,
+        }),
+      );
+      store.storeCodeProvenance(records);
+    } catch (error) {
+      logger.debug('INGEST', 'Code provenance persistence failed (non-fatal)', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   await ensureGeneratorRunning?.(sessionDbId, 'observation');
   eventBroadcaster.broadcastObservationQueued(sessionDbId);

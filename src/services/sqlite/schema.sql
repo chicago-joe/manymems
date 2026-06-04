@@ -1,7 +1,7 @@
 -- claude-mem SQLite schema
 --
 -- Authoritative shape of the database after all migrations through
--- runner.ts have been applied (current tip = migration 34). Fresh
+-- runner.ts have been applied (current tip = migration 36). Fresh
 -- databases boot directly into this shape; existing databases reach
 -- it via the migration runner.
 --
@@ -188,3 +188,36 @@ CREATE TABLE IF NOT EXISTS observation_feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_observation ON observation_feedback(observation_id);
 CREATE INDEX IF NOT EXISTS idx_feedback_signal      ON observation_feedback(signal_type);
+
+-- ─────────────────────────────────────────────────────────────────────
+-- code_provenance: per-edit file/line linkage to user prompts.
+-- Migration 36.
+-- ─────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS code_provenance (
+  id TEXT PRIMARY KEY,
+  project TEXT NOT NULL,
+  team_id TEXT,
+  actor_id TEXT,
+  agent_tool_id TEXT,
+  agent_id TEXT,
+  session_id TEXT,
+  user_prompt_id INTEGER,          -- FK → user_prompts.id
+  observation_id INTEGER,          -- FK → observations.id
+  file_path TEXT NOT NULL,         -- relative to project root
+  line_start INTEGER NOT NULL,
+  line_end INTEGER NOT NULL,
+  symbol_qualified_name TEXT,
+  symbol_kind TEXT,
+  signature_hash TEXT,
+  line_offset_from_symbol_start INTEGER,
+  old_content_hash TEXT,
+  new_content_hash TEXT,
+  commit_sha TEXT,
+  stale INTEGER NOT NULL DEFAULT 0,
+  occurred_at_epoch INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_prov_file_line ON code_provenance(file_path, line_start, line_end);
+CREATE INDEX IF NOT EXISTS idx_prov_symbol ON code_provenance(file_path, symbol_qualified_name);
+CREATE INDEX IF NOT EXISTS idx_prov_prompt ON code_provenance(user_prompt_id);
+CREATE INDEX IF NOT EXISTS idx_prov_session ON code_provenance(session_id);
+CREATE INDEX IF NOT EXISTS idx_prov_project ON code_provenance(project, occurred_at_epoch);

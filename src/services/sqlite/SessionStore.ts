@@ -1,5 +1,10 @@
 import { Database, type SQLQueryBindings } from 'bun:sqlite';
 import { DATA_DIR, DB_PATH, ensureDir, OBSERVER_SESSIONS_PROJECT } from '../../shared/paths.js';
+import {
+  storeProvenanceRecords,
+  resolveUserPromptId,
+  type ProvenanceRecord,
+} from '../provenance/store.js';
 import { logger } from '../../utils/logger.js';
 import {
   TableColumnInfo,
@@ -70,6 +75,49 @@ export class SessionStore {
     this.ensurePendingMessagesToolUseIdColumn();
     this.dropWorkerPidColumn();
     this.addIdentityAndVisibilityColumns();
+    this.createCodeProvenanceTable();
+  }
+
+  // Migration 36: code_provenance table (intent->code linkage). Mirrors the
+  // MigrationRunner copy so the inline chain used by SessionStore(':memory:')
+  // and ContextBuilder stays in parity with the Database.ts bootstrap path.
+  private createCodeProvenanceTable(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(36) as SchemaVersion | undefined;
+    if (applied) return;
+
+    this.db.run(`
+      CREATE TABLE IF NOT EXISTS code_provenance (
+        id TEXT PRIMARY KEY,
+        project TEXT NOT NULL,
+        team_id TEXT,
+        actor_id TEXT,
+        agent_tool_id TEXT,
+        agent_id TEXT,
+        session_id TEXT,
+        user_prompt_id INTEGER,
+        observation_id INTEGER,
+        file_path TEXT NOT NULL,
+        line_start INTEGER NOT NULL,
+        line_end INTEGER NOT NULL,
+        symbol_qualified_name TEXT,
+        symbol_kind TEXT,
+        signature_hash TEXT,
+        line_offset_from_symbol_start INTEGER,
+        old_content_hash TEXT,
+        new_content_hash TEXT,
+        commit_sha TEXT,
+        stale INTEGER NOT NULL DEFAULT 0,
+        occurred_at_epoch INTEGER NOT NULL
+      )
+    `);
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_file_line ON code_provenance(file_path, line_start, line_end)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_symbol ON code_provenance(file_path, symbol_qualified_name)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_prompt ON code_provenance(user_prompt_id)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_session ON code_provenance(session_id)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_prov_project ON code_provenance(project, occurred_at_epoch)');
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(36, new Date().toISOString());
+    logger.debug('DB', 'Migration 36: code_provenance table applied (inline)');
   }
 
   private addIdentityAndVisibilityColumns(): void {
@@ -2513,6 +2561,17 @@ export class SessionStore {
     logger.info('SESSION', 'Created manual session', { memorySessionId, project });
 
     return memorySessionId;
+  }
+
+  // A3: persist intent->code provenance records. Thin delegation so the db
+  // handle stays private while the worker ingest path can store provenance.
+  storeCodeProvenance(records: ProvenanceRecord[]): number {
+    return storeProvenanceRecords(this.db, records);
+  }
+
+  // A3: resolve the user_prompts.id that triggered an edit, for FK linkage.
+  resolveProvenancePromptId(contentSessionId: string, promptNumber?: number | null): number | null {
+    return resolveUserPromptId(this.db, contentSessionId, promptNumber);
   }
 
   close(): void {
