@@ -40,7 +40,9 @@ CREATE TABLE IF NOT EXISTS sdk_sessions (
                               CHECK(status IN ('active', 'completed', 'failed')),
   worker_port         INTEGER,
   prompt_counter      INTEGER DEFAULT 0,
-  custom_title        TEXT
+  custom_title        TEXT,
+  actor_id            TEXT,
+  agent_tool_id       TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_sdk_sessions_claude_id        ON sdk_sessions(content_session_id);
 CREATE INDEX IF NOT EXISTS idx_sdk_sessions_sdk_id           ON sdk_sessions(memory_session_id);
@@ -72,6 +74,8 @@ CREATE TABLE IF NOT EXISTS observations (
   content_hash         TEXT,
   agent_type           TEXT,
   agent_id             TEXT,
+  agent_tool_id        TEXT,
+  visibility           TEXT NOT NULL DEFAULT 'private',
   merged_into_project  TEXT,
   generated_by_model   TEXT,
   metadata             TEXT,
@@ -89,6 +93,8 @@ CREATE INDEX IF NOT EXISTS idx_observations_content_hash ON observations(content
 CREATE INDEX IF NOT EXISTS idx_observations_agent_type   ON observations(agent_type);
 CREATE INDEX IF NOT EXISTS idx_observations_agent_id     ON observations(agent_id);
 CREATE INDEX IF NOT EXISTS idx_observations_merged_into  ON observations(merged_into_project);
+CREATE INDEX IF NOT EXISTS idx_observations_visibility   ON observations(project, visibility);
+CREATE INDEX IF NOT EXISTS idx_observations_identity     ON observations(agent_tool_id, visibility);
 
 -- ─────────────────────────────────────────────────────────────────────
 -- session_summaries: one summary row per memory session.

@@ -8,6 +8,7 @@ import { updateCursorContextForProject } from '../../integrations/CursorHooksIns
 import { notifyTelegram } from '../../integrations/TelegramNotifier.js';
 import { updateFolderClaudeMdFiles } from '../../../utils/claude-md-utils.js';
 import { getWorkerPort } from '../../../shared/worker-utils.js';
+import { platformSourceToAgentToolId } from '../../../shared/platform-source.js';
 import { SettingsDefaultsManager } from '../../../shared/SettingsDefaultsManager.js';
 import { USER_SETTINGS_PATH } from '../../../shared/paths.js';
 import type { ActiveSession } from '../../worker-types.js';
@@ -144,7 +145,9 @@ export async function processAgentResponse(
   const labeledObservations = observations.map(obs => ({
     ...obs,
     agent_type: session.pendingAgentType ?? null,
-    agent_id: session.pendingAgentId ?? null
+    agent_id: session.pendingAgentId ?? null,
+    agent_tool_id: platformSourceToAgentToolId(session.platformSource),
+    visibility: 'private' as const,
   }));
 
   let result: ReturnType<typeof sessionStore.storeObservations>;

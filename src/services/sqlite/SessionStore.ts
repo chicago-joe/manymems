@@ -69,6 +69,42 @@ export class SessionStore {
     this.dropDeadPendingMessagesColumns();
     this.ensurePendingMessagesToolUseIdColumn();
     this.dropWorkerPidColumn();
+    this.addIdentityAndVisibilityColumns();
+  }
+
+  private addIdentityAndVisibilityColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(35) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const obsCols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const obsColNames = new Set(obsCols.map((c: TableColumnInfo) => c.name));
+
+    if (!obsColNames.has('agent_tool_id')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN agent_tool_id TEXT');
+      logger.debug('DB', 'Added agent_tool_id column to observations');
+    }
+    if (!obsColNames.has('visibility')) {
+      this.db.run("ALTER TABLE observations ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'");
+      logger.debug('DB', 'Added visibility column to observations');
+    }
+
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_visibility ON observations(project, visibility)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_identity ON observations(agent_tool_id, visibility)');
+
+    const sessCols = this.db.query('PRAGMA table_info(sdk_sessions)').all() as TableColumnInfo[];
+    const sessColNames = new Set(sessCols.map((c: TableColumnInfo) => c.name));
+
+    if (!sessColNames.has('actor_id')) {
+      this.db.run('ALTER TABLE sdk_sessions ADD COLUMN actor_id TEXT');
+      logger.debug('DB', 'Added actor_id column to sdk_sessions');
+    }
+    if (!sessColNames.has('agent_tool_id')) {
+      this.db.run('ALTER TABLE sdk_sessions ADD COLUMN agent_tool_id TEXT');
+      logger.debug('DB', 'Added agent_tool_id column to sdk_sessions');
+    }
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(35, new Date().toISOString());
+    logger.debug('DB', 'Migration 35: identity + visibility columns applied');
   }
 
   private dropWorkerPidColumn(): void {
@@ -1758,6 +1794,8 @@ export class SessionStore {
       files_modified: string[];
       agent_type?: string | null;
       agent_id?: string | null;
+      agent_tool_id?: string | null;
+      visibility?: 'private' | 'team' | 'org';
       metadata?: string | null;
     },
     promptNumber?: number,
@@ -1773,9 +1811,10 @@ export class SessionStore {
     const stmt = this.db.prepare(`
       INSERT INTO observations
       (memory_session_id, project, type, title, subtitle, facts, narrative, concepts,
-       files_read, files_modified, prompt_number, discovery_tokens, agent_type, agent_id, content_hash, created_at, created_at_epoch,
+       files_read, files_modified, prompt_number, discovery_tokens, agent_type, agent_id,
+       agent_tool_id, visibility, content_hash, created_at, created_at_epoch,
        generated_by_model, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(memory_session_id, content_hash) DO NOTHING
       RETURNING id, created_at_epoch
     `);
@@ -1795,6 +1834,8 @@ export class SessionStore {
       discoveryTokens,
       observation.agent_type ?? null,
       observation.agent_id ?? null,
+      observation.agent_tool_id ?? null,
+      observation.visibility ?? 'private',
       contentHash,
       timestampIso,
       timestampEpoch,
@@ -1878,6 +1919,8 @@ export class SessionStore {
       files_modified: string[];
       agent_type?: string | null;
       agent_id?: string | null;
+      agent_tool_id?: string | null;
+      visibility?: 'private' | 'team' | 'org';
     }>,
     summary: {
       request: string;
@@ -1901,9 +1944,10 @@ export class SessionStore {
       const obsStmt = this.db.prepare(`
         INSERT INTO observations
         (memory_session_id, project, type, title, subtitle, facts, narrative, concepts,
-         files_read, files_modified, prompt_number, discovery_tokens, agent_type, agent_id, content_hash, created_at, created_at_epoch,
+         files_read, files_modified, prompt_number, discovery_tokens, agent_type, agent_id,
+         agent_tool_id, visibility, content_hash, created_at, created_at_epoch,
          generated_by_model)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(memory_session_id, content_hash) DO NOTHING
         RETURNING id
       `);
@@ -1928,6 +1972,8 @@ export class SessionStore {
           discoveryTokens,
           observation.agent_type ?? null,
           observation.agent_id ?? null,
+          observation.agent_tool_id ?? null,
+          observation.visibility ?? 'private',
           contentHash,
           timestampIso,
           timestampEpoch,
@@ -1994,6 +2040,8 @@ export class SessionStore {
       files_modified: string[];
       agent_type?: string | null;
       agent_id?: string | null;
+      agent_tool_id?: string | null;
+      visibility?: 'private' | 'team' | 'org';
     }>,
     summary: {
       request: string;
@@ -2019,9 +2067,10 @@ export class SessionStore {
       const obsStmt = this.db.prepare(`
         INSERT INTO observations
         (memory_session_id, project, type, title, subtitle, facts, narrative, concepts,
-         files_read, files_modified, prompt_number, discovery_tokens, agent_type, agent_id, content_hash, created_at, created_at_epoch,
+         files_read, files_modified, prompt_number, discovery_tokens, agent_type, agent_id,
+         agent_tool_id, visibility, content_hash, created_at, created_at_epoch,
          generated_by_model)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(memory_session_id, content_hash) DO NOTHING
         RETURNING id
       `);
@@ -2046,6 +2095,8 @@ export class SessionStore {
           discoveryTokens,
           observation.agent_type ?? null,
           observation.agent_id ?? null,
+          observation.agent_tool_id ?? null,
+          observation.visibility ?? 'private',
           contentHash,
           timestampIso,
           timestampEpoch,

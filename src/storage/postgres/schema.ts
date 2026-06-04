@@ -290,4 +290,15 @@ CREATE INDEX IF NOT EXISTS idx_observation_jobs_event ON observation_generation_
 CREATE INDEX IF NOT EXISTS idx_observation_jobs_source ON observation_generation_jobs(source_type, source_id);
 CREATE INDEX IF NOT EXISTS idx_observation_job_events_job_created ON observation_generation_job_events(generation_job_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_log_scope_created ON audit_log(project_id, team_id, created_at);
+
+-- B1: four-part identity + visibility columns on observations
+ALTER TABLE observations ADD COLUMN IF NOT EXISTS agent_tool_id TEXT;
+ALTER TABLE observations ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'private';
+ALTER TABLE observations ADD COLUMN IF NOT EXISTS actor_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_observations_visibility ON observations(team_id, visibility);
+CREATE INDEX IF NOT EXISTS idx_observations_identity ON observations(team_id, agent_tool_id, actor_id);
+
+-- B1: session-level identity on sdk_sessions equivalent (server_sessions already has agent_id/agent_type)
+ALTER TABLE server_sessions ADD COLUMN IF NOT EXISTS actor_id TEXT;
+ALTER TABLE server_sessions ADD COLUMN IF NOT EXISTS agent_tool_id TEXT;
 `;
