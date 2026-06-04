@@ -38,6 +38,7 @@ export class MigrationRunner {
     this.dropWorkerPidColumn();
     this.createServerOwnedTables();
     this.rebuildPendingMessagesForFinalQueueSchema();
+    this.addIdentityAndVisibilityColumns();
   }
 
   private initializeSchema(): void {
@@ -1026,6 +1027,41 @@ export class MigrationRunner {
       SERVER_STORAGE_SCHEMA_VERSION,
       new Date().toISOString()
     );
+  }
+
+  private addIdentityAndVisibilityColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(35) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const obsCols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const obsColNames = new Set(obsCols.map(c => c.name));
+
+    if (!obsColNames.has('agent_tool_id')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN agent_tool_id TEXT');
+      logger.debug('DB', 'Added agent_tool_id column to observations');
+    }
+    if (!obsColNames.has('visibility')) {
+      this.db.run("ALTER TABLE observations ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'");
+      logger.debug('DB', 'Added visibility column to observations');
+    }
+
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_visibility ON observations(project, visibility)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_identity ON observations(agent_tool_id, visibility)');
+
+    const sessCols = this.db.query('PRAGMA table_info(sdk_sessions)').all() as TableColumnInfo[];
+    const sessColNames = new Set(sessCols.map(c => c.name));
+
+    if (!sessColNames.has('actor_id')) {
+      this.db.run('ALTER TABLE sdk_sessions ADD COLUMN actor_id TEXT');
+      logger.debug('DB', 'Added actor_id column to sdk_sessions');
+    }
+    if (!sessColNames.has('agent_tool_id')) {
+      this.db.run('ALTER TABLE sdk_sessions ADD COLUMN agent_tool_id TEXT');
+      logger.debug('DB', 'Added agent_tool_id column to sdk_sessions');
+    }
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(35, new Date().toISOString());
+    logger.debug('DB', 'Migration 35: identity + visibility columns applied');
   }
 
   private rebuildPendingMessagesForFinalQueueSchema(): void {

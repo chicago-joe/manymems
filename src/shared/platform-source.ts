@@ -18,6 +18,15 @@ export function normalizePlatformSource(value?: string | null): string {
   return source;
 }
 
+export function platformSourceToAgentToolId(source: string): string {
+  const normalized = normalizePlatformSource(source);
+  if (normalized === 'claude') return 'claude-code';
+  if (normalized === 'cursor') return 'cursor';
+  if (normalized === 'codex') return 'codex';
+  if (normalized === 'windsurf') return 'windsurf';
+  return 'unknown';
+}
+
 export function sortPlatformSources(sources: string[]): string[] {
   const priority = ['claude', 'codex', 'cursor'];
 

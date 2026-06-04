@@ -11,6 +11,8 @@ export interface ObservationInput {
   files_modified: string[];
   agent_type?: string | null;
   agent_id?: string | null;
+  agent_tool_id?: string;
+  visibility?: 'private' | 'team' | 'org';
 }
 
 export interface StoreObservationResult {
