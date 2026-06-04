@@ -10,6 +10,10 @@ import { shouldTrackProject } from '../../shared/should-track-project.js';
 import { normalizePlatformSource } from '../../shared/platform-source.js';
 import { resolveRuntimeContext, logServerBetaFallback } from '../../services/hooks/runtime-selector.js';
 import { isServerBetaClientError } from '../../services/hooks/server-beta-client.js';
+import { extractEditChanges } from '../../services/provenance/extract-line-range.js';
+import { buildSymbolAnchor } from '../../services/provenance/symbol-anchor.js';
+
+const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit']);
 
 async function dispatchToWorker(
   input: NormalizedHookInput,
@@ -58,6 +62,21 @@ export const observationHandler: EventHandler = {
     if (!shouldTrackProject(cwd)) {
       logger.debug('HOOK', 'Project excluded from tracking, skipping observation', { cwd, toolName });
       return { continue: true, suppressOutput: true };
+    }
+
+    if (EDIT_TOOLS.has(toolName) && toolInput && typeof toolInput === 'object') {
+      try {
+        const changes = await extractEditChanges(toolName, toolInput as Record<string, unknown>);
+        for (const change of changes) {
+          change.symbol_anchor = await buildSymbolAnchor(change.file_path, change.line_start, change.line_end);
+        }
+        input.editChanges = changes;
+      } catch (err) {
+        logger.debug('HOOK', 'Edit change extraction failed (non-fatal)', {
+          toolName,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
 
     const runtime = resolveRuntimeContext();

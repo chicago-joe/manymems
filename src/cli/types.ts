@@ -1,7 +1,9 @@
+import type { EditChange } from '../services/provenance/extract-line-range.js';
+
 export interface NormalizedHookInput {
   sessionId: string;
   cwd: string;
-  platform?: string;   
+  platform?: string;
   prompt?: string;
   toolName?: string;
   toolInput?: unknown;
@@ -13,11 +15,12 @@ export interface NormalizedHookInput {
   permissionMode?: string;
   model?: string;
   sessionSource?: 'startup' | 'resume' | 'clear';
-  filePath?: string;   
-  edits?: unknown[];   
+  filePath?: string;
+  edits?: unknown[];
   metadata?: Record<string, unknown>;
-  agentId?: string;      
-  agentType?: string;    
+  agentId?: string;
+  agentType?: string;
+  editChanges?: EditChange[];
 }
 
 export interface HookResult {
