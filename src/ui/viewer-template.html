@@ -3270,6 +3270,16 @@
       color: var(--color-text-secondary, #8b949e);
     }
 
+    .model-bar-secondary {
+      font-size: 10px;
+      color: #888;
+    }
+    .model-bar-dates {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
     /* ── ObservationCard model/agent badges ─────────────────────── */
     .card-model-badge,
     .card-agent-badge {
@@ -3438,6 +3448,34 @@
       color: var(--color-text-secondary, #8b949e);
       text-transform: uppercase;
       letter-spacing: 0.06em;
+    }
+
+    .commit-entry-stale { opacity: 0.8; }
+    .commit-entry-stale-badge {
+      font-size: 10px;
+      background: #7c3a3a;
+      color: #ffaaaa;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .commit-entry-hash {
+      font-family: monospace;
+      font-size: 10px;
+      color: #888;
+      margin: 2px 0;
+    }
+    .commit-entry-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 3px;
+    }
+    .commit-entry-obs-id, .commit-entry-session {
+      font-size: 10px;
+      color: #666;
+      font-family: monospace;
     }
 
     .commit-entry-prompt {

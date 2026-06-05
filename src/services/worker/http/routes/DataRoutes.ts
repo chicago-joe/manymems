@@ -263,7 +263,12 @@ export class DataRoutes extends BaseRouteHandler {
   private handleGetModelStats = this.wrapHandler((req: Request, res: Response): void => {
     const db = this.dbManager.getSessionStore().db;
     const rows = db.prepare(`
-      SELECT o.generated_by_model, s.platform_source, COUNT(*) AS count, MAX(o.created_at_epoch) AS last_seen_epoch
+      SELECT o.generated_by_model, s.platform_source,
+             COUNT(*) AS count,
+             MAX(o.created_at_epoch) AS last_seen_epoch,
+             MIN(o.created_at_epoch) AS first_seen_epoch,
+             COUNT(DISTINCT o.memory_session_id) AS session_count,
+             COUNT(DISTINCT s.project) AS project_count
       FROM observations o
       LEFT JOIN sdk_sessions s ON s.memory_session_id = o.memory_session_id
       GROUP BY o.generated_by_model, s.platform_source

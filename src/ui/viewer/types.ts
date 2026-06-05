@@ -121,6 +121,9 @@ export interface Stats {
 }
 
 export interface ModelStats {
+  first_seen_epoch: number;
+  session_count: number;
+  project_count: number;
   generated_by_model: string | null;
   platform_source: string;
   count: number;
@@ -145,4 +148,9 @@ export interface ProvenanceEntry {
   prompt_text: string | null;
   agent_type: string | null;
   created_at_epoch: number;
+  session_id: string | null;
+  observation_id: number | null;
+  stale: number;
+  old_content_hash: string | null;
+  new_content_hash: string | null;
 }

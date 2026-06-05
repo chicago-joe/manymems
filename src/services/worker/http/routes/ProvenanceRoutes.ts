@@ -77,7 +77,9 @@ export class ProvenanceRoutes extends BaseRouteHandler {
     const rows = db.prepare(`
       SELECT cp.id, cp.file_path, cp.line_start, cp.line_end, cp.commit_sha,
              cp.${symCol} AS symbol_name, cp.symbol_kind${agentCol}, cp.${epochCol} AS created_at_epoch,
-             up.prompt_text
+             up.prompt_text,
+             cp.session_id, cp.observation_id, cp.stale,
+             cp.old_content_hash, cp.new_content_hash
       FROM code_provenance cp
       LEFT JOIN user_prompts up ON cp.user_prompt_id = up.id
       WHERE cp.commit_sha = ?

@@ -13,22 +13,36 @@ function CommitDetail({ entries, isLoading }: { entries: ProvenanceEntry[]; isLo
   if (entries.length === 0) return <div className="commit-detail-empty">No provenance entries found</div>;
   return (
     <div className="commit-detail">
-      {entries.map(e => (
-        <div key={e.id} className="commit-entry">
-          <div className="commit-entry-loc">
-            <code className="commit-entry-file">{e.file_path.split('/').pop()}</code>
-            <span className="commit-entry-range">:{e.line_start}–{e.line_end}</span>
-            {e.symbol_name && <span className="commit-entry-symbol">{e.symbol_name}</span>}
-            {e.symbol_kind && <span className="commit-entry-kind">{e.symbol_kind}</span>}
-          </div>
-          {e.prompt_text && (
-            <div className="commit-entry-prompt">
-              "{e.prompt_text.slice(0, 120)}{e.prompt_text.length > 120 ? '…' : ''}"
+      {entries.map(e => {
+        // Show last 2 path segments for context without overflow
+        const pathParts = e.file_path.split('/');
+        const displayPath = pathParts.slice(-2).join('/');
+        const hashDiff = (e.old_content_hash && e.new_content_hash)
+          ? `${e.old_content_hash.slice(0, 7)} → ${e.new_content_hash.slice(0, 7)}`
+          : null;
+        return (
+          <div key={e.id} className={`commit-entry${e.stale ? ' commit-entry-stale' : ''}`}>
+            <div className="commit-entry-loc">
+              <code className="commit-entry-file" title={e.file_path}>{displayPath}</code>
+              <span className="commit-entry-range">:{e.line_start}–{e.line_end}</span>
+              {e.symbol_name && <span className="commit-entry-symbol">{e.symbol_name}</span>}
+              {e.symbol_kind && <span className="commit-entry-kind">{e.symbol_kind}</span>}
+              {e.stale === 1 && <span className="commit-entry-stale-badge" title="Symbol may no longer exist">stale</span>}
             </div>
-          )}
-          {e.agent_type && <span className="commit-entry-agent">{e.agent_type}</span>}
-        </div>
-      ))}
+            {hashDiff && <div className="commit-entry-hash">{hashDiff}</div>}
+            {e.prompt_text && (
+              <div className="commit-entry-prompt">
+                "{e.prompt_text}"
+              </div>
+            )}
+            <div className="commit-entry-meta">
+              {e.agent_type && <span className="commit-entry-agent">{e.agent_type}</span>}
+              {e.observation_id && <span className="commit-entry-obs-id">obs #{e.observation_id}</span>}
+              {e.session_id && <span className="commit-entry-session" title={e.session_id}>session {e.session_id.slice(0, 8)}</span>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

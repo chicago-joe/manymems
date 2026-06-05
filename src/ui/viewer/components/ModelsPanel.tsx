@@ -23,8 +23,11 @@ function ModelBar({ model }: { model: ModelStats }) {
         <span className="model-bar-provider" style={{ color: providerColor }}>{model.platform_source}</span>
       </div>
       <div className="model-bar-stats">
-        <span className="model-bar-count">{model.count.toLocaleString()}</span>
-        <span className="model-bar-date">{formatDate(model.last_seen_epoch)}</span>
+        <span className="model-bar-count">{model.count.toLocaleString()} obs</span>
+        <span className="model-bar-secondary">{model.session_count} sessions · {model.project_count} projects</span>
+      </div>
+      <div className="model-bar-dates">
+        <span className="model-bar-date">{formatDate(model.first_seen_epoch)} – {formatDate(model.last_seen_epoch)}</span>
       </div>
     </div>
   );
