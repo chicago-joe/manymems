@@ -21,7 +21,7 @@ jobs:
         run: bun install
 
       - name: Build tree-sitter grammars
-        run: bun pm trust tree-sitter && bun install
+        run: bun pm trust --all && bun install
 
       - name: Run provenance unit + SQLite round-trip tests
         run: bun test tests/provenance/ tests/sqlite/ tests/session_store.test.ts tests/context/
@@ -43,7 +43,7 @@ jobs:
         run: bun install
 
       - name: Build tree-sitter grammars
-        run: bun pm trust tree-sitter && bun install
+        run: bun pm trust --all && bun install
 
       - name: Build plugin bundles
         run: npm run build
