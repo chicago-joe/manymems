@@ -17,7 +17,21 @@ export class ObservationRoutes extends BaseRouteHandler {
 
   setupRoutes(app: express.Application): void {
     app.post('/api/observations/:id/promote', validateBody(promoteSchema), this.handlePromote.bind(this));
+    app.get('/api/observations/:id/staleness', this.handleGetStaleness.bind(this));
   }
+
+  private handleGetStaleness = this.wrapHandler((req: Request, res: Response): void => {
+    const id = req.params['id'] as string;
+    const db = this.dbManager.getSessionStore().db;
+    const row = db.prepare(
+      'SELECT id, stale, stale_reason, last_valid_commit FROM observations WHERE id = ?'
+    ).get(id) as { id: number; stale: number; stale_reason: string | null; last_valid_commit: string | null } | undefined;
+    if (!row) {
+      res.status(404).json({ error: 'not found' });
+      return;
+    }
+    res.json(row);
+  });
 
   private handlePromote = this.wrapHandler((req: Request, res: Response): void => {
     const id = req.params['id'] as string;

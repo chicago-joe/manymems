@@ -6,7 +6,7 @@ import type {
   ObservationGenerationJobStatus
 } from '../../storage/postgres/generation-jobs.js';
 
-export type ServerGenerationJobKind = 'event' | 'event-batch' | 'summary' | 'reindex' | 'promotion-suggestion';
+export type ServerGenerationJobKind = 'event' | 'event-batch' | 'summary' | 'reindex' | 'promotion-suggestion' | 'dedup-check' | 'staleness-check';
 
 export type ServerGenerationJobStatus = ObservationGenerationJobStatus;
 
@@ -63,19 +63,35 @@ export interface PromotionSuggestionJob extends ServerGenerationJob {
   commitSha: string;
 }
 
+export interface DedupCheckJob extends ServerGenerationJob {
+  kind: 'dedup-check';
+  observationId: number;
+  project: string;
+}
+
+export interface StalenessCheckJob extends ServerGenerationJob {
+  kind: 'staleness-check';
+  pushedFiles: string[];
+  commitSha: string;
+}
+
 export type ServerGenerationJobPayload =
   | GenerateObservationsForEventJob
   | GenerateObservationsForEventBatchJob
   | GenerateSessionSummaryJob
   | ReindexObservationJob
-  | PromotionSuggestionJob;
+  | PromotionSuggestionJob
+  | DedupCheckJob
+  | StalenessCheckJob;
 
 export const SERVER_JOB_QUEUE_NAMES: Record<ServerGenerationJobKind, string> = {
   event: 'server_beta_generate_event',
   'event-batch': 'server_beta_generate_event_batch',
   summary: 'server_beta_generate_summary',
   reindex: 'server_beta_reindex',
-  'promotion-suggestion': 'server_beta_promotion_suggestion'
+  'promotion-suggestion': 'server_beta_promotion_suggestion',
+  'dedup-check': 'server_beta_dedup_check',
+  'staleness-check': 'server_beta_staleness_check',
 };
 
 export const SERVER_JOB_KIND_PREFIX: Record<ServerGenerationJobKind, string> = {
@@ -83,7 +99,9 @@ export const SERVER_JOB_KIND_PREFIX: Record<ServerGenerationJobKind, string> = {
   'event-batch': 'evtb',
   summary: 'sum',
   reindex: 'rdx',
-  'promotion-suggestion': 'promo'
+  'promotion-suggestion': 'promo',
+  'dedup-check': 'dedup',
+  'staleness-check': 'stale',
 };
 
 // Phase 11 — Zod schema validates payloads at the queue boundary so a
@@ -130,11 +148,32 @@ export const ReindexObservationJobSchema = baseFieldsSchema.extend({
   observation_id: z.string().min(1),
 });
 
+export const PromotionSuggestionJobSchema = baseFieldsSchema.extend({
+  kind: z.literal('promotion-suggestion'),
+  pushedFiles: z.array(z.string()).min(1),
+  commitSha: z.string().min(1),
+});
+
+export const DedupCheckJobSchema = baseFieldsSchema.extend({
+  kind: z.literal('dedup-check'),
+  observationId: z.number().int().positive(),
+  project: z.string().min(1),
+});
+
+export const StalenessCheckJobSchema = baseFieldsSchema.extend({
+  kind: z.literal('staleness-check'),
+  pushedFiles: z.array(z.string()).min(1),
+  commitSha: z.string().min(1),
+});
+
 export const ServerGenerationJobPayloadSchema = z.discriminatedUnion('kind', [
   GenerateObservationsForEventJobSchema,
   GenerateObservationsForEventBatchJobSchema,
   GenerateSessionSummaryJobSchema,
   ReindexObservationJobSchema,
+  PromotionSuggestionJobSchema,
+  DedupCheckJobSchema,
+  StalenessCheckJobSchema,
 ]);
 
 export class ServerGenerationJobPayloadValidationError extends Error {

@@ -41,6 +41,7 @@ export class MigrationRunner {
     this.addIdentityAndVisibilityColumns();
     this.createCodeProvenanceTable();
     this.addPromotionColumns();
+    this.addStalenessAndDedupColumns();
   }
 
   private initializeSchema(): void {
@@ -1228,5 +1229,39 @@ export class MigrationRunner {
       }
       throw new Error(`Migration 34 failed: ${String(error)}`);
     }
+  }
+
+  private addStalenessAndDedupColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(38) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const cols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const colNames = new Set(cols.map((c) => c.name));
+
+    if (!colNames.has('stale')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN stale INTEGER NOT NULL DEFAULT 0');
+      logger.debug('DB', 'Added stale column');
+    }
+    if (!colNames.has('stale_reason')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN stale_reason TEXT');
+      logger.debug('DB', 'Added stale_reason column');
+    }
+    if (!colNames.has('last_valid_commit')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN last_valid_commit TEXT');
+      logger.debug('DB', 'Added last_valid_commit column');
+    }
+    if (!colNames.has('contradicts_observation_id')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN contradicts_observation_id INTEGER');
+      logger.debug('DB', 'Added contradicts_observation_id column');
+    }
+    if (!colNames.has('possible_duplicate')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN possible_duplicate INTEGER NOT NULL DEFAULT 0');
+      logger.debug('DB', 'Added possible_duplicate column');
+    }
+
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_stale ON observations(project, stale)');
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(38, new Date().toISOString());
+    logger.debug('DB', 'Migration 38: staleness + dedup columns applied');
   }
 }
