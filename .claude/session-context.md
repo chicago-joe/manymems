@@ -81,4 +81,4 @@ Tests: `tests/provenance/*.test.ts` (39 pass) + 189 across hook/sqlite/context.
 
 - `manymems-project-goal.md` — what the project is + master plan location
 - `manymems-build-checkpoint.md` — detailed build progress, decisions, gotchas (the authoritative checkpoint)
-# hook e2e marker
+# hook e2e marker — 1780640101
