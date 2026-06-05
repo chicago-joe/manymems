@@ -518,6 +518,23 @@ NEVER fetch full details without filtering first. 10x token savings.`,
       return await callWorkerAPIPost('/api/observations/batch', args);
     }
   },
+  {
+    name: 'get_code_provenance',
+    description: 'Why was this line written? Returns the user prompt(s) and session(s) that produced the code at a file:line, resolved by tree-sitter symbol (survives line drift) with a stale flag when the symbol changed since. Params: file (absolute path), line (1-indexed), include_prompt (default true).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', description: 'Absolute file path' },
+        line: { type: 'number', description: '1-indexed line number to explain' },
+        include_prompt: { type: 'boolean', description: 'Include originating prompt text (default true)' }
+      },
+      required: ['file', 'line'],
+      additionalProperties: true
+    },
+    handler: async (args: any) => {
+      return await callWorkerAPI('/api/provenance/by-line', args);
+    }
+  },
   // Phase 8 — observation_* tools backed by server-beta REST core.
   // These are the canonical names. memory_* tools below are kept as
   // compatibility aliases that delegate to these handlers, so existing

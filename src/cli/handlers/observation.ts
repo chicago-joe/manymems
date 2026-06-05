@@ -11,7 +11,6 @@ import { normalizePlatformSource } from '../../shared/platform-source.js';
 import { resolveRuntimeContext, logServerBetaFallback } from '../../services/hooks/runtime-selector.js';
 import { isServerBetaClientError } from '../../services/hooks/server-beta-client.js';
 import { extractEditChanges } from '../../services/provenance/extract-line-range.js';
-import { buildSymbolAnchor } from '../../services/provenance/symbol-anchor.js';
 
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit']);
 
@@ -67,11 +66,11 @@ export const observationHandler: EventHandler = {
 
     if (EDIT_TOOLS.has(toolName) && toolInput && typeof toolInput === 'object') {
       try {
-        const changes = await extractEditChanges(toolName, toolInput as Record<string, unknown>);
-        for (const change of changes) {
-          change.symbol_anchor = await buildSymbolAnchor(change.file_path, change.line_start, change.line_end);
-        }
-        input.editChanges = changes;
+        // Hot path: only the cheap, deterministic line-range + content-hash
+        // extraction runs here. Tree-sitter symbol anchoring is resolved off
+        // the capture path (worker-side, async) to avoid ~2.4s/parse latency
+        // on every edit. See ingestObservation + resolveProvenanceSymbols.
+        input.editChanges = await extractEditChanges(toolName, toolInput as Record<string, unknown>);
       } catch (err) {
         logger.debug('HOOK', 'Edit change extraction failed (non-fatal)', {
           toolName,

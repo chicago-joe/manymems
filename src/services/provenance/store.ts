@@ -140,6 +140,74 @@ export function queryProvenanceByLine(
   return rows.map(rowToProvenanceRecord);
 }
 
+// A4: backfill commit_sha onto provenance rows whose file was changed by a
+// commit. Only fills rows where commit_sha IS NULL (idempotent) and, when
+// `sinceEpoch` is given, only those recorded after the previous commit — so an
+// edit is attributed to the commit that actually shipped it, not a later one.
+// Returns the number of rows updated.
+export function linkCommitToProvenance(
+  db: Database,
+  changedFiles: string[],
+  commitSha: string,
+  sinceEpoch?: number,
+): number {
+  if (changedFiles.length === 0) return 0;
+  const placeholders = changedFiles.map(() => '?').join(', ');
+  const sinceClause = sinceEpoch != null ? 'AND occurred_at_epoch > ?' : '';
+  const sql = `
+    UPDATE code_provenance
+    SET commit_sha = ?
+    WHERE commit_sha IS NULL
+      AND file_path IN (${placeholders})
+      ${sinceClause}
+  `;
+  const params: unknown[] = [commitSha, ...changedFiles];
+  if (sinceEpoch != null) params.push(sinceEpoch);
+  const result = db.prepare(sql).run(...(params as never[]));
+  return Number(result.changes ?? 0);
+}
+
+// Off-hot-path symbol backfill: update a stored row with its resolved
+// tree-sitter symbol anchor (qualified name + signature hash baseline for
+// staleness). Called asynchronously by the worker after capture, never on the
+// edit hook path. Returns true if a row was updated.
+export function updateProvenanceSymbol(
+  db: Database,
+  id: string,
+  anchor: {
+    qualified_name: string;
+    kind: string;
+    signature_hash: string;
+    line_offset_from_symbol_start: number;
+  },
+): boolean {
+  const result = db
+    .prepare(`
+      UPDATE code_provenance
+      SET symbol_qualified_name = ?, symbol_kind = ?, signature_hash = ?, line_offset_from_symbol_start = ?
+      WHERE id = ?
+    `)
+    .run(anchor.qualified_name, anchor.kind, anchor.signature_hash, anchor.line_offset_from_symbol_start, id);
+  return Number(result.changes ?? 0) > 0;
+}
+
+// A5: primary resolution — provenance for a known tree-sitter symbol in a file.
+// Survives line drift because it keys on the qualified symbol name, not lines.
+export function queryProvenanceBySymbol(
+  db: Database,
+  file_path: string,
+  qualified_name: string,
+): ProvenanceRecord[] {
+  const rows = db
+    .prepare(`
+      SELECT * FROM code_provenance
+      WHERE file_path = ? AND symbol_qualified_name = ?
+      ORDER BY occurred_at_epoch DESC
+    `)
+    .all(file_path, qualified_name) as Array<Record<string, unknown>>;
+  return rows.map(rowToProvenanceRecord);
+}
+
 function rowToProvenanceRecord(row: Record<string, unknown>): ProvenanceRecord {
   return {
     id: row.id as string,

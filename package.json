@@ -197,6 +197,7 @@
   },
   "trustedDependencies": [
     "esbuild",
+    "tree-sitter",
     "tree-sitter-c",
     "tree-sitter-cli",
     "tree-sitter-cpp",

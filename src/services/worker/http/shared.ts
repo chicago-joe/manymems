@@ -13,6 +13,7 @@ import { normalizePlatformSource, platformSourceToAgentToolId } from '../../../s
 import { PrivacyCheckValidator } from '../validation/PrivacyCheckValidator.js';
 import type { EditChange } from '../../provenance/extract-line-range.js';
 import { editChangeToProvenanceRecord } from '../../provenance/store.js';
+import { resolveProvenanceSymbols } from '../../provenance/query.js';
 import { EventEmitter } from 'events';
 
 export interface SummaryStoredEvent {
@@ -178,9 +179,11 @@ export async function ingestObservation(payload: ObservationPayload): Promise<In
     toolUseId: typeof payload.toolUseId === 'string' ? payload.toolUseId : undefined,
   });
 
-  // A3: persist intent->code provenance for edit events. Runs after the
-  // observation is queued; failures are non-fatal (provenance is additive and
-  // must never block the capture path).
+  // A3: persist intent->code provenance for edit events. Stores line ranges +
+  // hashes synchronously (cheap, deterministic), then resolves tree-sitter
+  // symbol anchors OFF the hot path (fire-and-forget) — parsing is ~seconds per
+  // file and must never block the capture response. Failures are non-fatal;
+  // provenance is additive.
   if (payload.editChanges && payload.editChanges.length > 0 && project) {
     try {
       const promptId = store.resolveProvenancePromptId(payload.contentSessionId, promptNumber);
@@ -196,6 +199,8 @@ export async function ingestObservation(payload: ObservationPayload): Promise<In
         }),
       );
       store.storeCodeProvenance(records);
+      // Off hot path: resolve symbol anchors after responding. Not awaited.
+      void resolveProvenanceSymbols(store, records).catch(() => { /* logged within */ });
     } catch (error) {
       logger.debug('INGEST', 'Code provenance persistence failed (non-fatal)', {
         error: error instanceof Error ? error.message : String(error),

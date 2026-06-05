@@ -75,7 +75,7 @@ describe('buildSymbolAnchor', () => {
     expect(anchorB.qualified_name).toBe('beta');
     // They should have different signature hashes (different function signatures)
     expect(anchorA.signature_hash).not.toBe(anchorB.signature_hash);
-  });
+  }, 30000);
 
   it('signature_hash changes when function signature changes', async () => {
     const file = join(tmpDir, 'src4.ts');
@@ -93,7 +93,7 @@ describe('buildSymbolAnchor', () => {
     expect(before.qualified_name).toBe('alpha');
     expect(after.qualified_name).toBe('alpha');
     expect(before.signature_hash).not.toBe(after.signature_hash);
-  });
+  }, 30000);
 
   it('returns null for a non-existent file', async () => {
     const anchor = await buildSymbolAnchor('/nonexistent/path/file.ts', 1, 1);

@@ -3,6 +3,10 @@ import { DATA_DIR, DB_PATH, ensureDir, OBSERVER_SESSIONS_PROJECT } from '../../s
 import {
   storeProvenanceRecords,
   resolveUserPromptId,
+  linkCommitToProvenance,
+  queryProvenanceByLine,
+  queryProvenanceBySymbol,
+  updateProvenanceSymbol,
   type ProvenanceRecord,
 } from '../provenance/store.js';
 import { logger } from '../../utils/logger.js';
@@ -2572,6 +2576,38 @@ export class SessionStore {
   // A3: resolve the user_prompts.id that triggered an edit, for FK linkage.
   resolveProvenancePromptId(contentSessionId: string, promptNumber?: number | null): number | null {
     return resolveUserPromptId(this.db, contentSessionId, promptNumber);
+  }
+
+  // A4: backfill commit_sha onto provenance rows for files changed by a commit.
+  linkCommitToProvenance(changedFiles: string[], commitSha: string, sinceEpoch?: number): number {
+    return linkCommitToProvenance(this.db, changedFiles, commitSha, sinceEpoch);
+  }
+
+  // A2/A5: backfill a row's resolved tree-sitter symbol anchor (off hot path).
+  updateProvenanceSymbol(
+    id: string,
+    anchor: { qualified_name: string; kind: string; signature_hash: string; line_offset_from_symbol_start: number },
+  ): boolean {
+    return updateProvenanceSymbol(this.db, id, anchor);
+  }
+
+  // A5: fetch provenance for a file line (symbol-aware resolution happens in
+  // the MCP tool; this is the line-range fallback + the row source).
+  getProvenanceByLine(filePath: string, line: number): ProvenanceRecord[] {
+    return queryProvenanceByLine(this.db, filePath, line);
+  }
+
+  // A5: fetch provenance rows for a known symbol in a file (primary resolution).
+  getProvenanceBySymbol(filePath: string, qualifiedName: string): ProvenanceRecord[] {
+    return queryProvenanceBySymbol(this.db, filePath, qualifiedName);
+  }
+
+  // A5: join a provenance row's user_prompt_id back to the prompt text.
+  getPromptTextById(userPromptId: number): string | null {
+    const row = this.db
+      .prepare('SELECT prompt_text FROM user_prompts WHERE id = ?')
+      .get(userPromptId) as { prompt_text: string } | undefined;
+    return row?.prompt_text ?? null;
   }
 
   close(): void {
