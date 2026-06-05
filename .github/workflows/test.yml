@@ -32,6 +32,7 @@ jobs:
   integration:
     name: L3 — Live worker integration
     runs-on: ubuntu-latest
+    if: false  # disabled — L3 requires a live Claude auth token; run locally only
     steps:
       - uses: actions/checkout@v4
 

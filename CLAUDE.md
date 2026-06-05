@@ -8,15 +8,53 @@ See `.claude/session-context.md` for full project context and
 ## Build
 
 ```bash
-npm run build-and-sync        # Build, sync to marketplace, restart worker
-npm run build                 # Build only (no restart)
+npm run build                 # Build only — safe, never touches the running plugin
+```
+
+**NEVER run `npm run build-and-sync` during development.**
+
+`sync-marketplace.cjs` rsyncs the **entire manymems project** (with `--delete`) into
+`~/.claude/plugins/marketplaces/thedotmack/` — which is the stock claude-mem git repo.
+This overwrites its scripts, deletes its workflows, and corrupts port 37777.
+Recovery: `git restore . && git clean -fd` in the thedotmack directory, then restart the worker.
+
+## Port Boundary — DO NOT CROSS
+
+| Port | Process | Owner | Rule |
+|------|---------|-------|------|
+| **37777** | Stock claude-mem plugin | `~/.claude/plugins/marketplaces/thedotmack/` | **OFF LIMITS** — never run build-and-sync |
+| **37778** | manymems dev worker | `/tmp/manymems-e2e-home` (tests) or `~/.claude-mem` (live DB) | OK for development |
+
+## Running the manymems dev worker (Option A)
+
+To run manymems alongside the stock claude-mem at 37777, start it manually on 37778:
+
+```bash
+export PATH="$PATH:/home/chicagojoe/.bun/bin"
+
+# Against the live DB (same data as 37777, useful for UI dev):
+CLAUDE_MEM_DATA_DIR=~/.claude-mem \
+CLAUDE_MEM_WORKER_PORT=37778 \
+CLAUDE_MEM_WORKER_HOST=127.0.0.1 \
+CLAUDE_MEM_CHROMA_ENABLED=false \
+CLAUDE_MEM_LOG_LEVEL=warn \
+  bun /home/chicagojoe/PyCharmProjects/manymems/plugin/scripts/worker-service.cjs --daemon
+
+# Against the isolated test DB (safe for destructive tests):
+mkdir -p /tmp/manymems-e2e-home
+echo '{"CLAUDE_MEM_WORKER_PORT":"37778","CLAUDE_MEM_WORKER_HOST":"127.0.0.1","CLAUDE_MEM_CHROMA_ENABLED":"false","CLAUDE_MEM_LOG_LEVEL":"warn","CLAUDE_MEM_DATA_DIR":"/tmp/manymems-e2e-home"}' \
+  > /tmp/manymems-e2e-home/settings.json
+CLAUDE_MEM_DATA_DIR=/tmp/manymems-e2e-home \
+  bun /home/chicagojoe/PyCharmProjects/manymems/plugin/scripts/worker-service.cjs --daemon
+
+# Poll until ready:
+until curl -sf http://127.0.0.1:37778/api/health | grep -q '"initialized":true'; do sleep 1; done
 ```
 
 ## File Locations
 
 - **Source**: `<project-root>/src/`
 - **Built Plugin**: `<project-root>/plugin/`
-- **Installed Plugin**: `~/.claude/plugins/marketplaces/thedotmack/`
 - **Database**: `~/.claude-mem/claude-mem.db`
 - **Chroma**: `~/.claude-mem/chroma/`
 
