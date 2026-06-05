@@ -1,3 +1,14 @@
+manymems
+Copyright 2026 chicago-joe
+
+This product is built on and includes software from the Claude-Mem project
+(https://github.com/thedotmack/claude-mem), Copyright 2026 Alex Newman,
+licensed under the Apache License, Version 2.0.
+
+manymems extends that work with team-scoped memory and intent→code provenance,
+and is itself licensed under the Apache License, Version 2.0.
+
+----------------------------------------------------------------------
 Claude-Mem
 Copyright 2026 Alex Newman
 
