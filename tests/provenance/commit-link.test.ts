@@ -98,3 +98,67 @@ describe('A4 post-commit hook installer', () => {
     expect(buildPostCommitHook(40404)).toContain('40404');
   });
 });
+
+describe('getRecentCommits via /api/provenance/commits SQL', () => {
+  let db: Database;
+  let store: SessionStore;
+
+  beforeEach(() => {
+    db = new Database(':memory:');
+    db.run('PRAGMA foreign_keys = ON');
+    store = new SessionStore(db);
+  });
+  afterEach(() => store.close());
+
+  it('groups rows by commit_sha and returns edit_count + files array', () => {
+    // Insert 3 provenance rows: 2 for sha-aaa, 1 for sha-bbb
+    const a1 = editChangeToProvenanceRecord(change('/repo/alpha.ts'), { project: 'p', occurred_at_epoch: 200 });
+    const a2 = editChangeToProvenanceRecord(change('/repo/beta.ts'), { project: 'p', occurred_at_epoch: 210 });
+    const b1 = editChangeToProvenanceRecord(change('/repo/gamma.ts'), { project: 'p', occurred_at_epoch: 100 });
+    storeProvenanceRecords(db, [a1, a2, b1]);
+
+    linkCommitToProvenance(db, ['/repo/alpha.ts', '/repo/beta.ts'], 'sha-aaa');
+    linkCommitToProvenance(db, ['/repo/gamma.ts'], 'sha-bbb');
+
+    const rows = db.prepare(`
+      SELECT commit_sha,
+             COUNT(*) AS edit_count,
+             MIN(occurred_at_epoch) AS earliest_epoch,
+             GROUP_CONCAT(DISTINCT file_path) AS files_concat
+      FROM code_provenance
+      WHERE commit_sha IS NOT NULL AND commit_sha != ''
+      GROUP BY commit_sha
+      ORDER BY earliest_epoch DESC
+      LIMIT 100
+    `).all() as Array<{ commit_sha: string; edit_count: number; earliest_epoch: number; files_concat: string }>;
+
+    expect(rows).toHaveLength(2);
+
+    // sha-aaa has earliest_epoch 200, sha-bbb has 100 — ORDER BY DESC puts sha-aaa first
+    const [rowA, rowB] = rows;
+    expect(rowA.commit_sha).toBe('sha-aaa');
+    expect(rowA.edit_count).toBe(2);
+    const filesA = rowA.files_concat.split(',').filter(Boolean);
+    expect(filesA).toContain('/repo/alpha.ts');
+    expect(filesA).toContain('/repo/beta.ts');
+
+    expect(rowB.commit_sha).toBe('sha-bbb');
+    expect(rowB.edit_count).toBe(1);
+    const filesB = rowB.files_concat.split(',').filter(Boolean);
+    expect(filesB).toContain('/repo/gamma.ts');
+  });
+
+  it('returns empty result when no rows have a commit_sha', () => {
+    const a = editChangeToProvenanceRecord(change('/repo/unlinkd.ts'), { project: 'p', occurred_at_epoch: 300 });
+    storeProvenanceRecords(db, [a]);
+
+    const rows = db.prepare(`
+      SELECT commit_sha, COUNT(*) AS edit_count
+      FROM code_provenance
+      WHERE commit_sha IS NOT NULL AND commit_sha != ''
+      GROUP BY commit_sha
+    `).all();
+
+    expect(rows).toHaveLength(0);
+  });
+});
