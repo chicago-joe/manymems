@@ -42,6 +42,7 @@ export class MigrationRunner {
     this.createCodeProvenanceTable();
     this.addPromotionColumns();
     this.addStalenessAndDedupColumns();
+    this.addMultimodalColumns();
   }
 
   private initializeSchema(): void {
@@ -1263,5 +1264,31 @@ export class MigrationRunner {
 
     this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(38, new Date().toISOString());
     logger.debug('DB', 'Migration 38: staleness + dedup columns applied');
+  }
+
+  private addMultimodalColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(39) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const cols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const colNames = new Set(cols.map((c) => c.name));
+
+    if (!colNames.has('modality')) {
+      this.db.run("ALTER TABLE observations ADD COLUMN modality TEXT NOT NULL DEFAULT 'text'");
+      logger.debug('DB', 'Added modality column');
+    }
+    if (!colNames.has('content_pointer')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN content_pointer TEXT');
+      logger.debug('DB', 'Added content_pointer column');
+    }
+    if (!colNames.has('content_summary')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN content_summary TEXT');
+      logger.debug('DB', 'Added content_summary column');
+    }
+
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_modality ON observations(project, modality)');
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(39, new Date().toISOString());
+    logger.debug('DB', 'Migration 39: multimodal columns applied');
   }
 }
