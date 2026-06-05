@@ -3134,6 +3134,459 @@
         transform: translateX(16px);
       }
     }
+
+    /* ── Side panels (right-side slide-in) ─────────────────────── */
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 420px;
+      max-width: 90vw;
+      height: 100vh;
+      background: var(--color-bg-secondary, #161b22);
+      border-left: 1px solid var(--color-border, #30363d);
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      font-family: 'Monaspace Radon Var', monospace;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+      animation: side-panel-in 0.18s ease-out;
+    }
+
+    @keyframes side-panel-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    .side-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border, #30363d);
+      flex-shrink: 0;
+    }
+
+    .side-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-primary, #e6edf3);
+      letter-spacing: 0.02em;
+    }
+
+    .side-panel-subtitle {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--color-text-secondary, #8b949e);
+      margin-left: 4px;
+    }
+
+    .side-panel-icon { flex-shrink: 0; }
+
+    .side-panel-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .side-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 0;
+    }
+
+    .side-panel-loading,
+    .side-panel-empty,
+    .side-panel-error {
+      padding: 24px 16px;
+      font-size: 12px;
+      color: var(--color-text-secondary, #8b949e);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .side-panel-error { color: #f85149; }
+
+    /* ── Models panel ───────────────────────────────────────────── */
+    .models-icon { color: #00d4d4; }
+
+    .models-list { padding: 0 4px; }
+
+    .model-bar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 6px;
+      transition: background 0.1s;
+      cursor: default;
+    }
+
+    .model-bar-row:hover { background: var(--color-bg-hover, rgba(255,255,255,0.04)); }
+
+    .model-bar-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .model-bar-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-primary, #e6edf3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .model-bar-provider {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .model-bar-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .model-bar-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-primary, #e6edf3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .model-bar-date {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+    }
+
+    /* ── ObservationCard model/agent badges ─────────────────────── */
+    .card-model-badge,
+    .card-agent-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      white-space: nowrap;
+    }
+
+    .card-model-badge {
+      background: rgba(0, 212, 212, 0.12);
+      color: #00d4d4;
+      border: 1px solid rgba(0, 212, 212, 0.25);
+    }
+
+    .card-agent-badge {
+      background: rgba(130, 100, 255, 0.12);
+      color: #a78bfa;
+      border: 1px solid rgba(130, 100, 255, 0.25);
+    }
+
+    /* ── File chip buttons (provenance trigger) ─────────────────── */
+    .file-chip-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      background: var(--color-bg-tertiary, rgba(255,255,255,0.05));
+      border: 1px solid var(--color-border, #30363d);
+      border-radius: 3px;
+      color: var(--color-text-secondary, #8b949e);
+      font-size: 10px;
+      font-family: 'Monaspace Radon Var', monospace;
+      cursor: pointer;
+      transition: all 0.1s;
+      text-decoration: none;
+    }
+
+    .file-chip-btn:hover {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: rgba(88, 166, 255, 0.4);
+      color: #58a6ff;
+    }
+
+    /* ── Commits panel ──────────────────────────────────────────── */
+    .commits-icon { color: #f0883e; }
+
+    .commit-row {
+      border-bottom: 1px solid var(--color-border, #30363d);
+    }
+
+    .commit-row:last-child { border-bottom: none; }
+
+    .commit-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      color: var(--color-text-primary, #e6edf3);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.1s;
+      font-family: inherit;
+    }
+
+    .commit-summary:hover { background: var(--color-bg-hover, rgba(255,255,255,0.04)); }
+
+    .commit-row.expanded .commit-summary {
+      background: rgba(240, 136, 62, 0.06);
+      border-left: 2px solid #f0883e;
+    }
+
+    .commit-sha {
+      font-family: 'Monaspace Radon Var', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #f0883e;
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
+    }
+
+    .commit-date {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .commit-edits {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+      flex-shrink: 0;
+    }
+
+    .commit-files-preview {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .commit-chevron {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .commit-detail {
+      padding: 8px 16px 12px 24px;
+      border-top: 1px solid var(--color-border, #30363d);
+      background: var(--color-bg-tertiary, rgba(0,0,0,0.2));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .commit-detail-loading,
+    .commit-detail-empty {
+      padding: 12px 16px 12px 24px;
+      font-size: 11px;
+      color: var(--color-text-secondary, #8b949e);
+    }
+
+    .commit-entry { display: flex; flex-direction: column; gap: 4px; }
+
+    .commit-entry-loc {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .commit-entry-file {
+      font-family: 'Monaspace Radon Var', monospace;
+      font-size: 11px;
+      color: #58a6ff;
+    }
+
+    .commit-entry-range {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+    }
+
+    .commit-entry-symbol {
+      font-size: 10px;
+      padding: 1px 5px;
+      background: rgba(130, 100, 255, 0.12);
+      color: #a78bfa;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .commit-entry-kind {
+      font-size: 9px;
+      color: var(--color-text-secondary, #8b949e);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .commit-entry-prompt {
+      font-size: 11px;
+      color: var(--color-text-secondary, #8b949e);
+      font-style: italic;
+      line-height: 1.5;
+      padding-left: 4px;
+      border-left: 2px solid rgba(240, 136, 62, 0.3);
+    }
+
+    .commit-entry-agent {
+      display: inline-flex;
+      font-size: 9px;
+      padding: 1px 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      color: var(--color-text-secondary, #8b949e);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      width: fit-content;
+    }
+
+    /* ── Provenance drawer ──────────────────────────────────────── */
+    .provenance-drawer { border-left-color: #8b5cf6; }
+    .provenance-icon { color: #8b5cf6; }
+
+    .side-panel-file-ref {
+      font-family: 'Monaspace Radon Var', monospace;
+      font-size: 11px;
+      color: #58a6ff;
+      background: rgba(88, 166, 255, 0.1);
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid rgba(88, 166, 255, 0.2);
+    }
+
+    .provenance-file-path {
+      padding: 6px 16px;
+      font-family: 'Monaspace Radon Var', monospace;
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+      border-bottom: 1px solid var(--color-border, #30363d);
+      background: var(--color-bg-tertiary, rgba(0,0,0,0.15));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+    }
+
+    .prov-entry {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border, #30363d);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .prov-entry:last-child { border-bottom: none; }
+
+    .prov-entry-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .prov-entry-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .prov-agent-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      color: var(--color-text-secondary, #8b949e);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .prov-symbol-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      background: rgba(130, 100, 255, 0.12);
+      color: #a78bfa;
+      border-radius: 3px;
+      font-weight: 600;
+      font-family: 'Monaspace Radon Var', monospace;
+    }
+
+    .prov-commit-sha {
+      font-family: 'Monaspace Radon Var', monospace;
+      font-size: 10px;
+      color: #f0883e;
+      background: rgba(240, 136, 62, 0.1);
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+    }
+
+    .prov-entry-date {
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .prov-prompt-text {
+      margin: 0;
+      padding: 8px 10px;
+      background: rgba(139, 92, 246, 0.06);
+      border-left: 2px solid rgba(139, 92, 246, 0.4);
+      border-radius: 0 4px 4px 0;
+      font-size: 12px;
+      color: var(--color-text-primary, #e6edf3);
+      line-height: 1.6;
+      font-style: normal;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .prov-file-range {
+      font-family: 'Monaspace Radon Var', monospace;
+      font-size: 10px;
+      color: var(--color-text-secondary, #8b949e);
+    }
+
+    .prov-loading-indicator {
+      display: inline-block;
+      animation: prov-spin 1.2s linear infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes prov-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ── nav-panel-btn (header icon buttons for new panels) ─────── */
+    .nav-panel-btn {
+      opacity: 0.7;
+      transition: opacity 0.15s, color 0.15s;
+    }
+
+    .nav-panel-btn:hover { opacity: 1; color: #58a6ff; }
   </style>
 </head>
 
