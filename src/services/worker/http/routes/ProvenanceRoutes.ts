@@ -21,6 +21,8 @@ export class ProvenanceRoutes extends BaseRouteHandler {
   setupRoutes(app: express.Application): void {
     app.post('/api/provenance/link-commit', validateBody(linkCommitSchema), this.handleLinkCommit.bind(this));
     app.get('/api/provenance/by-line', this.handleByLine.bind(this));
+    app.get('/api/provenance/commits', this.handleCommits.bind(this));
+    app.get('/api/provenance/by-commit', this.handleByCommit.bind(this));
   }
 
   // A5: "why was this written" — symbol-aware provenance + staleness for file:line.
@@ -36,6 +38,47 @@ export class ProvenanceRoutes extends BaseRouteHandler {
     const result = await getCodeProvenance(store, file, line, includePrompt);
     // MCP content shape so the get_code_provenance tool can forward verbatim.
     res.json({ content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] });
+  });
+
+  private handleCommits = this.wrapHandler((_req: Request, res: Response): void => {
+    const db = this.dbManager.getSessionStore().db;
+    const rows = db.prepare(`
+      SELECT commit_sha,
+             COUNT(*) AS edit_count,
+             MIN(occurred_at_epoch) AS earliest_epoch,
+             GROUP_CONCAT(DISTINCT file_path) AS files_concat
+      FROM code_provenance
+      WHERE commit_sha IS NOT NULL AND commit_sha != ''
+      GROUP BY commit_sha
+      ORDER BY earliest_epoch DESC
+      LIMIT 100
+    `).all() as Array<{ commit_sha: string; edit_count: number; earliest_epoch: number; files_concat: string }>;
+    const commits = rows.map(r => ({
+      commit_sha: r.commit_sha,
+      edit_count: r.edit_count,
+      earliest_epoch: r.earliest_epoch,
+      files: (r.files_concat as string).split(',').filter(Boolean),
+    }));
+    res.json({ commits });
+  });
+
+  private handleByCommit = this.wrapHandler((req: Request, res: Response): void => {
+    const sha = typeof req.query.sha === 'string' ? req.query.sha : '';
+    if (!sha) {
+      res.status(400).json({ ok: false, error: 'sha query parameter is required' });
+      return;
+    }
+    const db = this.dbManager.getSessionStore().db;
+    const rows = db.prepare(`
+      SELECT cp.id, cp.file_path, cp.line_start, cp.line_end, cp.commit_sha,
+             cp.symbol_name, cp.symbol_kind, cp.agent_type, cp.created_at_epoch,
+             up.prompt_text
+      FROM code_provenance cp
+      LEFT JOIN user_prompts up ON cp.user_prompt_id = up.id
+      WHERE cp.commit_sha = ?
+      ORDER BY cp.created_at_epoch ASC
+    `).all(sha);
+    res.json({ entries: rows });
   });
 
   private handleLinkCommit = this.wrapHandler(async (req: Request, res: Response): Promise<void> => {

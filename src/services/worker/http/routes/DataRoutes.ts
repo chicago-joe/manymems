@@ -100,6 +100,7 @@ export class DataRoutes extends BaseRouteHandler {
     app.get('/api/prompt/:id', this.handleGetPromptById.bind(this));
 
     app.get('/api/stats', this.handleGetStats.bind(this));
+    app.get('/api/models/stats', this.handleGetModelStats.bind(this));
     app.get('/api/projects', this.handleGetProjects.bind(this));
 
     app.get('/api/processing-status', this.handleGetProcessingStatus.bind(this));
@@ -257,6 +258,18 @@ export class DataRoutes extends BaseRouteHandler {
         firstObservationAt
       }
     });
+  });
+
+  private handleGetModelStats = this.wrapHandler((req: Request, res: Response): void => {
+    const db = this.dbManager.getSessionStore().db;
+    const rows = db.prepare(`
+      SELECT o.generated_by_model, s.platform_source, COUNT(*) AS count, MAX(o.created_at_epoch) AS last_seen_epoch
+      FROM observations o
+      LEFT JOIN sdk_sessions s ON s.memory_session_id = o.memory_session_id
+      GROUP BY o.generated_by_model, s.platform_source
+      ORDER BY count DESC
+    `).all();
+    res.json({ models: rows });
   });
 
   private handleGetProjects = this.wrapHandler((req: Request, res: Response): void => {

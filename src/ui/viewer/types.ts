@@ -16,6 +16,10 @@ export interface Observation {
   prompt_number: number | null;
   created_at: string;
   created_at_epoch: number;
+  generated_by_model: string | null;
+  agent_type: string | null;
+  agent_id: string | null;
+  visibility: string | null;
 }
 
 export interface Summary {
@@ -91,6 +95,9 @@ export interface Settings {
 
   CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY?: string;
   CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE?: string;
+
+  CLAUDE_MEM_SERVER_BETA_URL?: string;
+  CLAUDE_MEM_SERVER_BETA_API_KEY?: string;
 }
 
 export interface WorkerStats {
@@ -111,4 +118,31 @@ export interface DatabaseStats {
 export interface Stats {
   worker?: WorkerStats;
   database?: DatabaseStats;
+}
+
+export interface ModelStats {
+  generated_by_model: string | null;
+  platform_source: string;
+  count: number;
+  last_seen_epoch: number;
+}
+
+export interface CommitRecord {
+  commit_sha: string;
+  edit_count: number;
+  earliest_epoch: number;
+  files: string[];
+}
+
+export interface ProvenanceEntry {
+  id: string;
+  file_path: string;
+  line_start: number;
+  line_end: number;
+  symbol_name: string | null;
+  symbol_kind: string | null;
+  commit_sha: string | null;
+  prompt_text: string | null;
+  agent_type: string | null;
+  created_at_epoch: number;
 }
