@@ -3499,6 +3499,85 @@
       width: fit-content;
     }
 
+    /* ── commit graph ── */
+    .commit-graph-container { padding: 8px 4px; }
+
+    .commit-graph-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 8px 10px;
+      border-bottom: 1px solid #222;
+      margin-bottom: 6px;
+    }
+    .commit-graph-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #aaa;
+    }
+    .commit-graph-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .commit-graph-body { position: relative; }
+    .commit-graph-svg { flex-shrink: 0; }
+
+    .commit-graph-row { display: block; }
+    .commit-graph-row-header {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      text-align: left;
+      border-radius: 4px;
+      transition: background 0.12s;
+    }
+    .commit-graph-row-header:hover { background: #1e1e1e; }
+    .commit-graph-row-header.expanded { background: #1a1f1f; }
+
+    .commit-graph-row-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .commit-graph-prompt-preview {
+      font-size: 11px;
+      font-style: italic;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.85;
+    }
+
+    .commit-sessions {
+      font-size: 10px;
+      color: #888;
+      background: #2a2a2a;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .commit-graph-detail {
+      padding: 4px 8px 8px;
+      border-left: 2px solid #333;
+      margin: 0 0 4px 8px;
+      background: #111;
+      border-radius: 0 4px 4px 0;
+    }
+
     /* ── Provenance drawer ──────────────────────────────────────── */
     .provenance-drawer { border-left-color: #8b5cf6; }
     .provenance-icon { color: #8b5cf6; }

@@ -1,50 +1,10 @@
 import React from 'react';
 import { useCommits } from '../hooks/useCommits';
-import { formatDate } from '../utils/formatters';
-import type { ProvenanceEntry } from '../types';
+import { CommitGraph } from './CommitGraph';
 
 interface CommitsPanelProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-function CommitDetail({ entries, isLoading }: { entries: ProvenanceEntry[]; isLoading: boolean }) {
-  if (isLoading) return <div className="commit-detail-loading">Loading entries…</div>;
-  if (entries.length === 0) return <div className="commit-detail-empty">No provenance entries found</div>;
-  return (
-    <div className="commit-detail">
-      {entries.map(e => {
-        // Show last 2 path segments for context without overflow
-        const pathParts = e.file_path.split('/');
-        const displayPath = pathParts.slice(-2).join('/');
-        const hashDiff = (e.old_content_hash && e.new_content_hash)
-          ? `${e.old_content_hash.slice(0, 7)} → ${e.new_content_hash.slice(0, 7)}`
-          : null;
-        return (
-          <div key={e.id} className={`commit-entry${e.stale ? ' commit-entry-stale' : ''}`}>
-            <div className="commit-entry-loc">
-              <code className="commit-entry-file" title={e.file_path}>{displayPath}</code>
-              <span className="commit-entry-range">:{e.line_start}–{e.line_end}</span>
-              {e.symbol_name && <span className="commit-entry-symbol">{e.symbol_name}</span>}
-              {e.symbol_kind && <span className="commit-entry-kind">{e.symbol_kind}</span>}
-              {e.stale === 1 && <span className="commit-entry-stale-badge" title="Symbol may no longer exist">stale</span>}
-            </div>
-            {hashDiff && <div className="commit-entry-hash">{hashDiff}</div>}
-            {e.prompt_text && (
-              <div className="commit-entry-prompt">
-                "{e.prompt_text}"
-              </div>
-            )}
-            <div className="commit-entry-meta">
-              {e.agent_type && <span className="commit-entry-agent">{e.agent_type}</span>}
-              {e.observation_id && <span className="commit-entry-obs-id">obs #{e.observation_id}</span>}
-              {e.session_id && <span className="commit-entry-session" title={e.session_id}>session {e.session_id.slice(0, 8)}</span>}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 export function CommitsPanel({ isOpen, onClose }: CommitsPanelProps) {
@@ -76,26 +36,15 @@ export function CommitsPanel({ isOpen, onClose }: CommitsPanelProps) {
         {!isLoading && !error && commits.length === 0 && (
           <div className="side-panel-empty">No commits linked yet. Make a commit after the post-commit hook is installed.</div>
         )}
-        {!isLoading && commits.map(c => (
-          <div key={c.commit_sha} className={`commit-row ${expandedSha === c.commit_sha ? 'expanded' : ''}`}>
-            <button className="commit-summary" onClick={() => toggleExpand(c.commit_sha)}>
-              <code className="commit-sha">{c.commit_sha.slice(0, 8)}</code>
-              <span className="commit-date">{formatDate(c.earliest_epoch)}</span>
-              <span className="commit-edits">{c.edit_count} edit{c.edit_count !== 1 ? 's' : ''}</span>
-              <span className="commit-files-preview">
-                {c.files.slice(0, 2).map(f => f.split('/').pop()).join(', ')}
-                {c.files.length > 2 ? ` +${c.files.length - 2}` : ''}
-              </span>
-              <span className="commit-chevron">{expandedSha === c.commit_sha ? '▾' : '▸'}</span>
-            </button>
-            {expandedSha === c.commit_sha && (
-              <CommitDetail
-                entries={detailCache[c.commit_sha] ?? []}
-                isLoading={detailLoading === c.commit_sha}
-              />
-            )}
-          </div>
-        ))}
+        {!isLoading && commits.length > 0 && (
+          <CommitGraph
+            commits={commits}
+            expandedSha={expandedSha}
+            detailCache={detailCache}
+            detailLoading={detailLoading}
+            onToggle={toggleExpand}
+          />
+        )}
       </div>
     </div>
   );

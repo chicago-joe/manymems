@@ -2259,13 +2259,23 @@ ${i.formatTableHeader()}`,m=d.map((f,h)=>i.formatObservationIndex(f,h));n.json({
       SELECT commit_sha,
              COUNT(*) AS edit_count,
              MIN(occurred_at_epoch) AS earliest_epoch,
-             GROUP_CONCAT(DISTINCT file_path) AS files_concat
-      FROM code_provenance
+             GROUP_CONCAT(DISTINCT file_path) AS files_concat,
+             GROUP_CONCAT(DISTINCT COALESCE(agent_tool_id, 'unknown')) AS models_concat,
+             GROUP_CONCAT(DISTINCT COALESCE(actor_id, '')) AS actors_concat,
+             COUNT(DISTINCT session_id) AS session_count,
+             (SELECT up.prompt_text
+              FROM code_provenance cp2
+              LEFT JOIN user_prompts up ON cp2.user_prompt_id = up.id
+              WHERE cp2.commit_sha = cp.commit_sha
+                AND up.prompt_text IS NOT NULL
+              ORDER BY cp2.occurred_at_epoch ASC
+              LIMIT 1) AS prompt_preview
+      FROM code_provenance cp
       WHERE commit_sha IS NOT NULL AND commit_sha != ''
       GROUP BY commit_sha
       ORDER BY earliest_epoch DESC
       LIMIT 100
-    `).all().map(a=>({commit_sha:a.commit_sha,edit_count:a.edit_count,earliest_epoch:a.earliest_epoch,files:a.files_concat.split(",").filter(Boolean)}));n.json({commits:o})});handleByCommit=this.wrapHandler((r,n)=>{let s=typeof r.query.sha=="string"?r.query.sha:"";if(!s){n.status(400).json({ok:!1,error:"sha query parameter is required"});return}let i=this.dbManager.getSessionStore().db,o=i.prepare("PRAGMA table_info(code_provenance)").all().map(d=>d.name),a=o.includes("symbol_name")?"symbol_name":"symbol_qualified_name",c=o.includes("created_at_epoch")?"created_at_epoch":"occurred_at_epoch",l=o.includes("agent_type")?", cp.agent_type":"",u=i.prepare(`
+    `).all().map(a=>({commit_sha:a.commit_sha,edit_count:a.edit_count,earliest_epoch:a.earliest_epoch,files:a.files_concat.split(",").filter(Boolean),models:[...new Set((a.models_concat??"").split(",").filter(Boolean))],actors:[...new Set((a.actors_concat??"").split(",").filter(c=>c!==""))],session_count:a.session_count,prompt_preview:a.prompt_preview??null}));n.json({commits:o})});handleByCommit=this.wrapHandler((r,n)=>{let s=typeof r.query.sha=="string"?r.query.sha:"";if(!s){n.status(400).json({ok:!1,error:"sha query parameter is required"});return}let i=this.dbManager.getSessionStore().db,o=i.prepare("PRAGMA table_info(code_provenance)").all().map(d=>d.name),a=o.includes("symbol_name")?"symbol_name":"symbol_qualified_name",c=o.includes("created_at_epoch")?"created_at_epoch":"occurred_at_epoch",l=o.includes("agent_type")?", cp.agent_type":"",u=i.prepare(`
       SELECT cp.id, cp.file_path, cp.line_start, cp.line_end, cp.commit_sha,
              cp.${a} AS symbol_name, cp.symbol_kind${l}, cp.${c} AS created_at_epoch,
              up.prompt_text,

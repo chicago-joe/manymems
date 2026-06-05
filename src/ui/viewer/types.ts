@@ -135,6 +135,10 @@ export interface CommitRecord {
   edit_count: number;
   earliest_epoch: number;
   files: string[];
+  models: string[];        // agent_tool_ids involved
+  actors: string[];        // actor_ids
+  session_count: number;
+  prompt_preview: string | null;
 }
 
 export interface ProvenanceEntry {
