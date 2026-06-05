@@ -157,4 +157,10 @@ export interface ProvenanceEntry {
   stale: number;
   old_content_hash: string | null;
   new_content_hash: string | null;
+  // observation semantic content — the AI's synthesis of this change
+  obs_title: string | null;
+  obs_text: string | null;
+  obs_narrative: string | null;
+  obs_facts: string | null;   // JSON-encoded string[]
+  obs_type: string | null;
 }

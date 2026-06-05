@@ -2280,9 +2280,15 @@ ${i.formatTableHeader()}`,m=d.map((f,h)=>i.formatObservationIndex(f,h));n.json({
              cp.${a} AS symbol_name, cp.symbol_kind${l}, cp.${c} AS created_at_epoch,
              up.prompt_text,
              cp.session_id, cp.observation_id, cp.stale,
-             cp.old_content_hash, cp.new_content_hash
+             cp.old_content_hash, cp.new_content_hash,
+             o.title    AS obs_title,
+             o.text     AS obs_text,
+             o.narrative AS obs_narrative,
+             o.facts    AS obs_facts,
+             o.type     AS obs_type
       FROM code_provenance cp
       LEFT JOIN user_prompts up ON cp.user_prompt_id = up.id
+      LEFT JOIN observations o  ON cp.observation_id = o.id
       WHERE cp.commit_sha = ?
       ORDER BY cp.${c} ASC
     `).all(s);n.json({entries:u})});handleLinkCommit=this.wrapHandler(async(r,n)=>{let{commit_sha:s,changed_files:i,since_epoch:o}=r.body,c=this.dbManager.getSessionStore().linkCommitToProvenance(i,s,o);y.info("HTTP","Provenance commit backfill",{commit_sha:s,changed_files:i.length,updated:c}),n.json({ok:!0,updated:c})})};var Bi=require("zod");Y();var TDe=Bi.z.object({visibility:Bi.z.enum(["team","org"]),promoted_by:Bi.z.string().optional()}),kDe=Bi.z.object({project:Bi.z.string(),modality:Bi.z.enum(["text","screenshot","diagram","voice_transcript","code"]),content_pointer:Bi.z.string().optional(),content_summary:Bi.z.string(),memory_session_id:Bi.z.string().optional()}),pS=class extends Nt{constructor(r){super();this.dbManager=r}dbManager;setupRoutes(r){r.post("/api/observations/:id/promote",lt(TDe),this.handlePromote.bind(this)),r.get("/api/observations/:id/staleness",this.handleGetStaleness.bind(this)),r.post("/api/observations/multimodal",lt(kDe),this.handleAddMultimodal.bind(this)),r.get("/api/observations/:id/content",this.handleGetContent.bind(this))}handleGetStaleness=this.wrapHandler((r,n)=>{let s=r.params.id,o=this.dbManager.getSessionStore().db.prepare("SELECT id, stale, stale_reason, last_valid_commit FROM observations WHERE id = ?").get(s);if(!o){n.status(404).json({error:"not found"});return}n.json(o)});handlePromote=this.wrapHandler((r,n)=>{let s=r.params.id,{visibility:i,promoted_by:o}=r.body,a=this.dbManager.getSessionStore().db,c=a.prepare("SELECT id, visibility FROM observations WHERE id = ?").get(s);if(!c){n.status(404).json({error:"not found"});return}if(c.visibility===i){n.json({ok:!0,id:s,new_visibility:i,already_promoted:!0});return}let l=Date.now();a.prepare("UPDATE observations SET visibility = ?, promoted_at = ?, promoted_by = ? WHERE id = ?").run(i,l,o??null,s),y.info("HTTP","Observation promoted",{id:s,visibility:i,promoted_by:o}),n.json({ok:!0,id:s,new_visibility:i,promoted_at:l})});handleAddMultimodal=this.wrapHandler((r,n)=>{let s=r.body,i=this.dbManager.getSessionStore(),o=i.db,a=Date.now(),c=crypto.randomUUID(),l=s.memory_session_id;if(!l){let u=`standalone-multimodal-${crypto.randomUUID()}`;l=`mm-${crypto.randomUUID()}`;let d=i.createSDKSession(u,s.project,`[multimodal capture] ${s.content_summary.slice(0,80)}`,void 0,"multimodal");i.updateMemorySessionId(d,l)}o.prepare(`

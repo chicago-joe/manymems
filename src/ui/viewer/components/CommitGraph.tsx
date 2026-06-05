@@ -182,33 +182,79 @@ export function CommitGraph({ commits, expandedSha, detailCache, detailLoading, 
                     {!isLoading && entries.length === 0 && (
                       <div className="commit-detail-empty">No entries</div>
                     )}
-                    {!isLoading && entries.map(e => {
-                      const pathParts = e.file_path.split('/');
-                      const displayPath = pathParts.slice(-2).join('/');
-                      const hashDiff = e.old_content_hash && e.new_content_hash
-                        ? `${e.old_content_hash.slice(0, 7)} → ${e.new_content_hash.slice(0, 7)}`
-                        : null;
-                      return (
-                        <div key={e.id} className={`commit-entry${e.stale ? ' commit-entry-stale' : ''}`}>
-                          <div className="commit-entry-loc">
-                            <code className="commit-entry-file" title={e.file_path}>{displayPath}</code>
-                            <span className="commit-entry-range">:{e.line_start}–{e.line_end}</span>
-                            {e.symbol_name && <span className="commit-entry-symbol">{e.symbol_name}</span>}
-                            {e.symbol_kind && <span className="commit-entry-kind">{e.symbol_kind}</span>}
-                            {e.stale === 1 && <span className="commit-entry-stale-badge">stale</span>}
+                    {!isLoading && (() => {
+                      // Deduplicate: collapse entries with identical symbol+prompt+filename, show count badge
+                      const seen = new Map<string, { entry: typeof entries[0]; count: number }>();
+                      for (const e of entries) {
+                        const key = `${e.file_path.split('/').pop()}|${e.symbol_name ?? ''}|${e.prompt_text ?? ''}`;
+                        const ex = seen.get(key);
+                        if (ex) { ex.count++; } else { seen.set(key, { entry: e, count: 1 }); }
+                      }
+                      return [...seen.values()].map(({ entry: e, count }) => {
+                        const displayPath = e.file_path.split('/').slice(-2).join('/');
+                        const abbrev = (h: string) => h.length > 10 ? h.slice(0, 8) : h;
+                        const hashDiff = e.old_content_hash && e.new_content_hash
+                          ? `${abbrev(e.old_content_hash)} → ${abbrev(e.new_content_hash)}`
+                          : null;
+                        // Parse obs_facts JSON array safely
+                        let facts: string[] = [];
+                        if (e.obs_facts) {
+                          try { facts = JSON.parse(e.obs_facts); } catch { facts = []; }
+                        }
+                        return (
+                          <div key={e.id} className={`commit-entry${e.stale ? ' commit-entry-stale' : ''}`}>
+                            {/* ── location row ── */}
+                            <div className="commit-entry-loc">
+                              <code className="commit-entry-file" title={e.file_path}>{displayPath}</code>
+                              <span className="commit-entry-range">:{e.line_start}–{e.line_end}</span>
+                              {e.symbol_name && <span className="commit-entry-symbol">{e.symbol_name}</span>}
+                              {e.symbol_kind && <span className="commit-entry-kind">{e.symbol_kind}</span>}
+                              {count > 1 && <span className="commit-entry-dup-badge" title={`${count} files with identical change`}>×{count}</span>}
+                              {e.stale === 1 && <span className="commit-entry-stale-badge">stale</span>}
+                              {hashDiff && <span className="commit-entry-hash">{hashDiff}</span>}
+                            </div>
+
+                            {/* ── observation title — the AI's name for this change ── */}
+                            {e.obs_title && (
+                              <div className="commit-entry-obs-title">
+                                {e.obs_type && <span className="commit-entry-obs-type">{e.obs_type}</span>}
+                                {e.obs_title}
+                              </div>
+                            )}
+
+                            {/* ── observation narrative — semantic synthesis ── */}
+                            {e.obs_narrative && (
+                              <div className="commit-entry-obs-narrative">{e.obs_narrative}</div>
+                            )}
+
+                            {/* ── facts bullets ── */}
+                            {facts.length > 0 && (
+                              <ul className="commit-entry-facts">
+                                {facts.slice(0, 4).map((f, i) => (
+                                  <li key={i}>{f}</li>
+                                ))}
+                                {facts.length > 4 && <li className="commit-entry-facts-more">+{facts.length - 4} more</li>}
+                              </ul>
+                            )}
+
+                            {/* ── intent prompt ── */}
+                            {e.prompt_text && (
+                              <div className="commit-entry-prompt">
+                                <span className="commit-entry-prompt-label">intent</span>
+                                &ldquo;{e.prompt_text}&rdquo;
+                              </div>
+                            )}
+
+                            {/* ── meta row ── */}
+                            <div className="commit-entry-meta">
+                              {e.agent_type && <span className="commit-entry-agent">{e.agent_type}</span>}
+                              {e.observation_id != null && <span className="commit-entry-obs-id">obs #{e.observation_id}</span>}
+                              {e.session_id && <span className="commit-entry-session" title={e.session_id}>session {e.session_id.slice(0, 8)}</span>}
+                            </div>
                           </div>
-                          {hashDiff && <div className="commit-entry-hash">{hashDiff}</div>}
-                          {e.prompt_text && (
-                            <div className="commit-entry-prompt">&ldquo;{e.prompt_text}&rdquo;</div>
-                          )}
-                          <div className="commit-entry-meta">
-                            {e.agent_type && <span className="commit-entry-agent">{e.agent_type}</span>}
-                            {e.observation_id != null && <span className="commit-entry-obs-id">obs #{e.observation_id}</span>}
-                            {e.session_id && <span className="commit-entry-session" title={e.session_id}>session {e.session_id.slice(0, 8)}</span>}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </div>

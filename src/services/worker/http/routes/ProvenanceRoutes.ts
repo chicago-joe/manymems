@@ -102,9 +102,15 @@ export class ProvenanceRoutes extends BaseRouteHandler {
              cp.${symCol} AS symbol_name, cp.symbol_kind${agentCol}, cp.${epochCol} AS created_at_epoch,
              up.prompt_text,
              cp.session_id, cp.observation_id, cp.stale,
-             cp.old_content_hash, cp.new_content_hash
+             cp.old_content_hash, cp.new_content_hash,
+             o.title    AS obs_title,
+             o.text     AS obs_text,
+             o.narrative AS obs_narrative,
+             o.facts    AS obs_facts,
+             o.type     AS obs_type
       FROM code_provenance cp
       LEFT JOIN user_prompts up ON cp.user_prompt_id = up.id
+      LEFT JOIN observations o  ON cp.observation_id = o.id
       WHERE cp.commit_sha = ?
       ORDER BY cp.${epochCol} ASC
     `).all(sha);
