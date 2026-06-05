@@ -15,6 +15,11 @@ interface HeaderProps {
   onThemeChange: (theme: ThemePreference) => void;
   onContextPreviewToggle: () => void;
   onShowHelp?: () => void;
+  currentModelFilter: string;
+  onModelFilterChange: (model: string) => void;
+  availableModels: string[];
+  onModelsPanelToggle: () => void;
+  onCommitsPanelToggle: () => void;
 }
 
 export function Header({
@@ -27,7 +32,12 @@ export function Header({
   themePreference,
   onThemeChange,
   onContextPreviewToggle,
-  onShowHelp
+  onShowHelp,
+  currentModelFilter,
+  onModelFilterChange,
+  availableModels,
+  onModelsPanelToggle,
+  onCommitsPanelToggle
 }: HeaderProps) {
   useSpinningFavicon(isProcessing);
 
@@ -82,6 +92,31 @@ export function Header({
           </svg>
         </a>
         <GitHubStarsButton username="thedotmack" repo="claude-mem" />
+        {availableModels.length > 0 && (
+          <select
+            value={currentModelFilter}
+            onChange={e => onModelFilterChange(e.target.value)}
+            title="Filter by model"
+          >
+            <option value="">All Models</option>
+            {availableModels.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        )}
+        <button
+          className="settings-btn nav-panel-btn"
+          onClick={onModelsPanelToggle}
+          title="Models & providers"
+          aria-label="Models panel"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="7" height="7" rx="1"/>
+            <rect x="9" y="3" width="7" height="7" rx="1"/>
+            <rect x="16" y="3" width="6" height="7" rx="1"/>
+            <rect x="2" y="14" width="20" height="7" rx="1"/>
+          </svg>
+        </button>
         <select
           value={currentFilter}
           onChange={e => onFilterChange(e.target.value)}

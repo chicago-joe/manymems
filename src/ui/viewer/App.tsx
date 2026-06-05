@@ -3,12 +3,16 @@ import { Header } from './components/Header';
 import { Feed } from './components/Feed';
 import { ContextSettingsModal } from './components/ContextSettingsModal';
 import { LogsDrawer } from './components/LogsModal';
+import { ModelsPanel } from './components/ModelsPanel';
+import { CommitsPanel } from './components/CommitsPanel';
 import { WelcomeCard, getStoredWelcomeDismissed, setStoredWelcomeDismissed } from './components/WelcomeCard';
 import { useSSE } from './hooks/useSSE';
 import { useSettings } from './hooks/useSettings';
 import { useStats } from './hooks/useStats';
 import { usePagination } from './hooks/usePagination';
 import { useTheme } from './hooks/useTheme';
+import { useProvenance } from './hooks/useProvenance';
+import { ProvenanceDrawer } from './components/ProvenanceDrawer';
 import { Observation, Summary, UserPrompt } from './types';
 import { mergeAndDeduplicateByProject } from './utils/data';
 
@@ -16,6 +20,9 @@ export function App() {
   const [currentFilter, setCurrentFilter] = useState('');
   const [contextPreviewOpen, setContextPreviewOpen] = useState(false);
   const [logsModalOpen, setLogsModalOpen] = useState(false);
+  const [modelsPanelOpen, setModelsPanelOpen] = useState(false);
+  const [commitsPanelOpen, setCommitsPanelOpen] = useState(false);
+  const [modelFilter, setModelFilter] = useState('');
   const [welcomeDismissed, setWelcomeDismissed] = useState<boolean>(getStoredWelcomeDismissed);
   const [paginatedObservations, setPaginatedObservations] = useState<Observation[]>([]);
   const [paginatedSummaries, setPaginatedSummaries] = useState<Summary[]>([]);
@@ -25,7 +32,15 @@ export function App() {
   const { settings, saveSettings, isSaving, saveStatus } = useSettings();
   const { refreshStats } = useStats();
   const { preference, setThemePreference } = useTheme();
+  const { target: provTarget, entries: provEntries, isLoading: provLoading, error: provError, open: openProvenance, close: closeProvenance } = useProvenance();
   const pagination = usePagination(currentFilter);
+
+  const availableModels = useMemo(() => {
+    const models = new Set(
+      observations.map(o => o.generated_by_model).filter((m): m is string => m !== null && m !== undefined)
+    );
+    return Array.from(models).sort();
+  }, [observations]);
 
   const matchesSelection = useCallback((item: { project: string }) => {
     return !currentFilter || item.project === currentFilter;
@@ -114,6 +129,11 @@ export function App() {
           setStoredWelcomeDismissed(false);
           setWelcomeDismissed(false);
         }}
+        currentModelFilter={modelFilter}
+        onModelFilterChange={setModelFilter}
+        availableModels={availableModels}
+        onModelsPanelToggle={() => setModelsPanelOpen(prev => !prev)}
+        onCommitsPanelToggle={() => setCommitsPanelOpen(prev => !prev)}
       />
 
       <Feed
@@ -123,6 +143,7 @@ export function App() {
         onLoadMore={handleLoadMore}
         isLoading={pagination.observations.isLoading || pagination.summaries.isLoading || pagination.prompts.isLoading}
         hasMore={pagination.observations.hasMore || pagination.summaries.hasMore || pagination.prompts.hasMore}
+        onFileClick={openProvenance}
       />
 
       {!welcomeDismissed && (
@@ -152,6 +173,18 @@ export function App() {
       <LogsDrawer
         isOpen={logsModalOpen}
         onClose={toggleLogsModal}
+      />
+
+      <ModelsPanel isOpen={modelsPanelOpen} onClose={() => setModelsPanelOpen(false)} />
+
+      <CommitsPanel isOpen={commitsPanelOpen} onClose={() => setCommitsPanelOpen(false)} />
+
+      <ProvenanceDrawer
+        target={provTarget}
+        entries={provEntries}
+        isLoading={provLoading}
+        error={provError}
+        onClose={closeProvenance}
       />
     </>
   );

@@ -82,6 +82,24 @@ Testing contract per phase:
 
 No need to edit the changelog ever, it's generated automatically.
 
+## Exploration Guardrails (enforced — do not bypass)
+
+**NEVER use Bash or Read for code exploration.** Always use smart tools first:
+- Find files/symbols → `smart_search(query, path)` (replaces Glob + grep + Read chains)
+- File structure → `smart_outline(file_path)` → `smart_unfold(file, symbol)` for bodies
+- Past session context → `/mem-search` → `search()` → `get_observations(ids)`
+- Feature mapping → `/pathfinder` skill before any fan-out
+- Bash: run commands only (tests, build, git). Never `cat`/`head`/`grep`/`find` on source files.
+- Read: only after smart tools are insufficient, or for non-code files (JSON config, markdown)
+
+**Parallel agents on the same file = race condition.**
+- Assign each agent non-overlapping files — `App.tsx`, `Header.tsx`, `Feed.tsx` are high-contention
+- Never run >1 agent touching `App.tsx` simultaneously; do UI wiring in a single sequential pass
+- Use `isolation: 'worktree'` in the Agent tool when agents must touch overlapping files
+
+**UI data shapes (src/ui/viewer):**
+- `observation.files_modified` and `observation.files_read` are JSON-encoded array strings — always `JSON.parse()`, never split on comma
+
 ## Daily Maintenance
 
 Run a daily version check across all package manifests and upgrade every dependency to its latest version — including major version bumps. Staying on the latest is the goal; do not skip majors.
