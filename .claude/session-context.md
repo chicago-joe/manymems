@@ -1,6 +1,6 @@
 # manymems — Session Context
 
-_Last updated: 2026-06-05_
+_Last updated: 2026-06-05 (integration testing complete)_
 
 ## What this project is
 
@@ -41,8 +41,15 @@ Master plan: `plans/00-team-intent-memory-master-plan.md` (12 phases, with verif
 | perf | Content-addressed tree-sitter parse cache (4600ms→<1ms on repeats) | `d5e3e86` |
 | docs | manymems identity + Apache-2.0 attribution | `e2250ca` |
 
-**Track A is functionally complete.** Provenance source: `src/services/provenance/{extract-line-range,symbol-anchor,store,query,commit-hook,visibility-filter}.ts`.
-Tests: `tests/provenance/*.test.ts` (39 pass) + 189 across hook/sqlite/context.
+**Track A is functionally complete and fully integration-tested.** Provenance source: `src/services/provenance/{extract-line-range,symbol-anchor,store,query,commit-hook,visibility-filter}.ts`.
+Tests: 185/185 passing — 179 L1/L2 (provenance/sqlite/context) + 6 L3 live integration.
+CI: `.github/workflows/test.yml` — `unit` (L1/L2) + `integration` (L3) on every push/PR; `e2e-docker` (L4) on main.
+
+## Bugs found by integration tests (not caught by unit tests)
+
+1. **`editChanges` not forwarded in `SessionRoutes.ts`** (`4e5df8b`) — field was in Zod schema but never destructured in `handleObservationsByClaudeId` and never passed to `ingestObservation`. L2 tests passed (they call store directly); L3 caught it because it tested the real HTTP route. Provenance rows silently dropped in live worker.
+2. **SQLite migration 36 missing from `SessionStore` inline chain** (`d6f0d52`) — caught by L2 :memory: round-trip. Both migration chains must always be kept in sync.
+3. **`buildSymbolAnchor` 2.4s/call on capture hot path** — moved off hot path (`2a87b3d`), parse cache added (`d5e3e86`).
 
 ## Hard-won gotchas (do not relearn)
 
@@ -61,7 +68,7 @@ Tests: `tests/provenance/*.test.ts` (39 pass) + 189 across hook/sqlite/context.
 ## Per-phase testing contract (enforce every phase)
 
 - **L1 unit** (pure fns) + **L2 SQLite `:memory:` round-trip** — MANDATORY every phase.
-- **L3 pipeline** (hook-lifecycle / context-injection) — for A5 + injection paths.
+- **L3 live worker** — ALSO mandatory for any new HTTP route (L2 bypasses the route layer entirely). Start fork worker: `CLAUDE_MEM_DATA_DIR=/tmp/manymems-e2e-home bun plugin/scripts/worker-service.cjs --daemon` where `settings.json` in that dir sets `CLAUDE_MEM_WORKER_PORT=37778`.
 - **L4 Docker e2e** (`scripts/e2e-server-beta-docker.sh`) — for B3 async jobs + B5 pgvector
   (pgvector can ONLY be tested here — needs the `vector` extension in the Postgres image).
 
@@ -81,4 +88,3 @@ Tests: `tests/provenance/*.test.ts` (39 pass) + 189 across hook/sqlite/context.
 
 - `manymems-project-goal.md` — what the project is + master plan location
 - `manymems-build-checkpoint.md` — detailed build progress, decisions, gotchas (the authoritative checkpoint)
-# hook e2e marker — 1780640101
