@@ -207,5 +207,12 @@ describe('live provenance integration', () => {
     // All matching rows already have a commit_sha; none should be updated.
     expect(Number(r.updated)).toBe(0);
   }, 10000);
+
+  it('GET /api/provenance/commits returns empty array on fresh DB', async () => {
+    const r = await fetch(`${WORKER_BASE}/api/provenance/commits`);
+    expect(r.status).toBe(200);
+    const body = await r.json() as Record<string, unknown>;
+    expect(Array.isArray(body.commits)).toBe(true);
+  });
 });
 
