@@ -69,14 +69,19 @@ export class ProvenanceRoutes extends BaseRouteHandler {
       return;
     }
     const db = this.dbManager.getSessionStore().db;
+    // Column name compatibility: installed DB may use symbol_qualified_name/occurred_at_epoch
+    const cols = (db.prepare('PRAGMA table_info(code_provenance)').all() as Array<{ name: string }>).map(c => c.name);
+    const symCol = cols.includes('symbol_name') ? 'symbol_name' : 'symbol_qualified_name';
+    const epochCol = cols.includes('created_at_epoch') ? 'created_at_epoch' : 'occurred_at_epoch';
+    const agentCol = cols.includes('agent_type') ? ', cp.agent_type' : '';
     const rows = db.prepare(`
       SELECT cp.id, cp.file_path, cp.line_start, cp.line_end, cp.commit_sha,
-             cp.symbol_name, cp.symbol_kind, cp.agent_type, cp.created_at_epoch,
+             cp.${symCol} AS symbol_name, cp.symbol_kind${agentCol}, cp.${epochCol} AS created_at_epoch,
              up.prompt_text
       FROM code_provenance cp
       LEFT JOIN user_prompts up ON cp.user_prompt_id = up.id
       WHERE cp.commit_sha = ?
-      ORDER BY cp.created_at_epoch ASC
+      ORDER BY cp.${epochCol} ASC
     `).all(sha);
     res.json({ entries: rows });
   });
