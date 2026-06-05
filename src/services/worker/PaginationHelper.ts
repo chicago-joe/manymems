@@ -51,7 +51,7 @@ export class PaginationHelper {
     };
   }
 
-  getObservations(offset: number, limit: number, project?: string, platformSource?: string): PaginatedResult<Observation> {
+  getObservations(offset: number, limit: number, project?: string, platformSource?: string, model?: string): PaginatedResult<Observation> {
     const db = this.dbManager.getSessionStore().db;
     let query = `
       SELECT
@@ -92,6 +92,10 @@ export class PaginationHelper {
     if (platformSource) {
       conditions.push(`COALESCE(s.platform_source, 'claude') = ?`);
       params.push(platformSource);
+    }
+    if (model) {
+      conditions.push(`o.generated_by_model = ?`);
+      params.push(model);
     }
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
