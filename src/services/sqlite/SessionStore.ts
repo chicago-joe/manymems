@@ -80,6 +80,9 @@ export class SessionStore {
     this.dropWorkerPidColumn();
     this.addIdentityAndVisibilityColumns();
     this.createCodeProvenanceTable();
+    this.addPromotionColumns();
+    this.addStalenessAndDedupColumns();
+    this.addMultimodalColumns();
   }
 
   // Migration 36: code_provenance table (intent->code linkage). Mirrors the
@@ -122,6 +125,77 @@ export class SessionStore {
 
     this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(36, new Date().toISOString());
     logger.debug('DB', 'Migration 36: code_provenance table applied (inline)');
+  }
+
+  private addPromotionColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(37) as SchemaVersion | undefined;
+    if (applied) return;
+    const cols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const colNames = new Set(cols.map((c) => c.name));
+    if (!colNames.has('promoted_at')) this.db.run('ALTER TABLE observations ADD COLUMN promoted_at INTEGER');
+    if (!colNames.has('promoted_by')) this.db.run('ALTER TABLE observations ADD COLUMN promoted_by TEXT');
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(37, new Date().toISOString());
+    logger.debug('DB', 'Migration 37: promotion columns applied (inline)');
+  }
+
+  private addStalenessAndDedupColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(38) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const cols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const colNames = new Set(cols.map((c) => c.name));
+
+    if (!colNames.has('stale')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN stale INTEGER NOT NULL DEFAULT 0');
+      logger.debug('DB', 'Added stale column');
+    }
+    if (!colNames.has('stale_reason')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN stale_reason TEXT');
+      logger.debug('DB', 'Added stale_reason column');
+    }
+    if (!colNames.has('last_valid_commit')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN last_valid_commit TEXT');
+      logger.debug('DB', 'Added last_valid_commit column');
+    }
+    if (!colNames.has('contradicts_observation_id')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN contradicts_observation_id INTEGER');
+      logger.debug('DB', 'Added contradicts_observation_id column');
+    }
+    if (!colNames.has('possible_duplicate')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN possible_duplicate INTEGER NOT NULL DEFAULT 0');
+      logger.debug('DB', 'Added possible_duplicate column');
+    }
+
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_stale ON observations(project, stale)');
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(38, new Date().toISOString());
+    logger.debug('DB', 'Migration 38: staleness + dedup columns applied (inline)');
+  }
+
+  private addMultimodalColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(39) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const cols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const colNames = new Set(cols.map((c) => c.name));
+
+    if (!colNames.has('modality')) {
+      this.db.run("ALTER TABLE observations ADD COLUMN modality TEXT NOT NULL DEFAULT 'text'");
+      logger.debug('DB', 'Added modality column');
+    }
+    if (!colNames.has('content_pointer')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN content_pointer TEXT');
+      logger.debug('DB', 'Added content_pointer column');
+    }
+    if (!colNames.has('content_summary')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN content_summary TEXT');
+      logger.debug('DB', 'Added content_summary column');
+    }
+
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_observations_modality ON observations(project, modality)');
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(39, new Date().toISOString());
+    logger.debug('DB', 'Migration 39: multimodal columns applied (inline)');
   }
 
   private addIdentityAndVisibilityColumns(): void {

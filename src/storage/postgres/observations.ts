@@ -25,6 +25,8 @@ export interface PostgresObservation {
   metadata: JsonObject;
   embedding: JsonValue | null;
   createdByJobId: string | null;
+  actorId: string | null;
+  visibility: string;
   createdAtEpoch: number;
   updatedAtEpoch: number;
 }
@@ -51,6 +53,8 @@ interface ObservationRow {
   metadata: unknown;
   embedding: unknown | null;
   created_by_job_id: string | null;
+  actor_id: string | null;
+  visibility: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -168,6 +172,67 @@ export class PostgresObservationRepository {
       [input.projectId, input.teamId, input.query, input.limit ?? 20]
     );
     return result.rows.map(mapObservationRow);
+  }
+
+  /**
+   * B5: Semantic search with scope-weighted cosine ranking.
+   * Weights: own actor × 1.5, same team × 1.0, org-wide × 0.7.
+   * Relevance gates: personal ≥ 0.50, team/org ≥ 0.70.
+   * Entity-exact matches always rank first (similarity forced to 1.0).
+   */
+  async searchSemantic(input: {
+    embedding: number[];        // 384-dim query vector
+    teamId: string;
+    projectId: string;
+    actorId?: string;
+    entityName?: string;        // tree-sitter entity for exact-match boost
+    limit?: number;
+  }): Promise<Array<PostgresObservation & { similarity: number; scope_weight: number }>> {
+    const limit = input.limit ?? 20;
+    const vectorLiteral = `'[${input.embedding.join(',')}]'::vector`;
+
+    const rows = await this.client.query<ObservationRow & { similarity: number; scope_weight: number }>(`
+      SELECT o.*,
+        -- Cosine similarity (pgvector operator <=>)
+        CASE WHEN o.embedding IS NOT NULL
+          THEN 1 - (o.embedding <=> ${vectorLiteral})
+          ELSE 0
+        END AS similarity,
+        -- Scope weight
+        CASE
+          WHEN o.actor_id = $1 THEN 1.5
+          WHEN o.team_id = $2 THEN 1.0
+          ELSE 0.7
+        END AS scope_weight
+      FROM observations o
+      WHERE o.team_id = $2
+        AND o.project_id = $3
+        AND (
+          o.visibility IN ('team', 'org')
+          OR o.actor_id = $1
+        )
+        AND (
+          -- Relevance gate
+          CASE WHEN o.actor_id = $1 THEN
+            CASE WHEN o.embedding IS NOT NULL THEN 1 - (o.embedding <=> ${vectorLiteral}) >= 0.50 ELSE true END
+          ELSE
+            CASE WHEN o.embedding IS NOT NULL THEN 1 - (o.embedding <=> ${vectorLiteral}) >= 0.70 ELSE false END
+          END
+        )
+      ORDER BY
+        -- Entity-exact always first
+        CASE WHEN $4::text IS NOT NULL AND o.content ILIKE '%' || $4 || '%' THEN 0 ELSE 1 END,
+        -- Then by weighted similarity desc
+        (CASE WHEN o.embedding IS NOT NULL THEN 1 - (o.embedding <=> ${vectorLiteral}) ELSE 0 END)
+        * (CASE WHEN o.actor_id = $1 THEN 1.5 WHEN o.team_id = $2 THEN 1.0 ELSE 0.7 END) DESC
+      LIMIT $5
+    `, [input.actorId ?? null, input.teamId, input.projectId, input.entityName ?? null, limit]);
+
+    return rows.rows.map(r => ({
+      ...mapObservationRow(r),
+      similarity: Number(r.similarity),
+      scope_weight: Number(r.scope_weight),
+    }));
   }
 }
 
@@ -376,6 +441,8 @@ function mapObservationRow(row: ObservationRow): PostgresObservation {
     metadata: toJsonObject(row.metadata),
     embedding: row.embedding,
     createdByJobId: row.created_by_job_id,
+    actorId: row.actor_id ?? null,
+    visibility: row.visibility ?? 'private',
     createdAtEpoch: toEpoch(row.created_at),
     updatedAtEpoch: toEpoch(row.updated_at)
   };

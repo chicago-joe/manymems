@@ -121,6 +121,9 @@ export interface Stats {
 }
 
 export interface ModelStats {
+  first_seen_epoch: number;
+  session_count: number;
+  project_count: number;
   generated_by_model: string | null;
   platform_source: string;
   count: number;
@@ -132,6 +135,10 @@ export interface CommitRecord {
   edit_count: number;
   earliest_epoch: number;
   files: string[];
+  models: string[];        // agent_tool_ids involved
+  actors: string[];        // actor_ids
+  session_count: number;
+  prompt_preview: string | null;
 }
 
 export interface ProvenanceEntry {
@@ -145,4 +152,15 @@ export interface ProvenanceEntry {
   prompt_text: string | null;
   agent_type: string | null;
   created_at_epoch: number;
+  session_id: string | null;
+  observation_id: number | null;
+  stale: number;
+  old_content_hash: string | null;
+  new_content_hash: string | null;
+  // observation semantic content — the AI's synthesis of this change
+  obs_title: string | null;
+  obs_text: string | null;
+  obs_narrative: string | null;
+  obs_facts: string | null;   // JSON-encoded string[]
+  obs_type: string | null;
 }

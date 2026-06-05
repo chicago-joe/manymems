@@ -3270,6 +3270,16 @@
       color: var(--color-text-secondary, #8b949e);
     }
 
+    .model-bar-secondary {
+      font-size: 10px;
+      color: #888;
+    }
+    .model-bar-dates {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
     /* ── ObservationCard model/agent badges ─────────────────────── */
     .card-model-badge,
     .card-agent-badge {
@@ -3440,6 +3450,97 @@
       letter-spacing: 0.06em;
     }
 
+    .commit-entry-stale { opacity: 0.8; }
+    .commit-entry-dup-badge {
+      font-size: 10px;
+      background: #2a2a3a;
+      color: #8888cc;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      cursor: help;
+    }
+    .commit-entry-obs-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 5px 0 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .commit-entry-obs-type {
+      font-size: 10px;
+      font-weight: 500;
+      background: #1e3a3a;
+      color: #00d4d4;
+      padding: 1px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+    .commit-entry-obs-narrative {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin: 3px 0 4px;
+      padding-left: 8px;
+      border-left: 2px solid #334;
+    }
+    .commit-entry-facts {
+      margin: 4px 0 4px 0;
+      padding-left: 16px;
+      list-style: disc;
+    }
+    .commit-entry-facts li {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .commit-entry-facts-more {
+      color: #556 !important;
+      list-style: none;
+      margin-left: -16px;
+      padding-left: 16px;
+    }
+    .commit-entry-prompt-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-right: 5px;
+      font-weight: 600;
+    }
+    .commit-entry-stale-badge {
+      font-size: 10px;
+      background: #7c3a3a;
+      color: #ffaaaa;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .commit-entry-hash {
+      font-family: monospace;
+      font-size: 10px;
+      color: #556688;
+      background: #111a22;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .commit-entry-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 3px;
+    }
+    .commit-entry-obs-id, .commit-entry-session {
+      font-size: 10px;
+      color: #666;
+      font-family: monospace;
+    }
+
     .commit-entry-prompt {
       font-size: 11px;
       color: var(--color-text-secondary, #8b949e);
@@ -3459,6 +3560,85 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
       width: fit-content;
+    }
+
+    /* ── commit graph ── */
+    .commit-graph-container { padding: 8px 4px; }
+
+    .commit-graph-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 8px 10px;
+      border-bottom: 1px solid #222;
+      margin-bottom: 6px;
+    }
+    .commit-graph-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #aaa;
+    }
+    .commit-graph-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .commit-graph-body { position: relative; }
+    .commit-graph-svg { flex-shrink: 0; }
+
+    .commit-graph-row { display: block; }
+    .commit-graph-row-header {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      text-align: left;
+      border-radius: 4px;
+      transition: background 0.12s;
+    }
+    .commit-graph-row-header:hover { background: #1e1e1e; }
+    .commit-graph-row-header.expanded { background: #1a1f1f; }
+
+    .commit-graph-row-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .commit-graph-prompt-preview {
+      font-size: 11px;
+      font-style: italic;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.85;
+    }
+
+    .commit-sessions {
+      font-size: 10px;
+      color: #888;
+      background: #2a2a2a;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .commit-graph-detail {
+      padding: 4px 8px 8px;
+      border-left: 2px solid #333;
+      margin: 0 0 4px 8px;
+      background: #111;
+      border-radius: 0 4px 4px 0;
     }
 
     /* ── Provenance drawer ──────────────────────────────────────── */

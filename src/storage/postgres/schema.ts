@@ -3,6 +3,7 @@
 import type { PostgresQueryable } from './utils.js';
 
 export const SERVER_BETA_POSTGRES_SCHEMA_VERSION = 1;
+export const SERVER_BETA_PGVECTOR_SCHEMA_VERSION = 2;
 
 export const SERVER_BETA_POSTGRES_TABLES = [
   'server_beta_schema_migrations',
@@ -46,6 +47,50 @@ export async function bootstrapServerBetaPostgresSchema(client: PostgresQueryabl
     await client.query('ROLLBACK');
     throw error;
   }
+}
+
+/**
+ * B5: Enable pgvector and migrate observations.embedding from JSONB to vector(384).
+ * Idempotent — safe to run multiple times. Skips gracefully if pgvector is not installed.
+ *
+ * Requires: postgresql-pgvector extension installed on the Postgres server.
+ * Development: `docker run -e POSTGRES_PASSWORD=postgres ankane/pgvector`
+ */
+export async function migratePostgresForPgvector(client: PostgresQueryable): Promise<{ enabled: boolean; reason?: string }> {
+  try {
+    // Enable extension (no-op if already enabled)
+    await client.query('CREATE EXTENSION IF NOT EXISTS vector');
+  } catch (err) {
+    const msg = (err as Error).message ?? String(err);
+    return { enabled: false, reason: `pgvector extension not available: ${msg}` };
+  }
+
+  // Check current column type
+  const colInfo = await client.query<{ data_type: string }>(`
+    SELECT data_type FROM information_schema.columns
+    WHERE table_name = 'observations' AND column_name = 'embedding'
+  `);
+  const currentType = colInfo.rows[0]?.data_type;
+
+  if (currentType !== 'USER-DEFINED') {
+    // Migrate from JSONB to vector(384)
+    await client.query(`
+      ALTER TABLE observations ALTER COLUMN embedding DROP DEFAULT
+    `).catch(() => {}); // ignore if no default
+    await client.query(`
+      ALTER TABLE observations ALTER COLUMN embedding TYPE vector(384)
+      USING NULL
+    `);
+  }
+
+  // HNSW index for cosine similarity — idempotent
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_observations_embedding_hnsw
+    ON observations USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64)
+  `);
+
+  return { enabled: true };
 }
 
 interface PostgresPoolLike extends PostgresQueryable {

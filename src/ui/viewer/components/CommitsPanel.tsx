@@ -1,36 +1,10 @@
 import React from 'react';
 import { useCommits } from '../hooks/useCommits';
-import { formatDate } from '../utils/formatters';
-import type { ProvenanceEntry } from '../types';
+import { CommitGraph } from './CommitGraph';
 
 interface CommitsPanelProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-function CommitDetail({ entries, isLoading }: { entries: ProvenanceEntry[]; isLoading: boolean }) {
-  if (isLoading) return <div className="commit-detail-loading">Loading entries…</div>;
-  if (entries.length === 0) return <div className="commit-detail-empty">No provenance entries found</div>;
-  return (
-    <div className="commit-detail">
-      {entries.map(e => (
-        <div key={e.id} className="commit-entry">
-          <div className="commit-entry-loc">
-            <code className="commit-entry-file">{e.file_path.split('/').pop()}</code>
-            <span className="commit-entry-range">:{e.line_start}–{e.line_end}</span>
-            {e.symbol_name && <span className="commit-entry-symbol">{e.symbol_name}</span>}
-            {e.symbol_kind && <span className="commit-entry-kind">{e.symbol_kind}</span>}
-          </div>
-          {e.prompt_text && (
-            <div className="commit-entry-prompt">
-              "{e.prompt_text.slice(0, 120)}{e.prompt_text.length > 120 ? '…' : ''}"
-            </div>
-          )}
-          {e.agent_type && <span className="commit-entry-agent">{e.agent_type}</span>}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export function CommitsPanel({ isOpen, onClose }: CommitsPanelProps) {
@@ -62,26 +36,15 @@ export function CommitsPanel({ isOpen, onClose }: CommitsPanelProps) {
         {!isLoading && !error && commits.length === 0 && (
           <div className="side-panel-empty">No commits linked yet. Make a commit after the post-commit hook is installed.</div>
         )}
-        {!isLoading && commits.map(c => (
-          <div key={c.commit_sha} className={`commit-row ${expandedSha === c.commit_sha ? 'expanded' : ''}`}>
-            <button className="commit-summary" onClick={() => toggleExpand(c.commit_sha)}>
-              <code className="commit-sha">{c.commit_sha.slice(0, 8)}</code>
-              <span className="commit-date">{formatDate(c.earliest_epoch)}</span>
-              <span className="commit-edits">{c.edit_count} edit{c.edit_count !== 1 ? 's' : ''}</span>
-              <span className="commit-files-preview">
-                {c.files.slice(0, 2).map(f => f.split('/').pop()).join(', ')}
-                {c.files.length > 2 ? ` +${c.files.length - 2}` : ''}
-              </span>
-              <span className="commit-chevron">{expandedSha === c.commit_sha ? '▾' : '▸'}</span>
-            </button>
-            {expandedSha === c.commit_sha && (
-              <CommitDetail
-                entries={detailCache[c.commit_sha] ?? []}
-                isLoading={detailLoading === c.commit_sha}
-              />
-            )}
-          </div>
-        ))}
+        {!isLoading && commits.length > 0 && (
+          <CommitGraph
+            commits={commits}
+            expandedSha={expandedSha}
+            detailCache={detailCache}
+            detailLoading={detailLoading}
+            onToggle={toggleExpand}
+          />
+        )}
       </div>
     </div>
   );

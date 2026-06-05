@@ -66,7 +66,7 @@ replaced by `/v1/info` for Server beta clients.
 | `GET  /api/context/timeline`       | _(none yet)_                   | _(none)_ | unsupported                           |
 | `GET  /api/context/preview`        | _(none yet)_                   | _(none)_ | unsupported                           |
 | `GET  /api/context/inject`         | _(none yet)_                   | _(none)_ | unsupported                           |
-| `POST /api/context/semantic`       | `POST /v1/context`             | _(none)_ | unsupported                           |
+| `POST /api/context/semantic`       | `POST /v1/context/semantic`    | _(none)_ | ✅ Supported via pgvector (B5)        |
 | `GET  /api/onboarding/explainer`   | _(none yet)_                   | _(none)_ | unsupported                           |
 | `GET  /api/timeline/by-query`      | _(none yet)_                   | _(none)_ | unsupported                           |
 | `GET  /api/search/help`            | _(none yet)_                   | _(none)_ | unsupported                           |

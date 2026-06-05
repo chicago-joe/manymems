@@ -46,18 +46,41 @@ export class ProvenanceRoutes extends BaseRouteHandler {
       SELECT commit_sha,
              COUNT(*) AS edit_count,
              MIN(occurred_at_epoch) AS earliest_epoch,
-             GROUP_CONCAT(DISTINCT file_path) AS files_concat
-      FROM code_provenance
+             GROUP_CONCAT(DISTINCT file_path) AS files_concat,
+             GROUP_CONCAT(DISTINCT COALESCE(agent_tool_id, 'unknown')) AS models_concat,
+             GROUP_CONCAT(DISTINCT COALESCE(actor_id, '')) AS actors_concat,
+             COUNT(DISTINCT session_id) AS session_count,
+             (SELECT up.prompt_text
+              FROM code_provenance cp2
+              LEFT JOIN user_prompts up ON cp2.user_prompt_id = up.id
+              WHERE cp2.commit_sha = cp.commit_sha
+                AND up.prompt_text IS NOT NULL
+              ORDER BY cp2.occurred_at_epoch ASC
+              LIMIT 1) AS prompt_preview
+      FROM code_provenance cp
       WHERE commit_sha IS NOT NULL AND commit_sha != ''
       GROUP BY commit_sha
       ORDER BY earliest_epoch DESC
       LIMIT 100
-    `).all() as Array<{ commit_sha: string; edit_count: number; earliest_epoch: number; files_concat: string }>;
+    `).all() as Array<{
+      commit_sha: string;
+      edit_count: number;
+      earliest_epoch: number;
+      files_concat: string;
+      models_concat: string;
+      actors_concat: string;
+      session_count: number;
+      prompt_preview: string | null;
+    }>;
     const commits = rows.map(r => ({
       commit_sha: r.commit_sha,
       edit_count: r.edit_count,
       earliest_epoch: r.earliest_epoch,
       files: (r.files_concat as string).split(',').filter(Boolean),
+      models: [...new Set((r.models_concat as string ?? '').split(',').filter(Boolean))],
+      actors: [...new Set((r.actors_concat as string ?? '').split(',').filter(s => s !== ''))],
+      session_count: r.session_count,
+      prompt_preview: r.prompt_preview ?? null,
     }));
     res.json({ commits });
   });
@@ -77,9 +100,17 @@ export class ProvenanceRoutes extends BaseRouteHandler {
     const rows = db.prepare(`
       SELECT cp.id, cp.file_path, cp.line_start, cp.line_end, cp.commit_sha,
              cp.${symCol} AS symbol_name, cp.symbol_kind${agentCol}, cp.${epochCol} AS created_at_epoch,
-             up.prompt_text
+             up.prompt_text,
+             cp.session_id, cp.observation_id, cp.stale,
+             cp.old_content_hash, cp.new_content_hash,
+             o.title    AS obs_title,
+             o.text     AS obs_text,
+             o.narrative AS obs_narrative,
+             o.facts    AS obs_facts,
+             o.type     AS obs_type
       FROM code_provenance cp
       LEFT JOIN user_prompts up ON cp.user_prompt_id = up.id
+      LEFT JOIN observations o  ON cp.observation_id = o.id
       WHERE cp.commit_sha = ?
       ORDER BY cp.${epochCol} ASC
     `).all(sha);
