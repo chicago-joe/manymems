@@ -6,7 +6,7 @@ import type {
   ObservationGenerationJobStatus
 } from '../../storage/postgres/generation-jobs.js';
 
-export type ServerGenerationJobKind = 'event' | 'event-batch' | 'summary' | 'reindex';
+export type ServerGenerationJobKind = 'event' | 'event-batch' | 'summary' | 'reindex' | 'promotion-suggestion';
 
 export type ServerGenerationJobStatus = ObservationGenerationJobStatus;
 
@@ -57,24 +57,33 @@ export interface ReindexObservationJob extends ServerGenerationJob {
   observation_id: string;
 }
 
+export interface PromotionSuggestionJob extends ServerGenerationJob {
+  kind: 'promotion-suggestion';
+  pushedFiles: string[];
+  commitSha: string;
+}
+
 export type ServerGenerationJobPayload =
   | GenerateObservationsForEventJob
   | GenerateObservationsForEventBatchJob
   | GenerateSessionSummaryJob
-  | ReindexObservationJob;
+  | ReindexObservationJob
+  | PromotionSuggestionJob;
 
 export const SERVER_JOB_QUEUE_NAMES: Record<ServerGenerationJobKind, string> = {
   event: 'server_beta_generate_event',
   'event-batch': 'server_beta_generate_event_batch',
   summary: 'server_beta_generate_summary',
-  reindex: 'server_beta_reindex'
+  reindex: 'server_beta_reindex',
+  'promotion-suggestion': 'server_beta_promotion_suggestion'
 };
 
 export const SERVER_JOB_KIND_PREFIX: Record<ServerGenerationJobKind, string> = {
   event: 'evt',
   'event-batch': 'evtb',
   summary: 'sum',
-  reindex: 'rdx'
+  reindex: 'rdx',
+  'promotion-suggestion': 'promo'
 };
 
 // Phase 11 — Zod schema validates payloads at the queue boundary so a

@@ -40,6 +40,7 @@ export class MigrationRunner {
     this.rebuildPendingMessagesForFinalQueueSchema();
     this.addIdentityAndVisibilityColumns();
     this.createCodeProvenanceTable();
+    this.addPromotionColumns();
   }
 
   private initializeSchema(): void {
@@ -1109,6 +1110,26 @@ export class MigrationRunner {
     }
 
     this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(36, new Date().toISOString());
+  }
+
+  private addPromotionColumns(): void {
+    const applied = this.db.prepare('SELECT version FROM schema_versions WHERE version = ?').get(37) as SchemaVersion | undefined;
+    if (applied) return;
+
+    const cols = this.db.query('PRAGMA table_info(observations)').all() as TableColumnInfo[];
+    const colNames = new Set(cols.map((c) => c.name));
+
+    if (!colNames.has('promoted_at')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN promoted_at INTEGER');
+      logger.debug('DB', 'Added promoted_at column to observations');
+    }
+    if (!colNames.has('promoted_by')) {
+      this.db.run('ALTER TABLE observations ADD COLUMN promoted_by TEXT');
+      logger.debug('DB', 'Added promoted_by column to observations');
+    }
+
+    this.db.prepare('INSERT OR IGNORE INTO schema_versions (version, applied_at) VALUES (?, ?)').run(37, new Date().toISOString());
+    logger.debug('DB', 'Migration 37: promotion columns applied');
   }
 
   private rebuildPendingMessagesForFinalQueueSchema(): void {
