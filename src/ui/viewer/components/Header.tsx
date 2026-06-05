@@ -117,6 +117,18 @@ export function Header({
             <rect x="2" y="14" width="20" height="7" rx="1"/>
           </svg>
         </button>
+        <button
+          className="settings-btn nav-panel-btn"
+          onClick={onCommitsPanelToggle}
+          title="Commits & provenance"
+          aria-label="Commits panel"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="3" y1="12" x2="9" y2="12"/>
+            <line x1="15" y1="12" x2="21" y2="12"/>
+          </svg>
+        </button>
         <select
           value={currentFilter}
           onChange={e => onFilterChange(e.target.value)}
