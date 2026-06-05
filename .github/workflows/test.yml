@@ -1,0 +1,103 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    name: L1/L2 — Unit + SQLite round-trip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build tree-sitter grammars
+        run: bun pm trust tree-sitter && bun install
+
+      - name: Run provenance unit + SQLite round-trip tests
+        run: bun test tests/provenance/ tests/sqlite/ tests/session_store.test.ts tests/context/
+
+      - name: Run worker search tests
+        run: bun test tests/worker/search/
+
+  integration:
+    name: L3 — Live worker integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build tree-sitter grammars
+        run: bun pm trust tree-sitter && bun install
+
+      - name: Build plugin bundles
+        run: npm run build
+
+      - name: Write worker settings
+        run: |
+          mkdir -p /tmp/manymems-ci
+          cat > /tmp/manymems-ci/settings.json << 'EOF'
+          {
+            "CLAUDE_MEM_WORKER_PORT": "37778",
+            "CLAUDE_MEM_WORKER_HOST": "127.0.0.1",
+            "CLAUDE_MEM_MODEL": "sonnet",
+            "CLAUDE_MEM_PROVIDER": "claude",
+            "CLAUDE_MEM_CLAUDE_AUTH_METHOD": "cli",
+            "CLAUDE_MEM_CHROMA_ENABLED": "false",
+            "CLAUDE_MEM_LOG_LEVEL": "warn",
+            "CLAUDE_MEM_DATA_DIR": "/tmp/manymems-ci"
+          }
+          EOF
+
+      - name: Start fork worker
+        run: |
+          CLAUDE_MEM_DATA_DIR=/tmp/manymems-ci bun plugin/scripts/worker-service.cjs --daemon
+          # Poll until initialized
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:37778/api/health | grep -q '"initialized":true'; then
+              echo "Worker ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:37778/api/health | grep '"initialized":true' || (echo "Worker failed to start" && exit 1)
+
+      - name: Run L3 live integration tests
+        run: bun test tests/integration/ --timeout 30000
+
+      - name: Stop fork worker
+        if: always()
+        run: |
+          PID=$(cat /tmp/manymems-ci/worker.pid 2>/dev/null) && kill "$PID" 2>/dev/null || true
+
+  e2e-docker:
+    name: L4 — Docker server-beta e2e
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run Docker server-beta e2e
+        run: bash scripts/e2e-server-beta-docker.sh
