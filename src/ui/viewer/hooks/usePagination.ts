@@ -12,7 +12,7 @@ interface PaginationState {
 type DataType = 'observations' | 'summaries' | 'prompts';
 type DataItem = Observation | Summary | UserPrompt;
 
-function usePaginationFor<TItem extends DataItem>(endpoint: string, dataType: DataType, currentFilter: string) {
+function usePaginationFor<TItem extends DataItem>(endpoint: string, dataType: DataType, currentFilter: string, modelFilter?: string) {
   const [state, setState] = useState<PaginationState>({
     isLoading: false,
     hasMore: true
@@ -49,6 +49,9 @@ function usePaginationFor<TItem extends DataItem>(endpoint: string, dataType: Da
     if (currentFilter) {
       params.append('project', currentFilter);
     }
+    if (modelFilter) {
+      params.append('model', encodeURIComponent(modelFilter));
+    }
 
     const response = await authFetch(`${endpoint}?${params}`);
 
@@ -74,7 +77,7 @@ function usePaginationFor<TItem extends DataItem>(endpoint: string, dataType: Da
     offsetRef.current += UI.PAGINATION_PAGE_SIZE;
 
     return data.items;
-  }, [currentFilter, endpoint, dataType]);
+  }, [currentFilter, modelFilter, endpoint, dataType]);
 
   return {
     ...state,
@@ -82,10 +85,10 @@ function usePaginationFor<TItem extends DataItem>(endpoint: string, dataType: Da
   };
 }
 
-export function usePagination(currentFilter: string) {
-  const observations = usePaginationFor<Observation>(API_ENDPOINTS.OBSERVATIONS, 'observations', currentFilter);
-  const summaries = usePaginationFor<Summary>(API_ENDPOINTS.SUMMARIES, 'summaries', currentFilter);
-  const prompts = usePaginationFor<UserPrompt>(API_ENDPOINTS.PROMPTS, 'prompts', currentFilter);
+export function usePagination(currentFilter: string, modelFilter?: string) {
+  const observations = usePaginationFor<Observation>(API_ENDPOINTS.OBSERVATIONS, 'observations', currentFilter, modelFilter);
+  const summaries = usePaginationFor<Summary>(API_ENDPOINTS.SUMMARIES, 'summaries', currentFilter, modelFilter);
+  const prompts = usePaginationFor<UserPrompt>(API_ENDPOINTS.PROMPTS, 'prompts', currentFilter, modelFilter);
 
   return {
     observations,
