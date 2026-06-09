@@ -1,104 +1,101 @@
 ---
 title: "Introduction"
-description: "Persistent memory compression system for Claude Code"
+description: "Team memory and code-provenance dashboard for Claude Code"
 ---
 
-# Claude-Mem
+# manymems
 
-**Persistent memory compression system for Claude Code**
+**Open-source memory and code-provenance dashboard**
 
-Claude-Mem seamlessly preserves context across sessions by automatically capturing tool usage observations, generating semantic summaries, and making them available to future sessions. This enables Claude to maintain continuity of knowledge about projects even after sessions end or reconnect.
+manymems captures Claude Code sessions into a local SQLite index with FTS5 search, then surfaces them through a team-oriented dashboard. Each session's observations — file reads, writes, tool calls — get linked to Git commits and previous context, giving teams visibility into how AI-assisted work shapes their codebase.
 
 ## Quick Start
 
-Install with a single command:
+Clone the repository and run the development worker:
 
 ```bash
-npx claude-mem install
+git clone https://github.com/chicago-joe/manymems.git
+cd manymems
+npm install
+npm run build
 ```
 
-Or install from the plugin marketplace inside Claude Code:
+Start the worker on port 37778:
 
 ```bash
-/plugin marketplace add thedotmack/claude-mem
-/plugin install claude-mem
+export PATH="$PATH:/home/chicagojoe/.bun/bin"
+CLAUDE_MEM_DATA_DIR=~/.claude-mem \
+CLAUDE_MEM_WORKER_PORT=37778 \
+CLAUDE_MEM_WORKER_HOST=127.0.0.1 \
+CLAUDE_MEM_CHROMA_ENABLED=false \
+CLAUDE_MEM_LOG_LEVEL=warn \
+  bun plugin/scripts/worker-service.cjs --daemon
 ```
 
-Restart Claude Code. Context from previous sessions will automatically appear in new sessions.
+Open http://localhost:37778 in your browser. The dashboard captures all Claude Code sessions automatically via hooks.
 
 ## Key Features
 
-- 🧠 **Persistent Memory** - Context survives across sessions
-- 📁 **Folder Context Files** - Auto-generated `CLAUDE.md` in project folders with activity timelines
-- 🌐 **Multilingual Modes** - Supports 28 languages (Spanish, Chinese, French, Japanese, etc.)
-- 🎭 **Mode System** - Switch between workflows (Code, Email Investigation, Chill)
-- 🔍 **MCP Search Tools** - Query your project history with natural language
-- 🧠 **Knowledge Agents** - Build queryable "brains" from your observation history
-- 🌐 **Web Viewer UI** - Real-time memory stream visualization served by the local worker
-- 🔒 **Privacy Control** - Use `<private>` tags to exclude sensitive content from storage
-- ⚙️ **Context Configuration** - Fine-grained control over what context gets injected
-- 🤖 **Automatic Operation** - No manual intervention required
-- 📊 **FTS5 Search** - Fast full-text search across observations
-- 🔗 **Citations** - Reference past observations with IDs
+- **Session Capture** - Automatically records file reads, writes, and all tool calls via Claude Code hooks
+- **Dashboard UI** - Prefect Cloud-style dark interface with observation timeline and drill-down
+- **Local SQLite Index** - FTS5 full-text search across all captured sessions
+- **Git Attribution** - Links observations to commits with author and timestamp
+- **API Explorer** - Browse the worker HTTP API directly from the dashboard
+- **MCP Search Tools** - Query sessions and observations from any Claude Code session
+- **Privacy by Default** - No network calls; all data stays local unless you sync it
 
 ## How It Works
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Session Start → Inject context from last 10 sessions       │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ User Prompts → Create session, save user prompts           │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ Tool Executions → Capture observations (Read, Write, etc.)  │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ Worker Processes → Extract learnings via Claude Agent SDK   │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ Session Ends → Generate summary, ready for next session     │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│ Claude Code Hook → Capture tool usage & prompts          │
+└───────────────────────────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────┐
+│ Local Worker (port 37778) → Index into SQLite + FTS5      │
+└───────────────────────────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────┐
+│ Dashboard Web UI → Search, filter, drill into sessions    │
+└───────────────────────────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────┐
+│ MCP Tools → Query from Claude Code for future context     │
+└───────────────────────────────────────────────────────────┘
 ```
 
 **Core Components:**
-1. **5 Lifecycle Hooks** - SessionStart, UserPromptSubmit, PostToolUse, Summary (Stop), SessionEnd
-2. **Worker Service** - Express HTTP API managed by Bun on a per-user port (default `37700 + (uid % 100)`)
-3. **SQLite Database** - Stores sessions, observations, summaries with FTS5 search
-4. **Chroma Vector Index** - Optional embedding-based semantic search
-5. **MCP / Skill Search Tools** - Query historical context with natural language
-6. **Web Viewer UI** - Real-time visualization with SSE and infinite scroll
+1. **Claude Code Hooks** - Capture observations at SessionStart, PostToolUse, SessionEnd
+2. **Worker Service** - Bun-based Express HTTP API on port 37778
+3. **SQLite Database** - Stores sessions, observations, and metadata with FTS5 indexing
+4. **Web Viewer** - React dashboard with real-time SSE updates
+5. **MCP Search Tools** - Natural language query interface for Claude Code
 
 See [Architecture Overview](architecture/overview) for details.
 
 ## System Requirements
 
 - **Node.js**: 20.0.0 or higher
-- **Bun** ≥ 1.0 (auto-installed by `npx claude-mem install` if missing)
-- **uv** (auto-installed if missing — provides Python for Chroma)
-- **Claude Code** (or another supported IDE: Cursor, Gemini CLI, Windsurf, OpenCode, Codex CLI, OpenClaw)
+- **Bun** ≥ 1.0
+- **Git**: for commit attribution
 - **SQLite 3** — bundled via `bun:sqlite`
 
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Installation" icon="download" href="/installation">
-    Quick start & advanced installation
+    Build and run manymems locally
   </Card>
   <Card title="Getting Started" icon="rocket" href="/usage/getting-started">
-    Learn how Claude-Mem works automatically
+    Configure hooks and see your first observations
   </Card>
-  <Card title="Folder Context" icon="folder-open" href="/usage/folder-context">
-    Auto-generated folder CLAUDE.md files
+  <Card title="Dashboard" icon="display" href="/usage/dashboard">
+    Navigate the team memory interface
   </Card>
   <Card title="Search Tools" icon="magnifying-glass" href="/usage/search-tools">
-    Query your project history
+    Query sessions from Claude Code
   </Card>
-  <Card title="Knowledge Agents" icon="brain" href="/usage/knowledge-agents">
-    Build queryable corpora from your history
+  <Card title="API" icon="code" href="/usage/api">
+    Worker API reference and examples
   </Card>
 </CardGroup>

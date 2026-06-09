@@ -15,11 +15,8 @@ interface HeaderProps {
   onThemeChange: (theme: ThemePreference) => void;
   onContextPreviewToggle: () => void;
   onShowHelp?: () => void;
-  currentModelFilter: string;
-  onModelFilterChange: (model: string) => void;
-  availableModels: string[];
-  activeView: 'dashboard' | 'feed' | 'api';
-  onViewChange: (view: 'dashboard' | 'feed' | 'api') => void;
+  activeView: 'dashboard' | 'api';
+  onViewChange: (view: 'dashboard' | 'api') => void;
 }
 
 export function Header({
@@ -33,9 +30,6 @@ export function Header({
   onThemeChange,
   onContextPreviewToggle,
   onShowHelp,
-  currentModelFilter,
-  onModelFilterChange,
-  availableModels,
   activeView,
   onViewChange,
 }: HeaderProps) {
@@ -75,12 +69,6 @@ export function Header({
             Dashboard
           </button>
           <button
-            className={`view-tab${activeView === 'feed' ? ' active' : ''}`}
-            onClick={() => onViewChange('feed')}
-          >
-            Feed
-          </button>
-          <button
             className={`view-tab${activeView === 'api' ? ' active' : ''}`}
             onClick={() => onViewChange('api')}
           >
@@ -90,7 +78,7 @@ export function Header({
       </div>
       <div className="status">
         <a
-          href="https://docs.claude-mem.ai"
+          href="https://github.com/chicago-joe/manymems"
           target="_blank"
           rel="noopener noreferrer"
           className="icon-link"
@@ -102,18 +90,6 @@ export function Header({
           </svg>
         </a>
         <GitHubStarsButton username="chicago-joe" repo="manymems" />
-        {availableModels.length > 0 && (
-          <select
-            value={currentModelFilter}
-            onChange={e => onModelFilterChange(e.target.value)}
-            title="Filter by model"
-          >
-            <option value="">All Models</option>
-            {availableModels.map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        )}
         <select
           value={currentFilter}
           onChange={e => onFilterChange(e.target.value)}
