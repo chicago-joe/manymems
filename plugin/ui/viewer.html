@@ -142,12 +142,12 @@
 
     /* Theme Variables - Dark Mode */
     [data-theme="dark"] {
-      --color-bg-primary: #1a1916;
-      --color-bg-secondary: #252320;
-      --color-bg-tertiary: #1f1d1a;
-      --color-bg-header: #1f1d1a;
-      --color-bg-card: #252320;
-      --color-bg-card-hover: #2d2a26;
+      --color-bg-primary: #0a0e1a;
+      --color-bg-secondary: #0f1629;
+      --color-bg-tertiary: #1a2035;
+      --color-bg-header: #0f1629;
+      --color-bg-card: #1a2035;
+      --color-bg-card-hover: #1f2840;
       --color-bg-input: #252320;
       --color-bg-button: #0969da;
       --color-bg-button-hover: #1177e6;
@@ -282,12 +282,12 @@
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme]) {
-        --color-bg-primary: #1e1e1e;
-        --color-bg-secondary: #2d2d2d;
-        --color-bg-tertiary: #252526;
-        --color-bg-header: #252526;
-        --color-bg-card: #2d2d2d;
-        --color-bg-card-hover: #333333;
+        --color-bg-primary: #0a0e1a;
+        --color-bg-secondary: #0f1629;
+        --color-bg-tertiary: #1a2035;
+        --color-bg-header: #0f1629;
+        --color-bg-card: #1a2035;
+        --color-bg-card-hover: #1f2840;
         --color-bg-input: #2d2d2d;
         --color-bg-button: #0969da;
         --color-bg-button-hover: #1177e6;
@@ -357,7 +357,6 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
       background: var(--color-bg-primary);
       color: var(--color-text-primary);
       font-size: 14px;
@@ -1126,7 +1125,7 @@
     }
 
     .meta-concepts {
-      font-style: italic;
+      font-style: normal;
       color: var(--color-text-muted);
     }
 
@@ -3606,7 +3605,7 @@
     .commit-entry-prompt {
       font-size: 11px;
       color: var(--color-text-secondary, #8b949e);
-      font-style: italic;
+      font-style: normal;
       line-height: 1.5;
       padding-left: 4px;
       border-left: 2px solid rgba(240, 136, 62, 0.3);
@@ -3679,7 +3678,7 @@
 
     .commit-graph-prompt-preview {
       font-size: 11px;
-      font-style: italic;
+      font-style: normal;
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
@@ -3837,7 +3836,7 @@
     .checkpoint-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .sha-chip { font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--mm-commit-chip-bg); color: var(--mm-commit-chip-text); }
     .checkpoint-model-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: color-mix(in srgb, var(--mm-accent-teal) 15%, transparent); color: var(--mm-accent-teal); }
-    .checkpoint-prompt { font-size: 12px; color: var(--mm-text-secondary); margin-top: 4px; font-style: italic; }
+    .checkpoint-prompt { font-size: 12px; color: var(--mm-text-secondary); margin-top: 4px; font-style: normal; }
     .checkpoint-files { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
     .checkpoint-file-chip { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: color-mix(in srgb, var(--mm-accent-amber) 12%, transparent); color: var(--mm-accent-amber); cursor: pointer; }
     .checkpoint-meta { font-size: 10px; color: var(--mm-text-muted); margin-top: 4px; }
