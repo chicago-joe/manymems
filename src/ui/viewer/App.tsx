@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
-import { Feed } from './components/Feed';
 import { ContextSettingsModal } from './components/ContextSettingsModal';
 import { LogsDrawer } from './components/LogsModal';
 import { TeamsPanel } from './components/TeamsPanel';
@@ -11,42 +10,23 @@ import { WelcomeCard, getStoredWelcomeDismissed, setStoredWelcomeDismissed } fro
 import { useSSE } from './hooks/useSSE';
 import { useSettings } from './hooks/useSettings';
 import { useStats } from './hooks/useStats';
-import { usePagination } from './hooks/usePagination';
 import { useTheme } from './hooks/useTheme';
 import { useProvenance } from './hooks/useProvenance';
 import { ProvenanceDrawer } from './components/ProvenanceDrawer';
-import { Observation, Summary, UserPrompt } from './types';
-import { mergeAndDeduplicateByProject } from './utils/data';
 
 export function App() {
   const [currentFilter, setCurrentFilter] = useState('');
   const [contextPreviewOpen, setContextPreviewOpen] = useState(false);
   const [logsModalOpen, setLogsModalOpen] = useState(false);
-  const [activeView, setActiveView] = useState<'dashboard' | 'feed' | 'api'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'api'>('dashboard');
   const [teamsPanelOpen, setTeamsPanelOpen] = useState(false);
-  const [modelFilter, setModelFilter] = useState('');
   const [welcomeDismissed, setWelcomeDismissed] = useState<boolean>(getStoredWelcomeDismissed);
-  const [paginatedObservations, setPaginatedObservations] = useState<Observation[]>([]);
-  const [paginatedSummaries, setPaginatedSummaries] = useState<Summary[]>([]);
-  const [paginatedPrompts, setPaginatedPrompts] = useState<UserPrompt[]>([]);
 
-  const { observations, summaries, prompts, projects, isProcessing, queueDepth, isConnected } = useSSE();
+  const { observations, projects, isProcessing, queueDepth, isConnected } = useSSE();
   const { settings, saveSettings, isSaving, saveStatus } = useSettings();
   const { refreshStats } = useStats();
   const { preference, setThemePreference } = useTheme();
   const { target: provTarget, entries: provEntries, isLoading: provLoading, error: provError, open: openProvenance, close: closeProvenance } = useProvenance();
-  const pagination = usePagination(currentFilter);
-
-  const availableModels = useMemo(() => {
-    const models = new Set(
-      observations.map(o => o.generated_by_model).filter((m): m is string => m !== null && m !== undefined)
-    );
-    return Array.from(models).sort();
-  }, [observations]);
-
-  const matchesSelection = useCallback((item: { project: string }) => {
-    return !currentFilter || item.project === currentFilter;
-  }, [currentFilter]);
 
   useEffect(() => {
     if (currentFilter && !projects.includes(currentFilter)) {
@@ -54,27 +34,9 @@ export function App() {
     }
   }, [projects, currentFilter]);
 
-  const allObservations = useMemo(() => {
-    const live = observations.filter(matchesSelection);
-    const paginated = paginatedObservations.filter(matchesSelection);
-    return mergeAndDeduplicateByProject(live, paginated);
-  }, [observations, paginatedObservations, matchesSelection]);
-
-  const allSummaries = useMemo(() => {
-    const live = summaries.filter(matchesSelection);
-    const paginated = paginatedSummaries.filter(matchesSelection);
-    return mergeAndDeduplicateByProject(live, paginated);
-  }, [summaries, paginatedSummaries, matchesSelection]);
-
-  const allPrompts = useMemo(() => {
-    const live = prompts.filter(matchesSelection);
-    const paginated = paginatedPrompts.filter(matchesSelection);
-    return mergeAndDeduplicateByProject(live, paginated);
-  }, [prompts, paginatedPrompts, matchesSelection]);
-
-  const handleDrillDown = useCallback((filter: DrillDownFilter) => {
-    setActiveView('feed');
-    if (filter.type === 'model') setModelFilter(filter.model);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleDrillDown = useCallback((_filter: DrillDownFilter) => {
+    // no-op: Feed view removed
   }, []);
 
   const toggleContextPreview = useCallback(() => {
@@ -84,36 +46,6 @@ export function App() {
   const toggleLogsModal = useCallback(() => {
     setLogsModalOpen(prev => !prev);
   }, []);
-
-  const handleLoadMore = useCallback(async () => {
-    try {
-      const [newObservations, newSummaries, newPrompts] = await Promise.all([
-        pagination.observations.loadMore(),
-        pagination.summaries.loadMore(),
-        pagination.prompts.loadMore()
-      ]);
-
-      if (newObservations.length > 0) {
-        setPaginatedObservations(prev => [...prev, ...newObservations]);
-      }
-      if (newSummaries.length > 0) {
-        setPaginatedSummaries(prev => [...prev, ...newSummaries]);
-      }
-      if (newPrompts.length > 0) {
-        setPaginatedPrompts(prev => [...prev, ...newPrompts]);
-      }
-    } catch (error) {
-      console.error('Failed to load more data:', error);
-    }
-  }, [pagination.observations, pagination.summaries, pagination.prompts]);
-
-  useEffect(() => {
-    setPaginatedObservations([]);
-    setPaginatedSummaries([]);
-    setPaginatedPrompts([]);
-    handleLoadMore();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentFilter]);
 
   useEffect(() => {
     refreshStats();
@@ -136,31 +68,18 @@ export function App() {
           setStoredWelcomeDismissed(false);
           setWelcomeDismissed(false);
         }}
-        currentModelFilter={modelFilter}
-        onModelFilterChange={setModelFilter}
-        availableModels={availableModels}
         activeView={activeView}
         onViewChange={setActiveView}
       />
 
-      {activeView === 'dashboard' ? (
+      {activeView === 'api' ? (
+        <ApiExplorerPanel />
+      ) : (
         <DashboardView
           settings={settings}
           onFileClick={(filePath: string) => openProvenance({ file: filePath, line: 1 })}
           onTeamsPanelOpen={() => setTeamsPanelOpen(true)}
           onDrillDown={handleDrillDown}
-        />
-      ) : activeView === 'api' ? (
-        <ApiExplorerPanel />
-      ) : (
-        <Feed
-          observations={allObservations}
-          summaries={allSummaries}
-          prompts={allPrompts}
-          onLoadMore={handleLoadMore}
-          isLoading={pagination.observations.isLoading || pagination.summaries.isLoading || pagination.prompts.isLoading}
-          hasMore={pagination.observations.hasMore || pagination.summaries.hasMore || pagination.prompts.hasMore}
-          onFileClick={openProvenance}
         />
       )}
       <TeamsPanel isOpen={teamsPanelOpen} onClose={() => setTeamsPanelOpen(false)} settings={settings} />
