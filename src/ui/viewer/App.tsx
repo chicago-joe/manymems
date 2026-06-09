@@ -5,6 +5,8 @@ import { ContextSettingsModal } from './components/ContextSettingsModal';
 import { LogsDrawer } from './components/LogsModal';
 import { ModelsPanel } from './components/ModelsPanel';
 import { CommitsPanel } from './components/CommitsPanel';
+import { CheckpointFeed } from './components/CheckpointFeed';
+import { useCheckpoints } from './hooks/useCheckpoints';
 import { WelcomeCard, getStoredWelcomeDismissed, setStoredWelcomeDismissed } from './components/WelcomeCard';
 import { useSSE } from './hooks/useSSE';
 import { useSettings } from './hooks/useSettings';
@@ -33,6 +35,7 @@ export function App() {
   const { refreshStats } = useStats();
   const { preference, setThemePreference } = useTheme();
   const { target: provTarget, entries: provEntries, isLoading: provLoading, error: provError, open: openProvenance, close: closeProvenance } = useProvenance();
+  const { checkpoints } = useCheckpoints();
   const pagination = usePagination(currentFilter);
 
   const availableModels = useMemo(() => {
@@ -178,6 +181,9 @@ export function App() {
       <ModelsPanel isOpen={modelsPanelOpen} onClose={() => setModelsPanelOpen(false)} />
 
       <CommitsPanel isOpen={commitsPanelOpen} onClose={() => setCommitsPanelOpen(false)} />
+      {commitsPanelOpen && (
+        <CheckpointFeed commits={checkpoints} onFileClick={(filePath) => openProvenance({ file: filePath, line: 1 })} />
+      )}
 
       <ProvenanceDrawer
         target={provTarget}
