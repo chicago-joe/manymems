@@ -78,7 +78,7 @@ export function Header({
       </div>
       <div className="status">
         <a
-          href="https://github.com/chicago-joe/manymems"
+          href="https://chicago-joe.github.io/manymems"
           target="_blank"
           rel="noopener noreferrer"
           className="icon-link"

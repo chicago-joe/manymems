@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — manymems docs{% endblock %}
+{% block description %}{{ description }}{% endblock %}
+
+{% block content %}
+<article class="doc-article">
+  <header class="doc-header">
+    {% if description %}
+    <p class="doc-description">{{ description }}</p>
+    {% endif %}
+  </header>
+  <div class="doc-body prose">
+    {{ content | safe }}
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/{{ active_slug }}.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+{% endblock %}

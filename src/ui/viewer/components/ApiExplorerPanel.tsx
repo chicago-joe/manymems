@@ -112,7 +112,7 @@ export function ApiExplorerPanel() {
           API Reference
         </h2>
         <a
-          href="https://github.com/chicago-joe/manymems"
+          href="https://chicago-joe.github.io/manymems"
           target="_blank"
           rel="noopener noreferrer"
           className="api-explorer-docs-link"
