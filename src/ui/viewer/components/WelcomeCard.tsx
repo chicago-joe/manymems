@@ -4,9 +4,9 @@ interface WelcomeCardProps {
   onDismiss: () => void;
 }
 
-const STORAGE_KEY = 'claude-mem-welcome-dismissed-v3';
+const STORAGE_KEY = 'manymems-welcome-dismissed-v1';
 const EXPLAINER_URL = '/api/onboarding/explainer';
-const DOCS_URL = 'https://docs.claude-mem.ai';
+const DOCS_URL = 'https://github.com/chicago-joe/manymems';
 
 export function getStoredWelcomeDismissed(): boolean {
   try {
@@ -142,20 +142,20 @@ const FEATURES: Feature[] = [
   {
     kind: 'stream',
     illustration: <StreamIllustration />,
-    title: 'Live feed',
-    description: 'Observations, summaries, and prompts stream in live.',
+    title: 'Every commit tells a story.',
+    description: 'manymems captures the prompt, transcript, and decisions behind every code change.',
   },
   {
     kind: 'tune',
     illustration: <TuneIllustration />,
-    title: 'Tune it',
-    description: 'The gear in the top-right tunes memory injection.',
+    title: 'Trace code to intent.',
+    description: 'Click any file:line to see the session that produced it — not just who changed it, but why.',
   },
   {
     kind: 'recall',
     illustration: <RecallIllustration />,
-    title: 'Recall it',
-    description: 'Ask Claude or run /mem-search to find past work.',
+    title: 'Ask in plain English.',
+    description: 'Skills let you search prior work, hand off sessions, and turn repeated workflows into reusable tools.',
   },
 ];
 
@@ -187,8 +187,8 @@ export function WelcomeCard({ onDismiss }: WelcomeCardProps) {
 
         <header className="welcome-modal-header">
           <img className="welcome-modal-logo" src="claude-mem-logo-stylized.png" alt="" width="96" height="96" />
-          <h2 id="welcome-modal-title">Welcome to claude-mem</h2>
-          <p>Persistent memory for Claude Code.</p>
+          <h2 id="welcome-modal-title">Welcome to manymems</h2>
+          <p>team memory · code provenance</p>
         </header>
 
         <div className="welcome-modal-grid">
