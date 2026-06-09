@@ -34,6 +34,7 @@ import {
   renderAgentContextEconomics,
   renderAgentDayHeader,
   renderAgentFileHeader,
+  renderAgentTableHeader,
   renderAgentTableRow,
   renderAgentFullObservation,
   renderAgentSummaryItem,
@@ -120,15 +121,26 @@ describe('AgentFormatter', () => {
     it('should produce legend with type items', () => {
       const result = renderAgentLegend();
 
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(6);
       expect(result[0]).toContain('Legend:');
-      expect(result[3]).toBe('');
+      expect(result[5]).toBe('');
     });
 
     it('should include session in legend', () => {
       const result = renderAgentLegend();
 
       expect(result[0]).toContain('session');
+    });
+
+    it('should describe the 3-layer workflow', () => {
+      const result = renderAgentLegend();
+      const joined = result.join('\n');
+
+      expect(joined).toContain('Layer 1');
+      expect(joined).toContain('Layer 2');
+      expect(joined).toContain('Layer 3');
+      expect(joined).toContain('get_observations');
+      expect(joined).toContain('timeline');
     });
   });
 
@@ -227,14 +239,24 @@ describe('AgentFormatter', () => {
     });
   });
 
+  describe('renderAgentTableHeader', () => {
+    it('should return pipe-table header and separator', () => {
+      const result = renderAgentTableHeader();
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toBe('| ID | Time | T | Title | Tokens |');
+      expect(result[1]).toBe('|----|------|---|-------|--------|');
+    });
+  });
+
   describe('renderAgentTableRow', () => {
-    it('should include observation ID', () => {
+    it('should include observation ID with # prefix', () => {
       const obs = createTestObservation({ id: 42 });
       const config = createTestConfig();
 
       const result = renderAgentTableRow(obs, '10:30 AM', config);
 
-      expect(result).toContain('42');
+      expect(result).toContain('#42');
     });
 
     it('should include compact time display', () => {
@@ -264,13 +286,22 @@ describe('AgentFormatter', () => {
       expect(result).toContain('Untitled');
     });
 
-    it('should produce flat format: ID TIME TYPE TITLE', () => {
+    it('should produce pipe-table format: | #ID | Time | T | Title | ~tokens |', () => {
       const obs = createTestObservation({ id: 5 });
       const config = createTestConfig();
 
       const result = renderAgentTableRow(obs, '10:00 AM', config);
 
-      expect(result).toBe('5 10:00a I Test Observation');
+      expect(result).toMatch(/^\| #5 \| 10:00a \| I \| Test Observation \| ~\d+ \|$/);
+    });
+
+    it('should include token count column', () => {
+      const obs = createTestObservation({ id: 5 });
+      const config = createTestConfig();
+
+      const result = renderAgentTableRow(obs, '10:00 AM', config);
+
+      expect(result).toMatch(/~\d+/);
     });
 
     it('should use quote mark for repeated time', () => {

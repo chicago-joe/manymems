@@ -2,12 +2,11 @@
 import type {
   ContextConfig,
   Observation,
-  SessionSummary,
   TokenEconomics,
   PriorMessages,
 } from '../types.js';
 import { ModeManager } from '../../domain/ModeManager.js';
-import { formatObservationTokenDisplay } from '../TokenCalculator.js';
+import { formatObservationTokenDisplay, calculateObservationTokens } from '../TokenCalculator.js';
 
 function formatHeaderDateTime(): string {
   const now = new Date();
@@ -34,8 +33,10 @@ export function renderAgentLegend(): string[] {
 
   return [
     `Legend: 🎯session ${typeLegendItems}`,
-    `Format: ID TIME TYPE TITLE`,
-    `Fetch details: get_observations([IDs]) | Search: mem-search skill`,
+    `Layer 1 (this index): Compact ~50t/row — scan titles, pick relevant IDs`,
+    `Layer 2: timeline([ID]) — narrative context around a session`,
+    `Layer 3: get_observations([IDs]) — full details ~300-500t each`,
+    `Search: mem-search skill`,
     ''
   ];
 }
@@ -87,6 +88,13 @@ function compactTime(time: string): string {
   return time.toLowerCase().replace(' am', 'a').replace(' pm', 'p');
 }
 
+export function renderAgentTableHeader(): string[] {
+  return [
+    '| ID | Time | T | Title | Tokens |',
+    '|----|------|---|-------|--------|',
+  ];
+}
+
 export function renderAgentTableRow(
   obs: Observation,
   timeDisplay: string,
@@ -95,8 +103,9 @@ export function renderAgentTableRow(
   const title = obs.title || 'Untitled';
   const icon = ModeManager.getInstance().getTypeIcon(obs.type);
   const time = timeDisplay ? compactTime(timeDisplay) : '"';
+  const tokenCount = calculateObservationTokens(obs);
 
-  return `${obs.id} ${time} ${icon} ${title}`;
+  return `| #${obs.id} | ${time} | ${icon} | ${title} | ~${tokenCount} |`;
 }
 
 export function renderAgentFullObservation(
@@ -161,9 +170,10 @@ export function renderAgentPreviouslySection(priorMessages: PriorMessages): stri
 
 export function renderAgentFooter(totalDiscoveryTokens: number, totalReadTokens: number): string[] {
   const workTokensK = Math.round(totalDiscoveryTokens / 1000);
+  const readTokensK = Math.round(totalReadTokens / 1000);
   return [
     '',
-    `Access ${workTokensK}k tokens of past work via get_observations([IDs]) or mem-search skill.`
+    `Access ${workTokensK}k tokens of past work (~${readTokensK}k read) via get_observations([IDs]) or mem-search skill.`
   ];
 }
 

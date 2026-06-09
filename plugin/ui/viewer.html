@@ -3815,6 +3815,19 @@
     .checkpoint-file-chip { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(245,158,11,0.12); color: var(--mm-accent-amber); cursor: pointer; }
     .checkpoint-meta { font-size: 10px; color: var(--mm-text-muted); margin-top: 4px; }
     .checkpoint-empty { padding: 32px; text-align: center; color: var(--mm-text-muted); font-size: 13px; }
+
+    /* TeamsPanel */
+    .teams-panel { position: fixed; top: 48px; right: 0; width: 420px; height: calc(100vh - 48px); overflow-y: auto; background: var(--mm-bg-secondary); border-left: 1px solid var(--mm-border); z-index: 100; display: flex; flex-direction: column; }
+    .teams-panel .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--mm-border); }
+    .teams-panel .panel-header h3 { margin: 0; font-size: 14px; font-weight: 600; color: var(--mm-text-primary); }
+    .teams-panel section { padding: 12px 16px; border-bottom: 1px solid var(--mm-border); }
+    .teams-panel section h4 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--mm-text-muted); }
+    .teams-not-configured { padding: 24px 16px; color: var(--mm-text-muted); font-size: 13px; }
+    .teams-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .teams-table th { color: var(--mm-text-muted); font-weight: normal; padding: 4px 8px; border-bottom: 1px solid var(--mm-border); text-align: left; }
+    .teams-table td { padding: 4px 8px; border-bottom: 1px solid var(--mm-border); color: var(--mm-text-secondary); }
+    .key-active  { color: var(--mm-accent-teal); font-size: 10px; }
+    .key-revoked { color: var(--mm-accent-red);  font-size: 10px; text-decoration: line-through; }
   </style>
 </head>
 

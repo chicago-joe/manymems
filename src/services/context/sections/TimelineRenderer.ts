@@ -47,6 +47,13 @@ function renderDayTimelineAgent(
 
   output.push(...Agent.renderAgentDayHeader(day));
 
+  const hasTableRows = dayItems.some(
+    item => item.type === 'observation' && !fullObservationIds.has((item.data as Observation).id)
+  );
+  if (hasTableRows) {
+    output.push(...Agent.renderAgentTableHeader());
+  }
+
   let lastTime = '';
 
   for (const item of dayItems) {

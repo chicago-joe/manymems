@@ -687,7 +687,7 @@ NEVER fetch full details without filtering first. 10x token savings.`,
   },
   {
     name: 'smart_search',
-    description: 'Search codebase for symbols, functions, classes using tree-sitter AST parsing. Returns folded structural views with token counts. Use path parameter to scope the search.',
+    description: 'Search codebase for symbols, functions, classes using tree-sitter AST parsing. Returns folded structural views with token counts (~2,000–6,000 tokens per call). Use path parameter to scope the search. Use when you know what you are looking for. For cross-cutting synthesis or open-ended exploration, use the /smart-explore or /pathfinder skill instead.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -724,7 +724,7 @@ NEVER fetch full details without filtering first. 10x token savings.`,
   },
   {
     name: 'smart_unfold',
-    description: 'Expand a specific symbol (function, class, method) from a file. Returns the full source code of just that symbol. Use after smart_search or smart_outline to read specific code.',
+    description: 'Expand a specific symbol (function, class, method) from a file. Returns the full source code of just that symbol (~400–2,100 tokens). AST extraction guarantees completeness — never truncates. Use after smart_search or smart_outline to read specific code. Escalate to Explore Agent only for multi-file synthesis.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -768,7 +768,7 @@ NEVER fetch full details without filtering first. 10x token savings.`,
   },
   {
     name: 'smart_outline',
-    description: 'Get structural outline of a file — shows all symbols (functions, classes, methods, types) with signatures but bodies folded. Much cheaper than reading the full file.',
+    description: 'Get structural outline of a file — shows all symbols (functions, classes, methods, types) with signatures but bodies folded (~1,000–2,000 tokens). Much cheaper than reading the full file. Use to understand file structure before smart_unfold for a specific symbol.',
     inputSchema: {
       type: 'object',
       properties: {

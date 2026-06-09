@@ -117,9 +117,11 @@ function formatFileTimeline(
 
   const lines: string[] = [
     `Current: ${currentDate} ${currentTime} ${currentTimezone}`,
-    `This file has prior observations — supplementary context follows. The Read result below is the full requested section.`,
-    `- **Need details on a past observation?** get_observations([IDs]) — ~300 tokens each.`,
-    `- **Need a structural map first?** smart_outline("${safePath}") — line numbers only, cheaper than re-reading.`,
+    `Read blocked: This file has prior observations. Choose the cheapest path:`,
+    `- Already know enough? The timeline below may be all you need (semantic priming — 0 extra tokens).`,
+    `- Need details? get_observations([IDs]) — ~300 tokens each.`,
+    `- Need current code? smart_outline("${safePath}") for structure (~1-2k tokens), smart_unfold("${safePath}", "<symbol>") for a specific function (~400-2k tokens).`,
+    `- Need to edit? Use smart tools for line numbers, then proceed. Full file read is the last resort (5k-50k tokens).`,
   ];
 
   for (const [day, dayObservations] of sortedDays) {
