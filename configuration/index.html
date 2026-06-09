@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration — manymems docs</title>
+  <meta name="description" content="Environment variables and settings for Claude-Mem" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Environment variables and settings for Claude-Mem</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Configuration</h1>
+<h2>Settings File</h2>
+<p>Settings are managed in <code>~/.claude-mem/settings.json</code>. The file is auto-created with defaults on first run.</p>
+<h3>Core Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_MODEL</code></td>
+  <td><code>claude-haiku-4-5-20251001</code></td>
+  <td>Claude model used to compress observations (when using the Claude provider)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_PROVIDER</code></td>
+  <td><code>claude</code></td>
+  <td>AI provider: <code>claude</code>, <code>gemini</code>, or <code>openrouter</code></td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_CLAUDE_AUTH_METHOD</code></td>
+  <td><code>subscription</code></td>
+  <td>Claude provider auth mode: <code>subscription</code>, <code>api-key</code>, or <code>gateway</code></td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_MODE</code></td>
+  <td><code>code</code></td>
+  <td>Active mode profile (e.g., <code>code--es</code>, <code>email-investigation</code>)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_CONTEXT_OBSERVATIONS</code></td>
+  <td><code>50</code></td>
+  <td>Number of observations to inject</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_WORKER_PORT</code></td>
+  <td><code>37700 + (uid % 100)</code></td>
+  <td>Worker service port (per-user default; override for fixed port)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_WORKER_HOST</code></td>
+  <td><code>127.0.0.1</code></td>
+  <td>Worker service host address</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_DATA_DIR</code></td>
+  <td><code>~/.claude-mem</code></td>
+  <td>Data root — every other path (database, chroma, logs, settings.json, worker.pid) derives from this</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_SKIP_TOOLS</code></td>
+  <td><code>ListMcpResourcesTool,SlashCommand,Skill,TodoWrite,AskUserQuestion</code></td>
+  <td>Comma-separated tools to exclude from observations</td>
+</tr>
+</tbody>
+</table>
+<h3>Gemini Provider Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_GEMINI_API_KEY</code></td>
+  <td>—</td>
+  <td>Gemini API key (<a href="https://aistudio.google.com/app/apikey">get free key</a>)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_GEMINI_MODEL</code></td>
+  <td><code>gemini-2.5-flash-lite</code></td>
+  <td>Gemini model: <code>gemini-2.5-flash-lite</code>, <code>gemini-2.5-flash</code>, <code>gemini-3-flash-preview</code></td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="usage/gemini-provider">Gemini Provider</a> for detailed configuration and free tier information.</p>
+<h3>OpenRouter Provider Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_API_KEY</code></td>
+  <td>—</td>
+  <td>OpenRouter API key (<a href="https://openrouter.ai/keys">get key</a>)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_MODEL</code></td>
+  <td><code>xiaomi/mimo-v2-flash:free</code></td>
+  <td>Model identifier (supports 100+ models)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES</code></td>
+  <td><code>20</code></td>
+  <td>Max messages in conversation history</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_MAX_TOKENS</code></td>
+  <td><code>100000</code></td>
+  <td>Token budget safety limit</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_SITE_URL</code></td>
+  <td>—</td>
+  <td>Optional: URL for analytics</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_APP_NAME</code></td>
+  <td><code>claude-mem</code></td>
+  <td>Optional: App name for analytics</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="usage/openrouter-provider">OpenRouter Provider</a> for detailed configuration, free model list, and usage guide.</p>
+<h3>Claude Gateway Settings</h3>
+<p>Gateway credentials live in <code>~/.claude-mem/.env</code>, not <code>settings.json</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Env var</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>ANTHROPIC_BASE_URL</code></td>
+  <td>none</td>
+  <td>LiteLLM or Anthropic-compatible gateway URL for the Claude Agent SDK path</td>
+</tr>
+<tr>
+  <td><code>ANTHROPIC_AUTH_TOKEN</code></td>
+  <td>none</td>
+  <td>Optional LiteLLM master key or virtual key</td>
+</tr>
+<tr>
+  <td><code>ANTHROPIC_API_KEY</code></td>
+  <td>none</td>
+  <td>Direct Anthropic API key; normally omit this in LiteLLM gateway mode</td>
+</tr>
+</tbody>
+</table>
+<p>Use <a href="configuration/litellm-gateway">LiteLLM Gateway</a> when you want <code>CLAUDE_MEM_PROVIDER=claude</code> to route through LiteLLM while preserving the Claude Agent SDK worker path.</p>
+<h3>System Configuration</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_DATA_DIR</code></td>
+  <td><code>~/.claude-mem</code></td>
+  <td>Data directory location</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_LOG_LEVEL</code></td>
+  <td><code>INFO</code></td>
+  <td>Log verbosity (DEBUG, INFO, WARN, ERROR, SILENT)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_PYTHON_VERSION</code></td>
+  <td><code>3.13</code></td>
+  <td>Python version for chroma-mcp</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_CODE_PATH</code></td>
+  <td><em>(auto-detect)</em></td>
+  <td>Path to Claude Code CLI (for Windows)</td>
+</tr>
+</tbody>
+</table>
+<h2>Model Configuration</h2>
+<p>Configure which Claude model compresses your observations (only applies when <code>CLAUDE_MEM_PROVIDER=claude</code>).</p>
+<h3>Available Models</h3>
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>claude-haiku-4-5-20251001</code></td>
+  <td>Default — fast and cheap, ideal for compression</td>
+</tr>
+<tr>
+  <td><code>claude-sonnet-4-6</code></td>
+  <td>Balanced quality and cost</td>
+</tr>
+<tr>
+  <td><code>claude-opus-4-7</code></td>
+  <td>Highest quality, most expensive</td>
+</tr>
+</tbody>
+</table>
+<h3>Picking via the Installer</h3>
+<p><code>npx claude-mem install</code> prompts for the Claude model (when the Claude provider is selected) and persists the choice to <code>~/.claude-mem/settings.json</code>.</p>
+<h3>Manual Configuration</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;claude-haiku-4-5-20251001&quot;
+}
+</code></pre>
+<h2>Mode Configuration</h2>
+<p>Configure the active workflow mode and language.</p>
+<h3>Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_MODE</code></td>
+  <td><code>code</code></td>
+  <td>Defines behavior and language. See <a href="modes">Modes &amp; Languages</a>.</td>
+</tr>
+</tbody>
+</table>
+<h3>Examples</h3>
+<p><strong>Spanish Code Mode:</strong></p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODE&quot;: &quot;code--es&quot;
+}
+</code></pre>
+<p><strong>Email Investigation Mode:</strong></p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODE&quot;: &quot;email-investigation&quot;
+}
+</code></pre>
+<h2>Files and Directories</h2>
+<h3>Data Directory Structure</h3>
+<p>The data directory location depends on the environment:</p>
+<ul>
+<li><strong>Production (installed plugin)</strong>: <code>~/.claude-mem/</code> (always, regardless of CLAUDE_PLUGIN_ROOT)</li>
+<li><strong>Development</strong>: Can be overridden with <code>CLAUDE_MEM_DATA_DIR</code></li>
+</ul>
+<pre><code>~/.claude-mem/
+├── claude-mem.db           # SQLite database
+├── .install-version        # Version marker written by `npx claude-mem install`/`repair`
+├── settings.json           # Worker port + provider/model settings
+└── logs/
+    ├── worker-out.log      # Worker stdout logs
+    └── worker-error.log    # Worker stderr logs
+</code></pre>
+<h3>Plugin Directory Structure</h3>
+<pre><code>${CLAUDE_PLUGIN_ROOT}/
+├── .claude-plugin/
+│   └── plugin.json         # Plugin metadata
+├── .mcp.json               # MCP server configuration
+├── hooks/
+│   └── hooks.json          # Hook configuration
+├── scripts/                # Built executables
+│   ├── version-check.js    # Sub-100ms Setup-hook version marker check
+│   ├── context-hook.js     # Context injection hook
+│   ├── new-hook.js         # Session creation hook
+│   ├── save-hook.js        # Observation capture hook
+│   ├── summary-hook.js     # Summary generation hook
+│   ├── worker-service.cjs  # Worker service (CJS)
+│   └── mcp-server.cjs      # MCP search server (CJS)
+└── ui/
+    └── viewer.html         # Web viewer UI bundle
+</code></pre>
+<h2>Plugin Configuration</h2>
+<h3>Hooks Configuration</h3>
+<p>Hooks are registered in <code>plugin/hooks/hooks.json</code>. The current shape uses a single dispatcher (<code>worker-service.cjs hook claude-code &lt;event&gt;</code>) launched through <code>bun-runner.js</code>, plus a fast Setup-phase <code>version-check.js</code>. The events wired up are:</p>
+<ul>
+<li><code>Setup</code> → <code>version-check.js</code> (sub-100ms <code>.install-version</code> check)</li>
+<li><code>SessionStart</code> → start the worker, then <code>hook claude-code context</code> (context injection)</li>
+<li><code>UserPromptSubmit</code> → <code>hook claude-code session-init</code></li>
+<li><code>PreToolUse</code> (matcher <code>Read</code>) → <code>hook claude-code file-context</code></li>
+<li><code>PostToolUse</code> (matcher <code>*</code>) → <code>hook claude-code observation</code></li>
+<li><code>Stop</code> → <code>hook claude-code summarize</code></li>
+</ul>
+<p>The exact <code>hooks.json</code> entries are written by the installer; do not hand-edit them in the marketplace copy unless you know what you're doing.</p>
+<h3>Search Configuration</h3>
+<p>Claude-Mem provides MCP search tools for querying your project history.</p>
+<p><strong>No configuration required</strong> - MCP tools are automatically available in Claude Code sessions.</p>
+<p>Search operations are provided via:</p>
+<ul>
+<li><strong>MCP Server</strong>: 3 tools (search, timeline, get_observations) with progressive disclosure</li>
+<li><strong>HTTP API</strong>: 10 endpoints on the worker service port (per-user, default <code>37700 + (uid % 100)</code>; see <code>~/.claude-mem/settings.json</code>)</li>
+<li><strong>Auto-Invocation</strong>: Claude recognizes natural language queries about past work</li>
+</ul>
+<h2>Version Channel</h2>
+<p>Claude-Mem supports switching between stable and beta versions via the web viewer UI.</p>
+<h3>Accessing Version Channel</h3>
+<ol>
+<li>Open the viewer at the worker URL (default <code>http://127.0.0.1:&lt;worker-port&gt;</code>; the active port is the value of <code>CLAUDE_MEM_WORKER_PORT</code> in <code>~/.claude-mem/settings.json</code>)</li>
+<li>Click the Settings gear icon</li>
+<li>Find the <strong>Version Channel</strong> section</li>
+</ol>
+<h3>Switching Versions</h3>
+<ul>
+<li><strong>Try Beta</strong>: Click &quot;Try Beta (Endless Mode)&quot; to switch to the beta branch with experimental features</li>
+<li><strong>Switch to Stable</strong>: Click &quot;Switch to Stable&quot; to return to the production release</li>
+<li><strong>Check for Updates</strong>: Pull the latest changes for your current branch</li>
+</ul>
+<p><strong>Your memory data is preserved</strong> when switching versions. Only the plugin code changes.</p>
+<h2>Worker Service Management</h2>
+<p>Worker service is managed by Bun as a background process. The worker auto-starts on first session and runs continuously in the background.</p>
+<h2>Folder Context Files</h2>
+<p>Claude-mem can automatically generate <code>CLAUDE.md</code> files in your project folders with activity timelines. This feature is disabled by default.</p>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_FOLDER_CLAUDEMD_ENABLED</code></td>
+  <td><code>false</code></td>
+  <td>Enable auto-generation of folder CLAUDE.md files</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="usage/folder-context">Folder Context Files</a> for full documentation on how this feature works, configuration options, and git integration recommendations.</p>
+<h2>Context Injection Configuration</h2>
+<p>Claude-Mem injects past observations into each new session, giving Claude awareness of recent work. You can configure exactly what gets injected using the <strong>Context Settings Modal</strong>.</p>
+<h3>Context Settings Modal</h3>
+<p>Access the settings modal from the web viewer (the worker prints its URL on startup; default is <code>http://127.0.0.1:&lt;worker-port&gt;</code>):</p>
+<ol>
+<li>Click the <strong>gear icon</strong> in the header</li>
+<li>Adjust settings in the right panel</li>
+<li>See changes reflected live in the <strong>Terminal Preview</strong> on the left</li>
+<li>Settings auto-save as you change them</li>
+</ol>
+<p>The Terminal Preview shows exactly what will be injected at the start of your next Claude Code session for the selected project.</p>
+<h3>Loading Settings</h3>
+<p>Control how many observations are injected:</p>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Range</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Observations</strong></td>
+  <td>50</td>
+  <td>1-200</td>
+  <td>Total number of recent observations to include</td>
+</tr>
+<tr>
+  <td><strong>Sessions</strong></td>
+  <td>10</td>
+  <td>1-50</td>
+  <td>Number of recent sessions to pull observations from</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Considerations</strong>:</p>
+<ul>
+<li><strong>Higher values</strong> = More context but slower SessionStart and more tokens used</li>
+<li><strong>Lower values</strong> = Faster SessionStart but less historical awareness</li>
+<li>Default of 50 observations from 10 sessions balances context richness with performance</li>
+</ul>
+<h3>Filter Settings</h3>
+<p>Control which observation types and concepts are included:</p>
+<p><strong>Types</strong> (select any combination):</p>
+<ul>
+<li><code>bugfix</code> - Bug fixes and error resolutions</li>
+<li><code>feature</code> - New functionality additions</li>
+<li><code>refactor</code> - Code restructuring</li>
+<li><code>discovery</code> - Learnings about how code works</li>
+<li><code>decision</code> - Architectural or design decisions</li>
+<li><code>change</code> - General code changes</li>
+</ul>
+<p><strong>Concepts</strong> (select any combination):</p>
+<ul>
+<li><code>how-it-works</code> - System behavior explanations</li>
+<li><code>why-it-exists</code> - Rationale for code/design</li>
+<li><code>what-changed</code> - Change summaries</li>
+<li><code>problem-solution</code> - Problem/solution pairs</li>
+<li><code>gotcha</code> - Edge cases and pitfalls</li>
+<li><code>pattern</code> - Recurring patterns</li>
+<li><code>trade-off</code> - Design trade-offs</li>
+</ul>
+<p>Use &quot;All&quot; or &quot;None&quot; buttons to quickly select/deselect all options.</p>
+<h3>Display Settings</h3>
+<p>Control how observations appear in the context:</p>
+<p><strong>Full Observations</strong>:</p>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Options</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Count</strong></td>
+  <td>5</td>
+  <td>0-20</td>
+  <td>How many observations show expanded details</td>
+</tr>
+<tr>
+  <td><strong>Field</strong></td>
+  <td>narrative</td>
+  <td>narrative, facts</td>
+  <td>Which field to expand</td>
+</tr>
+</tbody>
+</table>
+<p>The most recent N observations (set by Count) show their full narrative or facts. Remaining observations show only title, type, and token counts in a compact table format.</p>
+<p><strong>Token Economics</strong> (toggles):</p>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Read cost</strong></td>
+  <td>true</td>
+  <td>Show tokens to read each observation</td>
+</tr>
+<tr>
+  <td><strong>Work investment</strong></td>
+  <td>true</td>
+  <td>Show tokens spent creating the observation</td>
+</tr>
+<tr>
+  <td><strong>Savings</strong></td>
+  <td>true</td>
+  <td>Show total tokens saved by reusing context</td>
+</tr>
+</tbody>
+</table>
+<p>Token economics help you understand the value of cached observations vs. re-reading files.</p>
+<h3>Advanced Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Model</strong></td>
+  <td>sonnet</td>
+  <td>AI model for generating observations</td>
+</tr>
+<tr>
+  <td><strong>Worker Port</strong></td>
+  <td><code>37700 + (uid % 100)</code></td>
+  <td>Port for background worker service (override with <code>CLAUDE_MEM_WORKER_PORT</code>)</td>
+</tr>
+<tr>
+  <td><strong>MCP search server</strong></td>
+  <td>true</td>
+  <td>Enable Model Context Protocol search tools</td>
+</tr>
+<tr>
+  <td><strong>Include last summary</strong></td>
+  <td>false</td>
+  <td>Add previous session's summary to context</td>
+</tr>
+<tr>
+  <td><strong>Include last message</strong></td>
+  <td>false</td>
+  <td>Add previous session's final message</td>
+</tr>
+</tbody>
+</table>
+<h3>Manual Configuration</h3>
+<p>Settings are stored in <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_CONTEXT_OBSERVATIONS&quot;: &quot;100&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_SESSION_COUNT&quot;: &quot;20&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_OBSERVATION_TYPES&quot;: &quot;bugfix,decision,discovery&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_OBSERVATION_CONCEPTS&quot;: &quot;how-it-works,gotcha&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_FULL_COUNT&quot;: &quot;10&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_FULL_FIELD&quot;: &quot;narrative&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS&quot;: &quot;true&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS&quot;: &quot;true&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_SHOW_SAVINGS_AMOUNT&quot;: &quot;true&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY&quot;: &quot;false&quot;,
+  &quot;CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE&quot;: &quot;false&quot;
+}
+</code></pre>
+<p><strong>Note</strong>: The Context Settings Modal (in the web viewer) is the recommended way to configure these settings, as it provides live preview of changes.</p>
+<h2>Customization</h2>
+<p>Settings can be customized in <code>~/.claude-mem/settings.json</code>.</p>
+<h3>Custom Data Directory</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_DATA_DIR&quot;: &quot;/custom/path&quot;
+}
+</code></pre>
+<h3>Custom Worker Port</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_WORKER_PORT&quot;: &quot;38000&quot;
+}
+</code></pre>
+<p>Then restart the worker:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+<h3>Custom Model</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;opus&quot;
+}
+</code></pre>
+<p>Then restart the worker:</p>
+<pre><code class="language-bash">
+npm run worker:restart
+</code></pre>
+<h3>Custom Skip Tools</h3>
+<p>Control which tools are excluded from observations. Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_SKIP_TOOLS&quot;: &quot;ListMcpResourcesTool,SlashCommand,Skill&quot;
+}
+</code></pre>
+<p><strong>Default excluded tools:</strong></p>
+<ul>
+<li><code>ListMcpResourcesTool</code></li>
+<li><code>SlashCommand</code></li>
+<li><code>Skill</code></li>
+<li><code>TodoWrite</code></li>
+<li><code>AskUserQuestion</code></li>
+</ul>
+<p><strong>Common customizations:</strong></p>
+<ul>
+<li>Include TodoWrite: Remove from skip list to track task planning</li>
+<li>Include AskUserQuestion: Remove to capture decision-making conversations</li>
+<li>Skip additional tools: Add tool names to reduce observation noise</li>
+</ul>
+<p>Changes take effect on the next tool execution (no worker restart needed).</p>
+<h2>Advanced Configuration</h2>
+<h3>Hook Timeouts</h3>
+<p>Hook timeouts are written into <code>plugin/hooks/hooks.json</code> by the installer. The current defaults match the shape of the workload at each lifecycle stage:</p>
+<ul>
+<li>Setup (<code>version-check.js</code>): 300s ceiling but normally &lt; 100ms — only reads <code>.install-version</code></li>
+<li>SessionStart (worker-start + context): 60s</li>
+<li>UserPromptSubmit: 60s</li>
+<li>PreToolUse (file-context, Read matcher): 60s</li>
+<li>PostToolUse (observation): 120s</li>
+<li>Stop (summary): 120s</li>
+</ul>
+<p>The Setup hook never installs anything — runtime install (Bun, uv, <code>bun install</code>) happens in <code>npx claude-mem install</code> / <code>npx claude-mem repair</code> outside the session lifecycle.</p>
+<h3>Worker Memory Limit</h3>
+<p>The worker service is managed by Bun and will automatically restart if it encounters issues. Memory usage is typically low (~100-200MB).</p>
+<h3>Logging Verbosity</h3>
+<p>Enable debug logging:</p>
+<pre><code class="language-bash">
+npm run worker:restart
+npm run worker:logs
+</code></pre>
+<h2>Configuration Best Practices</h2>
+<ol>
+<li><strong>Use defaults</strong>: Default configuration works for most use cases</li>
+<li><strong>Override selectively</strong>: Only change what you need</li>
+<li><strong>Document changes</strong>: Keep track of custom configurations</li>
+<li><strong>Test after changes</strong>: Verify worker restarts successfully</li>
+<li><strong>Monitor logs</strong>: Check worker logs after configuration changes</li>
+</ol>
+<h2>Troubleshooting Configuration</h2>
+<h3>Configuration Not Applied</h3>
+<ol>
+<li><p>Restart worker after changes:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+<li><p>Verify environment variables:</p>
+<pre><code class="language-bash">echo $CLAUDE_MEM_MODEL
+echo $CLAUDE_MEM_WORKER_PORT
+</code></pre>
+</li>
+<li><p>Check worker logs:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+</li>
+</ol>
+<h3>Invalid Model Name</h3>
+<p>If you specify an invalid Claude model name, the worker logs a warning and uses the default. Valid Claude models for <code>CLAUDE_MEM_MODEL</code>:</p>
+<ul>
+<li><code>claude-haiku-4-5-20251001</code> (default)</li>
+<li><code>claude-sonnet-4-6</code></li>
+<li><code>claude-opus-4-7</code></li>
+</ul>
+<h3>Port Already in Use</h3>
+<p>The default worker port is <code>37700 + (uid % 100)</code>, so different OS users on the same machine get different ports automatically. If you still hit a collision (e.g. running multiple profiles as the same UID), set a fixed port:</p>
+<ol>
+<li><p>Set custom port:</p>
+<pre><code class="language-bash">export CLAUDE_MEM_WORKER_PORT=38000
+</code></pre>
+</li>
+<li><p>Restart worker:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+<li><p>Verify new port:</p>
+<pre><code class="language-bash">curl -s http://127.0.0.1:$CLAUDE_MEM_WORKER_PORT/api/health | jq .port
+</code></pre>
+</li>
+</ol>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="architecture/overview">Architecture Overview</a> - Understand the system</li>
+<li><a href="troubleshooting">Troubleshooting</a> - Common issues</li>
+<li><a href="development">Development</a> - Building from source</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/configuration.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Anthropic-Compatible Backends — manymems docs</title>
+  <meta name="description" content="Point claude-mem at bridged or self-hosted Anthropic-compatible API endpoints with ANTHROPIC_BASE_URL" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Point claude-mem at bridged or self-hosted Anthropic-compatible API endpoints with ANTHROPIC_BASE_URL</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Custom Anthropic-Compatible Backends</h1>
+<p>When you use the <code>claude</code> provider, claude-mem talks to the Anthropic API through the Claude Agent SDK. By default, the SDK targets the official Anthropic endpoint, but it honors the standard <code>ANTHROPIC_BASE_URL</code> environment variable. That means you can route claude-mem at any Anthropic-protocol-compatible backend — for example a corporate gateway, a regional bridge, or a third-party provider that exposes an Anthropic-shaped API — without changing any claude-mem source code.</p>
+<h2>When to Use This</h2>
+<p>Use <code>ANTHROPIC_BASE_URL</code> if you need claude-mem's observation worker to talk to:</p>
+<ul>
+<li>A <strong>corporate Anthropic gateway</strong> (proxy in front of <code>api.anthropic.com</code>)</li>
+<li>A <strong>regional Anthropic deployment</strong> (e.g. AWS Bedrock or GCP Vertex via an Anthropic-compatible shim)</li>
+<li>A <strong>third-party provider</strong> that bridges its API to the Anthropic protocol</li>
+</ul>
+<p>If your provider only speaks the OpenAI chat-completions protocol, put a gateway such as LiteLLM in front of it and point claude-mem's Claude Agent SDK path at that gateway. See <a href="litellm-gateway">LiteLLM Gateway</a> for the full routing model.</p>
+<h2>How the Plumbing Works</h2>
+<p>The flow is intentionally simple:</p>
+<ol>
+<li><strong>You write the credential</strong> to <code>~/.claude-mem/.env</code>.</li>
+<li><strong><code>EnvManager.loadClaudeMemEnv()</code></strong> reads that file (<code>src/shared/EnvManager.ts:67</code>).</li>
+<li><strong><code>buildIsolatedEnv()</code></strong> copies <code>ANTHROPIC_BASE_URL</code> into the worker's spawn environment alongside explicit gateway or API credentials (<code>src/shared/EnvManager.ts:164</code>).</li>
+<li><strong><code>ClaudeProvider.startSession()</code></strong> spawns the Claude Agent SDK with that isolated env (<code>src/services/worker/ClaudeProvider.ts:115</code>). The SDK reads <code>ANTHROPIC_BASE_URL</code> natively — claude-mem does not parse or rewrite it.</li>
+</ol>
+<p>Because the variable is isolated to the worker process, your interactive Claude Code sessions are unaffected; only the background memory agent uses the override.</p>
+<h2>Configuration</h2>
+<h3>Step 1: Edit <code>~/.claude-mem/.env</code></h3>
+<p>The credentials file is a plain <code>KEY=VALUE</code> env file at <code>~/.claude-mem/.env</code> (mode <code>0600</code>). Add or update the <code>ANTHROPIC_BASE_URL</code> line:</p>
+<pre><code class="language-bash"># ~/.claude-mem/.env
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_BASE_URL=https://your-gateway.example.com/v1
+</code></pre>
+<p>If the file does not yet exist, create it. The directory permissions are enforced to <code>0700</code> and the file to <code>0600</code> automatically on the next worker write.</p>
+<h3>Step 2: Pick a Compatible Model</h3>
+<p><code>CLAUDE_MEM_MODEL</code> (in <code>~/.claude-mem/settings.json</code>) is passed straight through to the SDK. The model name <strong>must be one your bridge accepts</strong> — claude-mem does not translate names.</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;claude-haiku-4-5-20251001&quot;
+}
+</code></pre>
+<p>If your bridge expects a non-Anthropic model name (for example, a Bedrock inference profile), set that string here instead.</p>
+<h3>Step 3: Restart the Worker</h3>
+<p>Credentials are loaded when the worker spawns the SDK, so a restart is required after you edit <code>.env</code>:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+<h2>Worked Example: Corporate Gateway</h2>
+<p>Suppose your team runs <code>https://anthropic-proxy.internal.example.com</code> in front of <code>api.anthropic.com</code> for audit and rate-limit purposes. The proxy accepts the same protocol and the same model names.</p>
+<p><code>~/.claude-mem/.env</code>:</p>
+<pre><code class="language-bash">ANTHROPIC_API_KEY=sk-corp-...
+ANTHROPIC_BASE_URL=https://anthropic-proxy.internal.example.com
+</code></pre>
+<p><code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;claude&quot;,
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;claude-haiku-4-5-20251001&quot;
+}
+</code></pre>
+<p>Restart, and the next observation will be routed through your gateway.</p>
+<h2>Verifying</h2>
+<p>After restarting, watch the worker logs for the next observation flush:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+<p>A successful request through your gateway shows the standard <code>SDK Starting SDK query</code> line followed by <code>Response received</code>. If the gateway rejects the request, the SDK error surfaces verbatim in <code>worker-error.log</code> — there is no silent fallback to the public Anthropic endpoint.</p>
+<h2>Limitations and Gotchas</h2>
+<ul>
+<li><strong>No model-name translation.</strong> If your bridge expects <code>glm-4.7</code> and <code>CLAUDE_MEM_MODEL</code> is <code>claude-haiku-4-5-20251001</code>, the request will fail. Pin <code>CLAUDE_MEM_MODEL</code> to a name your bridge recognizes.</li>
+<li><strong>Gateway auth usually uses <code>ANTHROPIC_AUTH_TOKEN</code>.</strong> For LiteLLM gateway mode, store the gateway key or virtual key as <code>ANTHROPIC_AUTH_TOKEN</code>. Use <code>ANTHROPIC_API_KEY</code> for direct Anthropic API-key mode or gateways that explicitly expect it.</li>
+<li><strong><code>ANTHROPIC_BASE_URL</code> from your shell is not inherited.</strong> <code>ANTHROPIC_API_KEY</code> is in the BLOCKED_ENV_VARS list (<code>src/shared/EnvManager.ts:10</code>) to prevent accidental billing on a shell-leaked key — <code>ANTHROPIC_BASE_URL</code> is not blocked, but it must still be set in <code>~/.claude-mem/.env</code> for the worker to pick it up reliably across restarts. Do not rely on shell exports.</li>
+<li><strong>No auto-detection.</strong> If you have already configured <code>ANTHROPIC_BASE_URL</code>, <code>ANTHROPIC_DEFAULT_HAIKU_MODEL</code>, etc. for Claude Code itself, claude-mem will <strong>not</strong> read those today. Mirror the relevant values into <code>~/.claude-mem/.env</code> and <code>~/.claude-mem/settings.json</code>.</li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><a href="../configuration">Configuration</a> — All claude-mem settings</li>
+<li><a href="litellm-gateway">LiteLLM Gateway</a>: Route the Claude Agent SDK path through LiteLLM</li>
+<li><a href="../usage/openrouter-provider">OpenRouter Provider</a> — OpenAI-compatible bridge for non-Anthropic protocols</li>
+<li><a href="../usage/gemini-provider">Gemini Provider</a> — Native Gemini API alternative</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/configuration/custom-anthropic-backends.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

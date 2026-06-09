@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beta Features — manymems docs</title>
+  <meta name="description" content="Try experimental features like Endless Mode before they&#39;re released" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Try experimental features like Endless Mode before they&#39;re released</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Beta Features</h1>
+<p>Claude-Mem offers a beta channel for users who want to try experimental features before they're released to the stable channel.</p>
+<h2>Version Channel Switching</h2>
+<p>You can switch between stable and beta versions directly from the web viewer UI (the worker prints its URL on startup; default <code>http://127.0.0.1:&lt;worker-port&gt;</code>).</p>
+<h3>How to Access</h3>
+<ol>
+<li>Open the Claude-Mem viewer (the worker prints its URL on startup)</li>
+<li>Click the <strong>Settings</strong> gear icon in the top-right</li>
+<li>Find the <strong>Version Channel</strong> section</li>
+<li>Click <strong>Try Beta (Endless Mode)</strong> to switch to beta, or <strong>Switch to Stable</strong> to return</li>
+</ol>
+<h3>What Happens When You Switch</h3>
+<p>When switching versions:</p>
+<ol>
+<li><strong>Local changes are discarded</strong> - Any modifications in the plugin directory are reset</li>
+<li><strong>Git fetch and checkout</strong> - The installed plugin switches to the target branch</li>
+<li><strong>Dependencies reinstall</strong> - <code>npm install</code> runs to ensure correct dependencies</li>
+<li><strong>Worker restarts automatically</strong> - The background service restarts with the new version</li>
+</ol>
+<p><strong>Your memory data is always preserved.</strong> The database at <code>~/.claude-mem/claude-mem.db</code> is not affected by version switching. All your observations, sessions, and summaries remain intact.</p>
+<h3>Version Indicators</h3>
+<p>The Version Channel section shows your current status:</p>
+<ul>
+<li><strong>Stable</strong> (green badge) - You're running the production release</li>
+<li><strong>Beta</strong> (orange badge) - You're running the beta with experimental features</li>
+</ul>
+<p>You'll also see the exact branch name (e.g., <code>main</code> for stable, <code>beta/7.0</code> for beta).</p>
+<h2>Endless Mode (Beta)</h2>
+<p>The flagship experimental feature in beta is <strong>Endless Mode</strong> - a biomimetic memory architecture that dramatically extends how long Claude can maintain context in a session.</p>
+<h3>The Problem Endless Mode Solves</h3>
+<p>In standard Claude Code sessions:</p>
+<ul>
+<li>Tool outputs (file reads, bash output, search results) accumulate in the context window</li>
+<li>Each tool can add 1-10k+ tokens to the context</li>
+<li>After ~50 tool uses, the context window fills up (~200k tokens)</li>
+<li>You're forced to start a new session, losing conversational continuity</li>
+</ul>
+<p>Worse, Claude <strong>re-synthesizes all previous tool outputs</strong> on every response. This is O(N²) complexity - quadratically growing both in tokens and compute.</p>
+<h3>How Endless Mode Works</h3>
+<p>Endless Mode applies a biomimetic memory architecture inspired by how human memory works:</p>
+<p><strong>Two-Tier Memory System:</strong></p>
+<pre><code>Working Memory (Context Window):
+  → Compressed observations only (~500 tokens each)
+  → Fast, efficient, manageable
+
+Archive Memory (Transcript File):
+  → Full tool outputs preserved on disk
+  → Perfect recall, searchable
+</code></pre>
+<p><strong>The Key Innovation</strong>: After each tool use, Endless Mode:</p>
+<ol>
+<li>Waits for the worker to generate a compressed observation (blocking)</li>
+<li>Transforms the transcript file on disk</li>
+<li>Replaces the full tool output with the compressed observation</li>
+<li>Claude resumes with the compressed context</li>
+</ol>
+<p>This transforms O(N²) scaling into O(N) - linear instead of quadratic.</p>
+<h3>Projected Results</h3>
+<p>Based on theoretical modeling (not production measurements):</p>
+<ul>
+<li><strong>Token savings</strong>: Significant reduction in context window usage</li>
+<li><strong>Efficiency gain</strong>: More tool uses before context exhaustion</li>
+<li><strong>Quality preservation</strong>: Observations cache the synthesis result, so no information is lost</li>
+</ul>
+<h3>Important Caveats</h3>
+<p>Endless Mode is experimental and has significant limitations:</p>
+<ul>
+<li><strong>Not in stable release</strong> - You must manually switch to the beta branch to use this feature</li>
+<li><strong>Still in development</strong> - May have bugs, breaking changes, or incomplete functionality</li>
+<li><strong>Slower than standard mode</strong> - Blocking observation generation adds latency to each tool use</li>
+<li><strong>Theoretical projections</strong> - The efficiency claims above are based on simulations, not real-world production data</li>
+<li><strong>Requires working database</strong> - Observations must save successfully for transformation</li>
+<li><strong>New architecture</strong> - Less battle-tested than standard mode</li>
+</ul>
+<h3>When to Use Beta</h3>
+<p>Consider switching to beta if you:</p>
+<ul>
+<li>Frequently hit context window limits</li>
+<li>Work on long, complex sessions with many tool uses</li>
+<li>Want to help test and provide feedback on new features</li>
+<li>Are comfortable with experimental software</li>
+</ul>
+<h3>When to Stay on Stable</h3>
+<p>Stay on stable if you:</p>
+<ul>
+<li>Need maximum reliability for critical work</li>
+<li>Prefer battle-tested, production-ready features</li>
+<li>Don't frequently hit context limits</li>
+<li>Want the smoothest, fastest experience</li>
+</ul>
+<h2>Checking for Updates</h2>
+<p>While on beta (or stable), you can check for updates:</p>
+<ol>
+<li>Open Settings in the viewer</li>
+<li>In the Version Channel section, click <strong>Check for Updates</strong></li>
+<li>The plugin will pull the latest changes and restart</li>
+</ol>
+<h2>Switching Back</h2>
+<p>If you encounter issues on beta:</p>
+<ol>
+<li>Open Settings in the viewer</li>
+<li>Click <strong>Switch to Stable</strong></li>
+<li>Wait for the worker to restart</li>
+</ol>
+<p>Your memory data is preserved, and you'll be back on the stable release.</p>
+<h2>Providing Feedback</h2>
+<p>If you encounter bugs or have feedback about beta features:</p>
+<ul>
+<li>Open an issue at <a href="https://github.com/thedotmack/claude-mem/issues">GitHub Issues</a></li>
+<li>Include your branch (<code>beta/7.0</code> etc.) in the report</li>
+<li>Describe what you expected vs. what happened</li>
+</ul>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="configuration">Configuration</a> - Customize other Claude-Mem settings</li>
+<li><a href="troubleshooting">Troubleshooting</a> - Common issues and solutions</li>
+<li><a href="architecture/overview">Architecture Overview</a> - Understand how Claude-Mem works</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/beta-features.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Worker Service — manymems docs</title>
+  <meta name="description" content="HTTP API and Bun process management" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">HTTP API and Bun process management</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Worker Service</h1>
+<p>The worker service is a long-running HTTP API built with Express.js and managed natively by Bun. It processes observations through the Claude Agent SDK separately from hook execution to prevent timeout issues.</p>
+<h2>Overview</h2>
+<ul>
+<li><strong>Technology</strong>: Express.js HTTP server</li>
+<li><strong>Runtime</strong>: Bun (auto-installed if missing)</li>
+<li><strong>Process Manager</strong>: Native Bun process management via ProcessManager</li>
+<li><strong>Port</strong>: Per-user default <code>37700 + (uid % 100)</code> (override with <code>CLAUDE_MEM_WORKER_PORT</code>). The active port is stored in <code>~/.claude-mem/settings.json</code> and reported by <code>GET /api/health</code>.</li>
+<li><strong>Location</strong>: <code>src/services/worker-service.ts</code></li>
+<li><strong>Built Output</strong>: <code>plugin/scripts/worker-service.cjs</code></li>
+<li><strong>Model</strong>: Configurable via <code>CLAUDE_MEM_MODEL</code> (default: <code>claude-haiku-4-5-20251001</code>)</li>
+</ul>
+<h2>REST API Endpoints</h2>
+<p>The worker service exposes 22 HTTP endpoints organized into six categories:</p>
+<h3>Viewer &amp; Health Endpoints</h3>
+<h4>1. Viewer UI</h4>
+<pre><code>GET /
+</code></pre>
+<p><strong>Purpose</strong>: Serves the web-based viewer UI (v5.1.0+)</p>
+<p><strong>Response</strong>: HTML page with embedded React application</p>
+<p><strong>Features</strong>:</p>
+<ul>
+<li>Real-time memory stream visualization</li>
+<li>Infinite scroll pagination</li>
+<li>Project filtering</li>
+<li>SSE-based live updates</li>
+<li>Theme toggle (light/dark mode) as of v5.1.2</li>
+</ul>
+<h4>2. Health Check</h4>
+<pre><code>GET /health
+</code></pre>
+<p><strong>Purpose</strong>: Worker health status check</p>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;uptime&quot;: 12345,
+  &quot;port&quot;: 37742
+}
+</code></pre>
+<p>The <code>port</code> value is the actual worker port for the current user — per-user default <code>37700 + (uid % 100)</code>, or whatever <code>CLAUDE_MEM_WORKER_PORT</code> is set to. The example above is illustrative; your value will differ.</p>
+<h4>3. Server-Sent Events Stream</h4>
+<pre><code>GET /stream
+</code></pre>
+<p><strong>Purpose</strong>: Real-time updates for viewer UI</p>
+<p><strong>Response</strong>: SSE stream with events:</p>
+<ul>
+<li><code>observation-created</code>: New observation added</li>
+<li><code>session-summary-created</code>: New summary generated</li>
+<li><code>user-prompt-created</code>: New prompt recorded</li>
+</ul>
+<p><strong>Event Format</strong>:</p>
+<pre><code>event: observation-created
+data: {&quot;id&quot;: 123, &quot;title&quot;: &quot;...&quot;, ...}
+</code></pre>
+<h3>Data Retrieval Endpoints</h3>
+<h4>4. Get Prompts</h4>
+<pre><code>GET /api/prompts?project=my-project&amp;limit=20&amp;offset=0
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve paginated user prompts</p>
+<p><strong>Query Parameters</strong>:</p>
+<ul>
+<li><code>project</code> (optional): Filter by project name</li>
+<li><code>limit</code> (default: 20): Number of results</li>
+<li><code>offset</code> (default: 0): Pagination offset</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;prompts&quot;: [{
+    &quot;id&quot;: 1,
+    &quot;session_id&quot;: &quot;abc123&quot;,
+    &quot;prompt&quot;: &quot;User's prompt text&quot;,
+    &quot;prompt_number&quot;: 1,
+    &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;
+  }],
+  &quot;total&quot;: 150,
+  &quot;hasMore&quot;: true
+}
+</code></pre>
+<h4>5. Get Observations</h4>
+<pre><code>GET /api/observations?project=my-project&amp;limit=20&amp;offset=0
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve paginated observations</p>
+<p><strong>Query Parameters</strong>:</p>
+<ul>
+<li><code>project</code> (optional): Filter by project name</li>
+<li><code>limit</code> (default: 20): Number of results</li>
+<li><code>offset</code> (default: 0): Pagination offset</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;observations&quot;: [{
+    &quot;id&quot;: 123,
+    &quot;title&quot;: &quot;Fix authentication bug&quot;,
+    &quot;type&quot;: &quot;bugfix&quot;,
+    &quot;narrative&quot;: &quot;...&quot;,
+    &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;
+  }],
+  &quot;total&quot;: 500,
+  &quot;hasMore&quot;: true
+}
+</code></pre>
+<h4>6. Get Summaries</h4>
+<pre><code>GET /api/summaries?project=my-project&amp;limit=20&amp;offset=0
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve paginated session summaries</p>
+<p><strong>Query Parameters</strong>:</p>
+<ul>
+<li><code>project</code> (optional): Filter by project name</li>
+<li><code>limit</code> (default: 20): Number of results</li>
+<li><code>offset</code> (default: 0): Pagination offset</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;summaries&quot;: [{
+    &quot;id&quot;: 456,
+    &quot;session_id&quot;: &quot;abc123&quot;,
+    &quot;request&quot;: &quot;User's original request&quot;,
+    &quot;completed&quot;: &quot;Work finished&quot;,
+    &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;
+  }],
+  &quot;total&quot;: 100,
+  &quot;hasMore&quot;: true
+}
+</code></pre>
+<h4>7. Get Observation by ID</h4>
+<pre><code>GET /api/observation/:id
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve a single observation by its ID</p>
+<p><strong>Path Parameters</strong>:</p>
+<ul>
+<li><code>id</code> (required): Observation ID</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: 123,
+  &quot;sdk_session_id&quot;: &quot;abc123&quot;,
+  &quot;project&quot;: &quot;my-project&quot;,
+  &quot;type&quot;: &quot;bugfix&quot;,
+  &quot;title&quot;: &quot;Fix authentication bug&quot;,
+  &quot;narrative&quot;: &quot;...&quot;,
+  &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;,
+  &quot;created_at_epoch&quot;: 1730886600000
+}
+</code></pre>
+<p><strong>Error Response</strong> (404):</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;Observation #123 not found&quot;
+}
+</code></pre>
+<h4>8. Get Observations by IDs (Batch)</h4>
+<pre><code>POST /api/observations/batch
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve multiple observations by their IDs in a single request</p>
+<p><strong>Request Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;ids&quot;: [123, 456, 789],
+  &quot;orderBy&quot;: &quot;date_desc&quot;,
+  &quot;limit&quot;: 10,
+  &quot;project&quot;: &quot;my-project&quot;
+}
+</code></pre>
+<p><strong>Body Parameters</strong>:</p>
+<ul>
+<li><code>ids</code> (required): Array of observation IDs</li>
+<li><code>orderBy</code> (optional): Sort order - <code>date_desc</code> or <code>date_asc</code> (default: <code>date_desc</code>)</li>
+<li><code>limit</code> (optional): Maximum number of results to return</li>
+<li><code>project</code> (optional): Filter by project name</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">[
+  {
+    &quot;id&quot;: 789,
+    &quot;sdk_session_id&quot;: &quot;abc123&quot;,
+    &quot;project&quot;: &quot;my-project&quot;,
+    &quot;type&quot;: &quot;feature&quot;,
+    &quot;title&quot;: &quot;Add new feature&quot;,
+    &quot;narrative&quot;: &quot;...&quot;,
+    &quot;created_at&quot;: &quot;2025-11-06T12:00:00Z&quot;,
+    &quot;created_at_epoch&quot;: 1730891400000
+  },
+  {
+    &quot;id&quot;: 456,
+    &quot;sdk_session_id&quot;: &quot;abc124&quot;,
+    &quot;project&quot;: &quot;my-project&quot;,
+    &quot;type&quot;: &quot;bugfix&quot;,
+    &quot;title&quot;: &quot;Fix authentication bug&quot;,
+    &quot;narrative&quot;: &quot;...&quot;,
+    &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;,
+    &quot;created_at_epoch&quot;: 1730886600000
+  }
+]
+</code></pre>
+<p><strong>Error Responses</strong>:</p>
+<ul>
+<li><code>400 Bad Request</code>: <code>{&quot;error&quot;: &quot;ids must be an array of numbers&quot;}</code></li>
+<li><code>400 Bad Request</code>: <code>{&quot;error&quot;: &quot;All ids must be integers&quot;}</code></li>
+</ul>
+<p><strong>Use Case</strong>: This endpoint is used by the <code>get_observations</code> MCP tool to efficiently retrieve multiple observations in a single request, avoiding the overhead of multiple individual requests.</p>
+<h4>9. Get Session by ID</h4>
+<pre><code>GET /api/session/:id
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve a single session by its ID</p>
+<p><strong>Path Parameters</strong>:</p>
+<ul>
+<li><code>id</code> (required): Session ID</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: 456,
+  &quot;sdk_session_id&quot;: &quot;abc123&quot;,
+  &quot;project&quot;: &quot;my-project&quot;,
+  &quot;request&quot;: &quot;User's original request&quot;,
+  &quot;completed&quot;: &quot;Work finished&quot;,
+  &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;
+}
+</code></pre>
+<p><strong>Error Response</strong> (404):</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;Session #456 not found&quot;
+}
+</code></pre>
+<h4>10. Get Prompt by ID</h4>
+<pre><code>GET /api/prompt/:id
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve a single user prompt by its ID</p>
+<p><strong>Path Parameters</strong>:</p>
+<ul>
+<li><code>id</code> (required): Prompt ID</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: 1,
+  &quot;session_id&quot;: &quot;abc123&quot;,
+  &quot;prompt&quot;: &quot;User's prompt text&quot;,
+  &quot;prompt_number&quot;: 1,
+  &quot;created_at&quot;: &quot;2025-11-06T10:30:00Z&quot;
+}
+</code></pre>
+<p><strong>Error Response</strong> (404):</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;Prompt #1 not found&quot;
+}
+</code></pre>
+<h4>12. Get Stats</h4>
+<pre><code>GET /api/stats
+</code></pre>
+<p><strong>Purpose</strong>: Get database statistics by project</p>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;byProject&quot;: {
+    &quot;my-project&quot;: {
+      &quot;observations&quot;: 245,
+      &quot;summaries&quot;: 12,
+      &quot;prompts&quot;: 48
+    },
+    &quot;other-project&quot;: {
+      &quot;observations&quot;: 156,
+      &quot;summaries&quot;: 8,
+      &quot;prompts&quot;: 32
+    }
+  },
+  &quot;total&quot;: {
+    &quot;observations&quot;: 401,
+    &quot;summaries&quot;: 20,
+    &quot;prompts&quot;: 80,
+    &quot;sessions&quot;: 20
+  }
+}
+</code></pre>
+<h4>13. Get Projects</h4>
+<pre><code>GET /api/projects
+</code></pre>
+<p><strong>Purpose</strong>: Get list of distinct projects from observations</p>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;projects&quot;: [&quot;my-project&quot;, &quot;other-project&quot;, &quot;test-project&quot;]
+}
+</code></pre>
+<h3>Settings Endpoints</h3>
+<h4>14. Get Settings</h4>
+<pre><code>GET /api/settings
+</code></pre>
+<p><strong>Purpose</strong>: Retrieve user settings</p>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;sidebarOpen&quot;: true,
+  &quot;selectedProject&quot;: &quot;my-project&quot;,
+  &quot;theme&quot;: &quot;dark&quot;
+}
+</code></pre>
+<h4>15. Save Settings</h4>
+<pre><code>POST /api/settings
+</code></pre>
+<p><strong>Purpose</strong>: Persist user settings</p>
+<p><strong>Request Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;sidebarOpen&quot;: false,
+  &quot;selectedProject&quot;: &quot;other-project&quot;,
+  &quot;theme&quot;: &quot;light&quot;
+}
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true
+}
+</code></pre>
+<h3>Queue Management Endpoints</h3>
+<h4>16. Get Pending Queue Status</h4>
+<pre><code>GET /api/pending-queue
+</code></pre>
+<p><strong>Purpose</strong>: View current processing queue status and identify stuck messages</p>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;queue&quot;: {
+    &quot;messages&quot;: [
+      {
+        &quot;id&quot;: 123,
+        &quot;session_db_id&quot;: 45,
+        &quot;claude_session_id&quot;: &quot;abc123&quot;,
+        &quot;message_type&quot;: &quot;observation&quot;,
+        &quot;status&quot;: &quot;pending&quot;,
+        &quot;retry_count&quot;: 0,
+        &quot;created_at_epoch&quot;: 1730886600000,
+        &quot;started_processing_at_epoch&quot;: null,
+        &quot;completed_at_epoch&quot;: null
+      }
+    ],
+    &quot;totalPending&quot;: 5,
+    &quot;totalProcessing&quot;: 2,
+    &quot;totalFailed&quot;: 0,
+    &quot;stuckCount&quot;: 1
+  },
+  &quot;recentlyProcessed&quot;: [
+    {
+      &quot;id&quot;: 122,
+      &quot;session_db_id&quot;: 44,
+      &quot;status&quot;: &quot;processed&quot;,
+      &quot;completed_at_epoch&quot;: 1730886500000
+    }
+  ],
+  &quot;sessionsWithPendingWork&quot;: [44, 45, 46]
+}
+</code></pre>
+<p><strong>Status Definitions</strong>:</p>
+<ul>
+<li><code>pending</code>: Message queued, not yet processed</li>
+<li><code>processing</code>: Message currently being processed by SDK agent</li>
+<li><code>processed</code>: Message completed successfully</li>
+<li><code>failed</code>: Message failed after max retry attempts (3 by default)</li>
+</ul>
+<p><strong>Stuck Detection</strong>: Messages in <code>processing</code> status for &gt;5 minutes are considered stuck and included in <code>stuckCount</code></p>
+<p><strong>Use Case</strong>: Check queue health after worker crashes or restarts to identify unprocessed observations</p>
+<h4>17. Trigger Manual Recovery</h4>
+<pre><code>POST /api/pending-queue/process
+</code></pre>
+<p><strong>Purpose</strong>: Manually trigger processing of pending queues (replaces automatic recovery in v5.x+)</p>
+<p><strong>Request Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;sessionLimit&quot;: 10
+}
+</code></pre>
+<p><strong>Body Parameters</strong>:</p>
+<ul>
+<li><code>sessionLimit</code> (optional): Maximum number of sessions to process (default: 10, max: 100)</li>
+</ul>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;totalPendingSessions&quot;: 15,
+  &quot;sessionsStarted&quot;: 10,
+  &quot;sessionsSkipped&quot;: 2,
+  &quot;startedSessionIds&quot;: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+}
+</code></pre>
+<p><strong>Response Fields</strong>:</p>
+<ul>
+<li><code>totalPendingSessions</code>: Total sessions with pending messages in database</li>
+<li><code>sessionsStarted</code>: Number of sessions we started processing this request</li>
+<li><code>sessionsSkipped</code>: Sessions already actively processing (not restarted)</li>
+<li><code>startedSessionIds</code>: Database IDs of sessions started</li>
+</ul>
+<p><strong>Behavior</strong>:</p>
+<ul>
+<li>Processes up to <code>sessionLimit</code> sessions with pending work</li>
+<li>Skips sessions already actively processing (prevents duplicate agents)</li>
+<li>Starts non-blocking SDK agents for each session</li>
+<li>Returns immediately with status (processing continues in background)</li>
+</ul>
+<p><strong>Use Case</strong>: Manually recover stuck observations after worker crashes, or when automatic recovery was disabled</p>
+<p><strong>Recovery Strategy Note</strong>: As of v5.x, automatic recovery on worker startup is disabled by default. Users must manually trigger recovery using this endpoint or the CLI tool (<code>bun scripts/check-pending-queue.ts</code>) to maintain explicit control over reprocessing.</p>
+<h3>Session Management Endpoints</h3>
+<h4>19. Initialize Session</h4>
+<pre><code>POST /sessions/:sessionDbId/init
+</code></pre>
+<p><strong>Request Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;sdk_session_id&quot;: &quot;abc-123&quot;,
+  &quot;project&quot;: &quot;my-project&quot;
+}
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;session_id&quot;: &quot;abc-123&quot;
+}
+</code></pre>
+<h4>20. Add Observation</h4>
+<pre><code>POST /sessions/:sessionDbId/observations
+</code></pre>
+<p><strong>Request Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;tool_name&quot;: &quot;Read&quot;,
+  &quot;tool_input&quot;: {...},
+  &quot;tool_result&quot;: &quot;...&quot;,
+  &quot;correlation_id&quot;: &quot;xyz-789&quot;
+}
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;observation_id&quot;: 123
+}
+</code></pre>
+<h4>21. Generate Summary</h4>
+<pre><code>POST /sessions/:sessionDbId/summarize
+</code></pre>
+<p><strong>Request Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;trigger&quot;: &quot;stop&quot;
+}
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;summary_id&quot;: 456
+}
+</code></pre>
+<h4>22. Session Status</h4>
+<pre><code>GET /sessions/:sessionDbId/status
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;abc-123&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;observation_count&quot;: 42,
+  &quot;summary_count&quot;: 1
+}
+</code></pre>
+<h4>23. Delete Session</h4>
+<pre><code>DELETE /sessions/:sessionDbId
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true
+}
+</code></pre>
+<p><strong>Note</strong>: As of v4.1.0, the cleanup hook no longer calls this endpoint. Sessions are marked complete instead of deleted to allow graceful worker shutdown.</p>
+<h2>Bun Process Management</h2>
+<h3>Overview</h3>
+<p>The worker is managed by the native <code>ProcessManager</code> class which handles:</p>
+<ul>
+<li>Process spawning with Bun runtime</li>
+<li>PID file tracking at <code>~/.claude-mem/worker.pid</code></li>
+<li>Health checks with automatic retry</li>
+<li>Graceful shutdown with SIGTERM/SIGKILL fallback</li>
+</ul>
+<h3>Commands</h3>
+<pre><code class="language-bash"># Start worker (auto-starts on first session)
+npm run worker:start
+
+# Stop worker
+npm run worker:stop
+
+# Restart worker
+npm run worker:restart
+
+# View logs
+npm run worker:logs
+
+# Check status
+npm run worker:status
+</code></pre>
+<h3>Auto-Start Behavior</h3>
+<p>The worker service auto-starts when the SessionStart hook fires. Manual start is optional.</p>
+<h3>Bun Requirement</h3>
+<p>Bun is required to run the worker service. If Bun is not installed, <code>npx claude-mem install</code> (and <code>npx claude-mem repair</code>) installs it globally during setup, with a visible clack spinner:</p>
+<ul>
+<li><strong>Windows</strong>: <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code></li>
+<li><strong>macOS/Linux</strong>: <code>curl -fsSL https://bun.sh/install | bash</code></li>
+</ul>
+<p>You can also install manually via:</p>
+<ul>
+<li><code>winget install Oven-sh.Bun</code> (Windows)</li>
+<li><code>brew install oven-sh/bun/bun</code> (macOS)</li>
+</ul>
+<h2>Claude Agent SDK Integration</h2>
+<p>The worker service routes observations to the Claude Agent SDK for AI-powered processing:</p>
+<h3>Processing Flow</h3>
+<ol>
+<li><strong>Observation Queue</strong>: Observations accumulate in memory</li>
+<li><strong>SDK Processing</strong>: Observations sent to Claude via Agent SDK</li>
+<li><strong>XML Parsing</strong>: Responses parsed for structured data</li>
+<li><strong>Database Storage</strong>: Processed observations stored in SQLite</li>
+</ol>
+<h3>SDK Components</h3>
+<ul>
+<li><strong>Prompts</strong> (<code>src/sdk/prompts.ts</code>): Builds XML-structured prompts</li>
+<li><strong>Parser</strong> (<code>src/sdk/parser.ts</code>): Parses Claude's XML responses</li>
+<li><strong>Worker</strong> (<code>src/sdk/worker.ts</code>): Main SDK agent loop</li>
+</ul>
+<h3>Model Configuration</h3>
+<p>Set the Claude model used for compression via environment variable or <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-bash">
+</code></pre>
+<p>Allowed values:</p>
+<ul>
+<li><code>claude-haiku-4-5-20251001</code> - default, fast and cheap (best for compression)</li>
+<li><code>claude-sonnet-4-6</code> - balanced quality and cost</li>
+<li><code>claude-opus-4-7</code> - highest quality, most expensive</li>
+</ul>
+<h2>Port Allocation</h2>
+<p>The worker uses a per-user default port so different OS users on the same machine never collide:</p>
+<ul>
+<li><strong>Default</strong>: <code>37700 + (uid % 100)</code> (set in <code>src/shared/SettingsDefaultsManager.ts</code>)</li>
+<li><strong>Override</strong>: Set <code>CLAUDE_MEM_WORKER_PORT</code> (env or <code>~/.claude-mem/settings.json</code>)</li>
+<li><strong>Discovery</strong>: <code>GET /api/health</code> returns the active port; <code>~/.claude-mem/settings.json</code> stores the configured value</li>
+</ul>
+<p>If the chosen port is occupied, the worker fails to start — pin a different port via <code>CLAUDE_MEM_WORKER_PORT</code> and restart.</p>
+<h2>Data Storage</h2>
+<p>The worker service stores data in the user data directory:</p>
+<pre><code>~/.claude-mem/
+├── claude-mem.db           # SQLite database (bun:sqlite)
+├── worker.pid              # PID file for process tracking
+├── settings.json           # User settings
+└── logs/
+    └── worker-YYYY-MM-DD.log  # Daily rotating logs
+</code></pre>
+<h2>Error Handling</h2>
+<p>The worker implements graceful degradation:</p>
+<ul>
+<li><strong>Database Errors</strong>: Logged but don't crash the service</li>
+<li><strong>SDK Errors</strong>: Retried with exponential backoff</li>
+<li><strong>Network Errors</strong>: Logged and skipped</li>
+<li><strong>Invalid Input</strong>: Validated and rejected with error response</li>
+</ul>
+<h2>Performance</h2>
+<ul>
+<li><strong>Async Processing</strong>: Observations processed asynchronously</li>
+<li><strong>In-Memory Queue</strong>: Fast observation accumulation</li>
+<li><strong>Batch Processing</strong>: Multiple observations processed together</li>
+<li><strong>Connection Pooling</strong>: SQLite connections reused</li>
+</ul>
+<h2>Troubleshooting</h2>
+<p>See <a href="../troubleshooting.md#worker-service-issues">Troubleshooting - Worker Issues</a> for common problems and solutions.</p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/architecture/worker-service.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

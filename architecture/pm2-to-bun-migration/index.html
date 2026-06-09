@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM2 to Bun Migration — manymems docs</title>
+  <meta name="description" content="Complete technical documentation for the process management and database driver migration in v7.1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Complete technical documentation for the process management and database driver migration in v7.1.0</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>PM2 to Bun Migration: Complete Technical Documentation</h1>
+<p><strong>Version</strong>: 7.1.0
+<strong>Date</strong>: December 2025
+<strong>Migration Type</strong>: Process Management (PM2 → Bun) + Database Driver (better-sqlite3 → bun:sqlite)</p>
+<h2>Executive Summary</h2>
+<p>Claude-mem version 7.1.0 introduces two major architectural migrations:</p>
+<ol>
+<li><strong>Process Management</strong>: PM2 → Custom Bun-based ProcessManager</li>
+<li><strong>Database Driver</strong>: better-sqlite3 npm package → bun:sqlite runtime module</li>
+</ol>
+<p>Both migrations are <strong>automatic</strong> and <strong>transparent</strong> to end users. The first time a hook fires after updating to 7.1.0+, the system performs a one-time cleanup of legacy PM2 processes and transitions to the new architecture.</p>
+<h3>Key Benefits</h3>
+<ul>
+<li><strong>Simplified Dependencies</strong>: Removes PM2 and better-sqlite3 npm packages</li>
+<li><strong>Improved Cross-Platform Support</strong>: Better Windows compatibility</li>
+<li><strong>Faster Installation</strong>: No native module compilation required</li>
+<li><strong>Built-in Runtime</strong>: Leverages Bun's built-in process management and SQLite</li>
+<li><strong>Reduced Complexity</strong>: Custom ProcessManager is simpler than PM2 integration</li>
+</ul>
+<h3>Migration Impact</h3>
+<ul>
+<li><strong>Data Preservation</strong>: User data, settings, and database remain unchanged</li>
+<li><strong>Automatic Cleanup</strong>: Old PM2 processes automatically terminated (all platforms)</li>
+<li><strong>No User Action Required</strong>: Migration happens automatically on first hook trigger</li>
+<li><strong>Backward Compatible</strong>: SQLite database format unchanged (only driver changed)</li>
+</ul>
+<h2>Architecture Comparison</h2>
+<h3>Old System (PM2-based)</h3>
+</AccordionGroup>
+
+<h3>New System (Bun-based)</h3>
+</AccordionGroup>
+
+<h2>Migration Mechanics</h2>
+<h3>One-Time PM2 Cleanup</h3>
+<p>The migration system uses a marker-based approach to perform PM2 cleanup exactly once.</p>
+<p><strong>Implementation</strong>: <code>src/shared/worker-utils.ts:73-86</code></p>
+<pre><code class="language-typescript">// Clean up legacy PM2 (one-time migration)
+const pm2MigratedMarker = join(DATA_DIR, '.pm2-migrated');
+
+if (!existsSync(pm2MigratedMarker)) {
+  try {
+    spawnSync('pm2', ['delete', 'claude-mem-worker'], { stdio: 'ignore' });
+    // Mark migration as complete
+    writeFileSync(pm2MigratedMarker, new Date().toISOString(), 'utf-8');
+    logger.debug('SYSTEM', 'PM2 cleanup completed and marked');
+  } catch {
+    // PM2 not installed or process doesn't exist - still mark as migrated
+    writeFileSync(pm2MigratedMarker, new Date().toISOString(), 'utf-8');
+  }
+}
+</code></pre>
+<h3>Migration Trigger Points</h3>
+<h3>Marker File</h3>
+<p><strong>Location</strong>: <code>~/.claude-mem/.pm2-migrated</code></p>
+<p><strong>Content</strong>: ISO 8601 timestamp</p>
+<pre><code>2025-12-13T00:18:39.673Z
+</code></pre>
+<p><strong>Purpose</strong>:</p>
+<ul>
+<li>One-time migration flag</li>
+<li>Prevents repeated PM2 cleanup on every start</li>
+<li>Persists across restarts and reboots</li>
+</ul>
+<p><strong>Lifecycle</strong>:</p>
+<ul>
+<li>Created: First hook trigger after update to 7.1.0+ (all platforms)</li>
+<li>Updated: Never</li>
+<li>Deleted: Never (user could manually delete to force re-migration)</li>
+</ul>
+<h2>User Experience Timeline</h2>
+<h3>First Session After Update</h3>
+<p><strong>Step-by-Step Execution</strong>:</p>
+<ol>
+<li><strong>Hook fires</strong> (SessionStart most common)</li>
+<li><strong>Worker status check</strong>: No PID file → worker not running</li>
+<li><strong>Migration check</strong>: No marker file → run PM2 cleanup</li>
+<li><strong>PM2 cleanup</strong>: <code>pm2 delete claude-mem-worker</code> (old worker terminated)</li>
+<li><strong>Marker creation</strong>: <code>~/.claude-mem/.pm2-migrated</code> with timestamp</li>
+<li><strong>New worker start</strong>: Bun process spawned, PID/port files created</li>
+<li><strong>Verification</strong>: Process check + HTTP health check</li>
+<li><strong>Hook completes</strong>: Claude Code session starts normally</li>
+</ol>
+<p><strong>User Observable Behavior</strong>:</p>
+<ul>
+<li>Slight delay on first startup (PM2 cleanup + new worker spawn)</li>
+<li>No error messages (cleanup failures silently handled)</li>
+<li>Worker appears running via <code>npm run worker:status</code></li>
+<li>Old PM2 worker no longer in <code>pm2 list</code></li>
+</ul>
+<h3>Subsequent Sessions</h3>
+<p>After migration completes, every hook trigger follows the fast path:</p>
+<ol>
+<li>PID file exists? <strong>YES</strong></li>
+<li>Process alive? <strong>YES</strong></li>
+<li>HTTP health check? <strong>SUCCESS</strong></li>
+<li>Result: Worker already running, done (~50ms)</li>
+</ol>
+<p>No migration logic runs on subsequent sessions.</p>
+<h2>Platform-Specific Behavior</h2>
+<h3>Platform Comparison</h3>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th>macOS</th>
+  <th>Linux</th>
+  <th>Windows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>PM2 Cleanup</td>
+  <td>Attempted</td>
+  <td>Attempted</td>
+  <td>Attempted</td>
+</tr>
+<tr>
+  <td>Marker File</td>
+  <td>Created</td>
+  <td>Created</td>
+  <td>Created</td>
+</tr>
+<tr>
+  <td>Process Signals</td>
+  <td>POSIX (native)</td>
+  <td>POSIX (native)</td>
+  <td>Bun abstraction</td>
+</tr>
+<tr>
+  <td>Bun Support</td>
+  <td>Full</td>
+  <td>Full</td>
+  <td>Full</td>
+</tr>
+<tr>
+  <td>PID File</td>
+  <td>Yes</td>
+  <td>Yes</td>
+  <td>Yes</td>
+</tr>
+<tr>
+  <td>Port File</td>
+  <td>Yes</td>
+  <td>Yes</td>
+  <td>Yes</td>
+</tr>
+<tr>
+  <td>Health Check</td>
+  <td>HTTP</td>
+  <td>HTTP</td>
+  <td>HTTP</td>
+</tr>
+<tr>
+  <td>Migration Delay</td>
+  <td>~2-5s first time</td>
+  <td>~2-5s first time</td>
+  <td>~2-5s first time</td>
+</tr>
+</tbody>
+</table>
+<h3>Platform Notes</h3>
+<h2>Observable Changes</h2>
+<h3>Command Changes</h3>
+<table>
+<thead>
+<tr>
+  <th>Old (PM2)</th>
+  <th>New (Bun)</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>pm2 list</code></td>
+  <td><code>npm run worker:status</code></td>
+  <td>Shows worker status</td>
+</tr>
+<tr>
+  <td><code>pm2 start &lt;script&gt;</code></td>
+  <td><code>npm run worker:start</code></td>
+  <td>Start worker</td>
+</tr>
+<tr>
+  <td><code>pm2 stop claude-mem-worker</code></td>
+  <td><code>npm run worker:stop</code></td>
+  <td>Stop worker</td>
+</tr>
+<tr>
+  <td><code>pm2 restart claude-mem-worker</code></td>
+  <td><code>npm run worker:restart</code></td>
+  <td>Restart worker</td>
+</tr>
+<tr>
+  <td><code>pm2 delete claude-mem-worker</code></td>
+  <td><code>npm run worker:stop</code></td>
+  <td>Remove worker</td>
+</tr>
+<tr>
+  <td><code>pm2 logs claude-mem-worker</code></td>
+  <td><code>npm run worker:logs</code></td>
+  <td>View logs</td>
+</tr>
+<tr>
+  <td><code>pm2 describe claude-mem-worker</code></td>
+  <td><code>npm run worker:status</code></td>
+  <td>Detailed status</td>
+</tr>
+<tr>
+  <td><code>pm2 monit</code></td>
+  <td>No equivalent</td>
+  <td>PM2-specific monitoring</td>
+</tr>
+</tbody>
+</table>
+<h3>File Location Changes</h3>
+<p><strong>Logs</strong>:</p>
+<pre><code>Old: ~/.pm2/logs/claude-mem-worker-out.log
+     ~/.pm2/logs/claude-mem-worker-error.log
+
+New: ~/.claude-mem/logs/worker-YYYY-MM-DD.log
+</code></pre>
+<p><strong>PID Files</strong>:</p>
+<pre><code>Old: ~/.pm2/pids/claude-mem-worker.pid
+
+New: ~/.claude-mem/.worker.pid
+</code></pre>
+<p><strong>Process State</strong>:</p>
+<pre><code>Old: PM2 daemon memory (pm2 save)
+
+New: ~/.claude-mem/.worker.pid
+     ~/.claude-mem/.worker.port
+     ~/.claude-mem/.pm2-migrated (all platforms)
+</code></pre>
+<p><strong>Database</strong> (unchanged):</p>
+<pre><code>Same: ~/.claude-mem/claude-mem.db
+</code></pre>
+<h3>User-Visible Changes</h3>
+<p><strong>Before Update</strong>:</p>
+<pre><code class="language-bash">$ pm2 list
+┌────┬────────────────────┬─────────┬─────────┬──────────┐
+│ id │ name               │ status  │ restart │ uptime   │
+├────┼────────────────────┼─────────┼─────────┼──────────┤
+│ 0  │ claude-mem-worker  │ online  │ 0       │ 2d 5h    │
+└────┴────────────────────┴─────────┴─────────┴──────────┘
+</code></pre>
+<p><strong>After Update</strong>:</p>
+<pre><code class="language-bash">$ pm2 list
+# Empty - worker no longer managed by PM2
+
+$ npm run worker:status
+Worker is running
+PID: 35557
+Port: 37777
+Uptime: 2h 15m
+</code></pre>
+<h3>Orphaned Files</h3>
+<p>After migration, these PM2 files may remain (safe to delete):</p>
+<pre><code>~/.pm2/                    # Entire PM2 directory
+~/.pm2/logs/               # Old logs
+~/.pm2/pids/               # Old PID files
+~/.pm2/pm2.log             # PM2 daemon log
+~/.pm2/dump.pm2            # PM2 process dump
+</code></pre>
+<p><strong>Cleanup (optional)</strong>:</p>
+<pre><code class="language-bash"># Remove PM2 entirely (if not used for other processes)
+pm2 kill
+rm -rf ~/.pm2
+
+# Or just remove claude-mem logs
+rm -f ~/.pm2/logs/claude-mem-worker-*.log
+rm -f ~/.pm2/pids/claude-mem-worker.pid
+</code></pre>
+<h2>File System State</h2>
+<h3>State Directory Structure</h3>
+<p><strong>Before Migration</strong> (PM2 system):</p>
+<pre><code>~/.claude-mem/
+├── claude-mem.db          # Database (unchanged)
+├── chroma/                # Vector embeddings (unchanged)
+├── logs/                  # Application logs (unchanged)
+└── settings.json          # User settings (unchanged)
+
+~/.pm2/
+├── logs/
+│   ├── claude-mem-worker-out.log
+│   └── claude-mem-worker-error.log
+├── pids/
+│   └── claude-mem-worker.pid
+└── pm2.log
+</code></pre>
+<p><strong>After Migration</strong> (Bun system):</p>
+<pre><code>~/.claude-mem/
+├── claude-mem.db          # Database (same file)
+├── chroma/                # Vector embeddings (unchanged)
+├── logs/
+│   └── worker-2025-12-13.log  # New log format
+├── settings.json          # User settings (unchanged)
+├── .worker.pid            # NEW: Process ID
+├── .worker.port           # NEW: Port + PID
+└── .pm2-migrated          # NEW: Migration marker (all platforms)
+
+~/.pm2/                    # Orphaned (safe to delete)
+├── logs/                  # Old logs (no longer written)
+├── pids/                  # Old PID (no longer updated)
+└── pm2.log                # PM2 daemon log (not used)
+</code></pre>
+<h2>Edge Cases and Troubleshooting</h2>
+<h3>Scenario 1: Migration Fails (PM2 Still Running)</h3>
+<p><strong>Symptoms</strong>:</p>
+<ul>
+<li><code>pm2 list</code> still shows <code>claude-mem-worker</code></li>
+<li>Port conflict errors in logs</li>
+<li>Worker fails to start</li>
+</ul>
+<p><strong>Resolution</strong>:</p>
+<pre><code class="language-bash"># Manual cleanup
+pm2 delete claude-mem-worker
+pm2 save  # Persist the deletion
+
+# Force re-migration (optional)
+rm ~/.claude-mem/.pm2-migrated
+
+# Restart worker
+npm run worker:restart
+</code></pre>
+<h3>Scenario 2: Stale PID File (Process Dead)</h3>
+<p><strong>Symptoms</strong>:</p>
+<ul>
+<li><code>npm run worker:status</code> shows &quot;not running&quot;</li>
+<li><code>.worker.pid</code> file exists</li>
+<li>Process ID doesn't exist</li>
+</ul>
+<p><strong>Automatic Recovery</strong>: Next hook trigger detects dead process and starts a fresh worker.</p>
+<p><strong>Manual Resolution</strong>:</p>
+<pre><code class="language-bash">rm ~/.claude-mem/.worker.pid
+rm ~/.claude-mem/.worker.port
+npm run worker:start
+</code></pre>
+<h3>Scenario 3: Port Already in Use</h3>
+<p><strong>Error</strong>: <code>EADDRINUSE: address already in use</code></p>
+<p><strong>Resolution</strong>:</p>
+<pre><code class="language-bash"># Check what's using the port
+lsof -i :37777
+
+# Kill the process
+kill -9 
+
+# Restart worker
+npm run worker:restart
+</code></pre>
+<h3>Common Error Messages</h3>
+<table>
+<thead>
+<tr>
+  <th>Error</th>
+  <th>Cause</th>
+  <th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>EADDRINUSE</code></td>
+  <td>Port already in use</td>
+  <td><code>lsof -i :37777</code> then kill conflicting process</td>
+</tr>
+<tr>
+  <td><code>No such process</code></td>
+  <td>Stale PID file</td>
+  <td>Automatic cleanup on next hook trigger</td>
+</tr>
+<tr>
+  <td><code>pm2: command not found</code></td>
+  <td>PM2 not installed</td>
+  <td>None needed (error is caught and ignored)</td>
+</tr>
+<tr>
+  <td><code>Invalid port X</code></td>
+  <td>Port validation failed</td>
+  <td>Update <code>CLAUDE_MEM_WORKER_PORT</code> in settings</td>
+</tr>
+</tbody>
+</table>
+<h2>Developer Notes</h2>
+<h3>Testing the Migration</h3>
+<pre><code class="language-bash"># 1. Install old version (with PM2)
+git checkout &lt;pre-7.1.0-tag&gt;
+npm install &amp;&amp; npm run build &amp;&amp; npm run sync-marketplace
+
+# 2. Start PM2 worker
+pm2 start plugin/scripts/worker-cli.js --name claude-mem-worker
+
+# 3. Update to new version
+git checkout main
+npm install &amp;&amp; npm run build &amp;&amp; npm run sync-marketplace
+
+# 4. Trigger hook
+node plugin/scripts/session-start-hook.js
+
+# 5. Verify migration
+pm2 list  # Should NOT show claude-mem-worker
+cat ~/.claude-mem/.pm2-migrated  # Should exist
+npm run worker:status  # Should show Bun worker running
+</code></pre>
+<h3>Architecture Decisions</h3>
+<p><strong>Why Custom ProcessManager Instead of PM2?</strong></p>
+<ol>
+<li><strong>Simplicity</strong>: Direct control, no external daemon</li>
+<li><strong>Dependencies</strong>: Remove npm dependency</li>
+<li><strong>Cross-platform</strong>: Bun handles platform differences</li>
+<li><strong>Bundle Size</strong>: Reduce plugin package size</li>
+<li><strong>Control</strong>: Fine-grained error handling and validation</li>
+</ol>
+<p><strong>Why One-Time Marker Instead of Always Running PM2 Delete?</strong></p>
+<ol>
+<li><strong>Performance</strong>: Avoid unnecessary process spawning</li>
+<li><strong>Idempotency</strong>: Migration runs exactly once</li>
+<li><strong>Debugging</strong>: Timestamp shows when migration occurred</li>
+<li><strong>Simplicity</strong>: Clear migration state</li>
+</ol>
+<p><strong>Why Run PM2 Cleanup on All Platforms?</strong></p>
+<ol>
+<li><strong>Quality Migration</strong>: Clean up orphaned processes</li>
+<li><strong>Consistency</strong>: Same behavior across all platforms</li>
+<li><strong>Safety</strong>: Error handling already in place (try/catch)</li>
+<li><strong>No Downside</strong>: If PM2 not installed, error is caught and ignored</li>
+</ol>
+<h2>Summary</h2>
+<p>The migration from PM2 to Bun-based ProcessManager is a <strong>one-time, automatic, transparent</strong> transition that:</p>
+<ol>
+<li><strong>Removes external dependencies</strong> (PM2, better-sqlite3)</li>
+<li><strong>Simplifies architecture</strong> (direct process control)</li>
+<li><strong>Improves cross-platform support</strong> (especially Windows)</li>
+<li><strong>Preserves user data</strong> (database, settings, logs unchanged)</li>
+<li><strong>Requires no user action</strong> (automatic on first hook trigger)</li>
+</ol>
+<p><strong>Key Migration Moment</strong>: First hook trigger after update to 7.1.0+
+<strong>Duration</strong>: ~2-5 seconds (one-time delay)
+<strong>Impact</strong>: Seamless transition, user-invisible
+<strong>Rollback</strong>: Not needed (migration is forward-only, safe)</p>
+<p>For most users, the migration will be completely transparent - they'll see no errors, no data loss, and experience improved reliability and simpler troubleshooting going forward.</p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/architecture/pm2-to-bun-migration.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

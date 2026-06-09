@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursor + OpenRouter Setup — manymems docs</title>
+  <meta name="description" content="Use Claude-Mem in Cursor with OpenRouter&#39;s 100+ AI models" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Use Claude-Mem in Cursor with OpenRouter&#39;s 100+ AI models</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Cursor + OpenRouter Setup</h1>
+<p>This guide walks you through setting up Claude-Mem in Cursor using OpenRouter. OpenRouter provides access to 100+ AI models from various providers, including several free options.</p>
+<h2>Step 1: Get an OpenRouter API Key</h2>
+<ol>
+<li>Go to <a href="https://openrouter.ai">OpenRouter</a></li>
+<li>Sign up or sign in</li>
+<li>Navigate to <a href="https://openrouter.ai/keys">API Keys</a></li>
+<li>Click <strong>Create Key</strong></li>
+<li>Copy your API key - you'll need it in Step 3</li>
+</ol>
+<h2>Step 2: Clone and Build Claude-Mem</h2>
+<pre><code class="language-bash"># Clone the repository
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem
+
+# Install dependencies
+bun install
+
+# Build the project
+bun run build
+</code></pre>
+<h2>Step 3: Configure OpenRouter Provider</h2>
+<h3>Option A: Interactive Setup (Recommended)</h3>
+<p>Run the setup wizard which guides you through everything:</p>
+<pre><code class="language-bash">bun run cursor:setup
+</code></pre>
+<p>When prompted for provider, select <strong>OpenRouter</strong>.</p>
+<h3>Option B: Manual Configuration</h3>
+<p>Create the settings file manually:</p>
+<pre><code class="language-bash"># Create settings directory
+mkdir -p ~/.claude-mem
+
+# Create settings file with OpenRouter configuration
+cat &gt; ~/.claude-mem/settings.json &lt;&lt; 'EOF'
+{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_API_KEY&quot;: &quot;YOUR_OPENROUTER_API_KEY&quot;
+}
+EOF
+</code></pre>
+<p>Replace <code>YOUR_OPENROUTER_API_KEY</code> with your actual API key.</p>
+<p>Then install hooks and start the worker:</p>
+<pre><code class="language-bash">bun run cursor:install
+bun run worker:start
+</code></pre>
+<h2>Step 4: Restart Cursor</h2>
+<p>Close and reopen Cursor IDE for the hooks to take effect.</p>
+<h2>Step 5: Verify Installation</h2>
+<pre><code class="language-bash"># Check worker is running
+bun run worker:status
+
+# Check hooks are installed
+bun run cursor:status
+</code></pre>
+<p>Open http://localhost:37777 to see the memory viewer.</p>
+<h2>Recommended Models</h2>
+<h3>Free Models</h3>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>Provider</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>google/gemini-2.0-flash-exp:free</code></td>
+  <td>Google</td>
+  <td>Fast, capable</td>
+</tr>
+<tr>
+  <td><code>xiaomi/mimo-v2-flash:free</code></td>
+  <td>Xiaomi</td>
+  <td>Good general purpose</td>
+</tr>
+</tbody>
+</table>
+<h3>Paid Models (Low Cost)</h3>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>Approx. Cost</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>anthropic/claude-3-haiku</code></td>
+  <td>~$0.25/1M tokens</td>
+  <td>Fast, efficient</td>
+</tr>
+<tr>
+  <td><code>google/gemini-flash-1.5</code></td>
+  <td>~$0.075/1M tokens</td>
+  <td>Great value</td>
+</tr>
+<tr>
+  <td><code>mistralai/mistral-7b-instruct</code></td>
+  <td>~$0.07/1M tokens</td>
+  <td>Budget option</td>
+</tr>
+</tbody>
+</table>
+<p>To specify a model, add to your settings:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_API_KEY&quot;: &quot;your-key&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_MODEL&quot;: &quot;google/gemini-2.0-flash-exp:free&quot;
+}
+</code></pre>
+<h2>Custom OpenAI-Compatible Endpoints</h2>
+<p>The OpenRouter provider is a generic OpenAI-compatible client. Set <code>CLAUDE_MEM_OPENROUTER_BASE_URL</code> to point it at any endpoint that speaks the OpenAI <code>/chat/completions</code> API — DeepSeek, a local LM Studio server, or any custom gateway. The model id you set in <code>CLAUDE_MEM_OPENROUTER_MODEL</code> is sent verbatim.</p>
+<h3>DeepSeek</h3>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_BASE_URL&quot;: &quot;https://api.deepseek.com&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_MODEL&quot;: &quot;deepseek-chat&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_API_KEY&quot;: &quot;YOUR_DEEPSEEK_API_KEY&quot;
+}
+</code></pre>
+<h3>LM Studio (local model)</h3>
+<p>LM Studio exposes an OpenAI-compatible server. No API key is required for local use, and you can use any model id you have loaded.</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_BASE_URL&quot;: &quot;http://localhost:1234/v1&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_MODEL&quot;: &quot;your-local-model-id&quot;
+}
+</code></pre>
+<h3>Generic custom endpoint</h3>
+<p>Any OpenAI-compatible gateway works the same way:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_BASE_URL&quot;: &quot;https://my-gateway.example.com/v1&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_MODEL&quot;: &quot;model-id&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_API_KEY&quot;: &quot;YOUR_KEY&quot;
+}
+</code></pre>
+<h2>Cost Management</h2>
+<p>OpenRouter charges per token. To manage costs:</p>
+<ol>
+<li><strong>Use free models:</strong> Several high-quality free models are available</li>
+<li><strong>Monitor usage:</strong> Check your <a href="https://openrouter.ai/activity">OpenRouter dashboard</a></li>
+<li><strong>Set spending limits:</strong> Configure limits in OpenRouter settings</li>
+</ol>
+<h2>Troubleshooting</h2>
+<h3>&quot;OpenRouter API key not configured&quot;</h3>
+<p>Ensure your settings file exists with the correct format:</p>
+<pre><code class="language-bash">cat ~/.claude-mem/settings.json
+</code></pre>
+<p>Should output something like:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_API_KEY&quot;: &quot;sk-or-...&quot;
+}
+</code></pre>
+<h3>Model not found</h3>
+<ol>
+<li>Check the model ID is correct at <a href="https://openrouter.ai/models">OpenRouter Models</a></li>
+<li>Some models may require payment - check if you have credits</li>
+<li>Free models have <code>:free</code> suffix in their ID</li>
+</ol>
+<h3>Rate limits</h3>
+<p>OpenRouter rate limits vary by model and your account tier. If you hit limits:</p>
+<ol>
+<li>Wait briefly and retry</li>
+<li>Consider upgrading your OpenRouter account tier</li>
+<li>Switch to a less popular model</li>
+</ol>
+<h3>API errors</h3>
+<p>Check the worker logs for details:</p>
+<pre><code class="language-bash">bun run worker:logs
+</code></pre>
+<p>Common issues:</p>
+<ul>
+<li>Invalid API key (regenerate at OpenRouter)</li>
+<li>Insufficient credits for paid models</li>
+<li>Model temporarily unavailable</li>
+</ul>
+<h2>Switching Providers Later</h2>
+<p>You can switch between OpenRouter, Gemini, and Claude SDK at any time by updating your settings. No restart required - changes take effect on the next observation.</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;gemini&quot;
+}
+</code></pre>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/cursor/index">Cursor Integration Overview</a> - All Cursor features</li>
+<li><a href="/cursor/gemini-setup">Gemini Setup</a> - Alternative free provider</li>
+<li><a href="../configuration">Configuration Reference</a> - All settings options</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/cursor/openrouter-setup.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Tags — manymems docs</title>
+  <meta name="description" content="Control what gets stored in memory with privacy tags" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Control what gets stored in memory with privacy tags</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Private Tags</h1>
+<h2>Overview</h2>
+<p>Use <code>&lt;private&gt;</code> tags to mark content you don't want persisted in claude-mem's observation database. This gives you fine-grained control over what gets remembered across sessions.</p>
+<h2>How It Works</h2>
+<p>Wrap any content in <code>&lt;private&gt;</code> tags:</p>
+<pre><code>&lt;private&gt;
+This content will not be stored in memory
+&lt;/private&gt;
+</code></pre>
+<p>Claude can see and use this content during the current session, but it won't be saved as an observation.</p>
+<h2>Use Cases</h2>
+<h3>1. Sensitive Information</h3>
+<pre><code>Please analyze this error:
+
+&lt;private&gt;
+Error: Database connection failed
+Host: internal-db-prod.company.com
+Port: 5432
+User: admin_user
+&lt;/private&gt;
+
+What might be causing this?
+</code></pre>
+<p>Claude sees the full error but only the question gets stored.</p>
+<h3>2. Temporary Context</h3>
+<pre><code>&lt;private&gt;
+Here's some background context just for this session:
+- Project deadline is tomorrow
+- This is a hotfix for production
+- Manager asked for this specifically
+&lt;/private&gt;
+
+Help me fix this bug quickly.
+</code></pre>
+<h3>3. Debugging Information</h3>
+<pre><code>&lt;private&gt;
+Debug output from previous run:
+[... 500 lines of logs ...]
+&lt;/private&gt;
+
+Based on these logs, what's the root cause?
+</code></pre>
+<h3>4. Exploratory Prompts</h3>
+<pre><code>&lt;private&gt;
+I'm just brainstorming here, not making a final decision
+&lt;/private&gt;
+
+What are some wild approaches to solving this?
+</code></pre>
+<h2>Technical Details</h2>
+<h3>Tag Behavior</h3>
+<ul>
+<li><strong>Multiline support</strong>: Tags can wrap multiple lines of content</li>
+<li><strong>Multiple tags</strong>: You can use multiple <code>&lt;private&gt;</code> sections in one message</li>
+<li><strong>Nested tags</strong>: Inner tags are included in outer tag removal</li>
+<li><strong>Always active</strong>: No configuration needed - works automatically</li>
+</ul>
+<h3>What Gets Filtered</h3>
+<p>The <code>&lt;private&gt;</code> tag filters content from storage and memory:</p>
+<ul>
+<li><strong>User prompt storage</strong> - Tags are stripped before saving to the user_prompts table</li>
+<li><strong>Tool inputs</strong> - Parameters passed to tools are filtered before observation creation</li>
+<li><strong>Tool responses</strong> - Output from tools is filtered before observation creation</li>
+<li><strong>All searchable content</strong> - Private content never reaches the database or search indices</li>
+</ul>
+<p><strong>Important</strong>: Tags are stripped during storage, not from the live conversation. Claude sees the full content including <code>&lt;private&gt;</code> tags during the session, and they only disappear when content is persisted to the database.</p>
+<h3>What Doesn't Get Filtered</h3>
+<ul>
+<li>Session summaries (generated from non-private observations only)</li>
+<li>Claude's responses (not captured by claude-mem)</li>
+</ul>
+<h2>Examples</h2>
+<h3>Example 1: API Keys</h3>
+<pre><code>&lt;private&gt;
+API_KEY=sk-proj-abc123xyz789
+&lt;/private&gt;
+
+Test this API connection for me
+</code></pre>
+<p>The API key won't be stored, but Claude can use it during the session.</p>
+<h3>Example 2: Personal Notes</h3>
+<pre><code>&lt;private&gt;
+Note to self: This is for the Smith project - the one we discussed
+last Tuesday. Don't confuse with the Jones project.
+&lt;/private&gt;
+
+Review the authentication implementation and suggest improvements.
+</code></pre>
+<p>The personal context helps Claude understand your request without polluting your observation history.</p>
+<h2>Best Practices</h2>
+<ol>
+<li><strong>Don't over-tag</strong>: Only use <code>&lt;private&gt;</code> for content you genuinely don't want stored</li>
+<li><strong>Context matters</strong>: Claude's understanding of your project comes from observations - excessive private tagging reduces future context quality</li>
+<li><strong>Secrets belong elsewhere</strong>: While <code>&lt;private&gt;</code> prevents storage, sensitive data should still use proper secrets management</li>
+<li><strong>Test it works</strong>: Check <code>~/.claude-mem/silent.log</code> if you're unsure whether tags are being stripped</li>
+</ol>
+<h2>Verification</h2>
+<p>To verify tags are working:</p>
+<ol>
+<li>Submit a prompt with <code>&lt;private&gt;</code> tags</li>
+<li>Check the database to ensure private content is not stored:<pre><code class="language-bash"># Check user prompts
+sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT prompt_text FROM user_prompts ORDER BY created_at_epoch DESC LIMIT 1;&quot;
+
+# Check observations
+sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT narrative FROM observations ORDER BY created_at_epoch DESC LIMIT 1;&quot;
+</code></pre>
+</li>
+<li>The private content should NOT appear in either user_prompts or observations</li>
+<li>The <code>&lt;private&gt;</code> tags themselves should also be stripped</li>
+</ol>
+<h2>Architecture</h2>
+<p>The <code>&lt;private&gt;</code> tag uses an <strong>edge processing pattern</strong>:</p>
+<ul>
+<li>Content is filtered at the hook layer before any storage<ul>
+<li><strong>UserPromptSubmit hook</strong>: Strips tags from user prompts before saving to the user_prompts table (your typed prompts are cleaned before database storage)</li>
+<li><strong>PostToolUse hook</strong>: Strips tags from serialized tool_input and tool_response JSON before observation creation</li>
+</ul>
+</li>
+<li>Filtering happens before data reaches the worker service or database</li>
+<li>This keeps the worker simple and follows a one-way data stream</li>
+<li>Tags remain visible in the live conversation but are stripped from all persistent storage</li>
+</ul>
+<p><strong>Tag Stripping Scope</strong>: The implementation strips tags from the <em>serialized JSON representations</em> of tool inputs and tool responses, not from the original user prompt text in the conversation UI. The user prompt text you type is stored in a separate table (user_prompts) where tags are also stripped before storage.</p>
+<p>This design ensures that private content never reaches the database, search indices, or memory agent, maintaining a clean separation between ephemeral and persistent data.</p>
+<h2>Related Features</h2>
+<ul>
+<li><a href="/usage/search-tools">Search Tools</a> - How to search past observations</li>
+<li><a href="/usage/getting-started">Getting Started</a> - Basic usage guide</li>
+<li><a href="/configuration">Configuration</a> - System settings and environment variables</li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>Tags Not Being Stripped</h3>
+<ol>
+<li>Verify correct syntax: <code>&lt;private&gt;content&lt;/private&gt;</code></li>
+<li>Check <code>~/.claude-mem/silent.log</code> for errors</li>
+<li>Ensure worker is running: <code>npm run worker:status</code></li>
+<li>Restart worker: <code>npm run worker:restart</code></li>
+</ol>
+<h3>Partial Content Stored</h3>
+<p>If content appears partially in observations:</p>
+<ul>
+<li>Ensure tags are properly closed</li>
+<li>Check for typos in tag names</li>
+<li>Verify content is inside tool executions (not just in your prompt text)</li>
+</ul>
+<h3>Silent Log Shows Errors</h3>
+<p>If you see errors in <code>~/.claude-mem/silent.log</code>:</p>
+<pre><code>[save-hook] stripMemoryTags received non-string: { type: 'object' }
+</code></pre>
+<p>This is usually harmless - it indicates defensive type checking is working. However, if you see these frequently, it may indicate a bug. Please report it at https://github.com/thedotmack/claude-mem/issues</p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/private-tags.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

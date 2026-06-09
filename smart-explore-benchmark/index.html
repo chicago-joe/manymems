@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Explore Benchmark — manymems docs</title>
+  <meta name="description" content="Token efficiency comparison between AST-based and traditional code exploration" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Token efficiency comparison between AST-based and traditional code exploration</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Smart Explore Benchmark</h1>
+<p>Smart Explore uses tree-sitter AST parsing to provide structural code navigation through three MCP tools: <code>smart_search</code>, <code>smart_outline</code>, and <code>smart_unfold</code>. This report documents a rigorous A/B comparison against the standard Explore agent (which uses Glob, Grep, and Read tools) to quantify the token savings and quality trade-offs.</p>
+<h2>Executive Summary</h2>
+<table>
+<thead>
+<tr>
+  <th>Metric</th>
+  <th style="text-align:center">Smart Explore</th>
+  <th style="text-align:center">Explore Agent</th>
+  <th>Advantage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Discovery (cross-file search)</td>
+  <td style="text-align:center">~14,200 tokens</td>
+  <td style="text-align:center">~252,500 tokens</td>
+  <td><strong>17.8x cheaper</strong></td>
+</tr>
+<tr>
+  <td>Targeted reads (specific symbols)</td>
+  <td style="text-align:center">~5,650 tokens</td>
+  <td style="text-align:center">~109,400 tokens</td>
+  <td><strong>19.4x cheaper</strong></td>
+</tr>
+<tr>
+  <td>End-to-end (search + read)</td>
+  <td style="text-align:center">~4,200 tokens</td>
+  <td style="text-align:center">~45,000 tokens</td>
+  <td><strong>10-12x cheaper</strong></td>
+</tr>
+<tr>
+  <td>Completeness</td>
+  <td style="text-align:center">5/5 full source returned</td>
+  <td style="text-align:center">4/5 (truncated longest method)</td>
+  <td>Smart Explore more reliable</td>
+</tr>
+<tr>
+  <td>Speed</td>
+  <td style="text-align:center">Under 2s per call</td>
+  <td style="text-align:center">5-66s per call</td>
+  <td><strong>10-30x faster</strong></td>
+</tr>
+</tbody>
+</table>
+<h2>Methodology</h2>
+<h3>Test Environment</h3>
+<ul>
+<li><strong>Codebase</strong>: claude-mem (<code>src/</code> directory, 194 TypeScript files, 1,206 parsed symbols)</li>
+<li><strong>Model</strong>: Claude Opus 4.6 for both approaches</li>
+<li><strong>Measurement</strong>: Token counts from tool response metadata (<code>total_tokens</code> for Explore agents, self-reported <code>~N tokens for folded view</code> for Smart Explore)</li>
+</ul>
+<h3>Controls</h3>
+<p>The Explore agents were explicitly instructed: <em>&quot;Do NOT use smart_search, smart_outline, or smart_unfold tools. Only use Glob, Grep, and Read tools.&quot;</em> This was verified necessary after an initial round where agents opportunistically used the Smart Explore tools, invalidating the comparison.</p>
+<h3>Queries</h3>
+<p>Five queries were selected to represent common exploration tasks:</p>
+<ol>
+<li><strong>&quot;session processing&quot;</strong> -- Cross-cutting feature spanning multiple services</li>
+<li><strong>&quot;shutdown&quot;</strong> -- Infrastructure concern touching 6+ files</li>
+<li><strong>&quot;hook registration&quot;</strong> -- Architecture question about plugin system</li>
+<li><strong>&quot;sqlite database&quot;</strong> -- Technology-specific search across the data layer</li>
+<li><strong>&quot;worker-service.ts outline&quot;</strong> -- Single large file (1,225 lines) structural understanding</li>
+</ol>
+<h2>Round 1: Discovery</h2>
+<p><em>&quot;What exists and where is it?&quot;</em> -- Finding relevant files and symbols across the codebase.</p>
+<h3>Results</h3>
+<table>
+<thead>
+<tr>
+  <th>Query</th>
+  <th style="text-align:center">Smart Explore</th>
+  <th style="text-align:center">Explore Agent</th>
+  <th style="text-align:center">Ratio</th>
+  <th style="text-align:center">Explore Tool Calls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>session processing</td>
+  <td style="text-align:center">~4,391 t</td>
+  <td style="text-align:center">51,659 t</td>
+  <td style="text-align:center"><strong>11.8x</strong></td>
+  <td style="text-align:center">15</td>
+</tr>
+<tr>
+  <td>shutdown</td>
+  <td style="text-align:center">~3,852 t</td>
+  <td style="text-align:center">51,523 t</td>
+  <td style="text-align:center"><strong>13.4x</strong></td>
+  <td style="text-align:center">18</td>
+</tr>
+<tr>
+  <td>hook registration</td>
+  <td style="text-align:center">~1,930 t</td>
+  <td style="text-align:center">51,688 t</td>
+  <td style="text-align:center"><strong>26.8x</strong></td>
+  <td style="text-align:center">37</td>
+</tr>
+<tr>
+  <td>sqlite database</td>
+  <td style="text-align:center">~2,543 t</td>
+  <td style="text-align:center">58,633 t</td>
+  <td style="text-align:center"><strong>23.1x</strong></td>
+  <td style="text-align:center">16</td>
+</tr>
+<tr>
+  <td>worker-service outline</td>
+  <td style="text-align:center">~1,500 t</td>
+  <td style="text-align:center">38,973 t</td>
+  <td style="text-align:center"><strong>26.0x</strong></td>
+  <td style="text-align:center">15</td>
+</tr>
+<tr>
+  <td><strong>Total</strong></td>
+  <td style="text-align:center"><strong>~14,216 t</strong></td>
+  <td style="text-align:center"><strong>252,476 t</strong></td>
+  <td style="text-align:center"><strong>17.8x</strong></td>
+  <td style="text-align:center"><strong>101</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>What Each Returned</h3>
+<p><strong>Smart Explore</strong> (1 tool call each): 10 ranked symbols with signatures, line numbers, and JSDoc summaries, plus folded structural views of all matching files showing every function/class/interface with bodies collapsed.</p>
+<p><strong>Explore Agent</strong> (15-37 tool calls each): Synthesized narrative reports with architecture diagrams, design pattern analysis, data flow explanations, complete interface dumps, and file structure maps. Significantly more explanatory prose.</p>
+<h3>Analysis</h3>
+<p>The token gap is widest for narrowly-scoped queries (&quot;hook registration&quot; at 26.8x) because the Explore agent reads multiple full files to find relatively few relevant symbols. For broad queries (&quot;session processing&quot; at 11.8x), more of the file content is relevant, narrowing the ratio.</p>
+<p>Smart Explore's consistent 1-tool-call pattern means its cost is predictable. The Explore agent's cost varies with how many files it reads and how much it synthesizes -- ranging from 15 to 37 tool calls for comparable scope.</p>
+<h2>Round 2: Targeted Reads</h2>
+<p><em>&quot;Show me this specific function.&quot;</em> -- Reading the implementation of a known symbol after discovery.</p>
+<p>Based on the Round 1 results, five specific symbols were selected as natural drill-down targets:</p>
+<table>
+<thead>
+<tr>
+  <th>Target Symbol</th>
+  <th>File</th>
+  <th style="text-align:center">Lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>SessionManager.initializeSession</code></td>
+  <td>services/worker/SessionManager.ts</td>
+  <td style="text-align:center">135</td>
+</tr>
+<tr>
+  <td><code>performGracefulShutdown</code></td>
+  <td>services/infrastructure/GracefulShutdown.ts</td>
+  <td style="text-align:center">48</td>
+</tr>
+<tr>
+  <td><code>hookCommand</code></td>
+  <td>cli/hook-command.ts</td>
+  <td style="text-align:center">45</td>
+</tr>
+<tr>
+  <td><code>DatabaseManager.initialize</code></td>
+  <td>services/sqlite/Database.ts</td>
+  <td style="text-align:center">27</td>
+</tr>
+<tr>
+  <td><code>WorkerService.startSessionProcessor</code></td>
+  <td>services/worker-service.ts</td>
+  <td style="text-align:center">158</td>
+</tr>
+</tbody>
+</table>
+<h3>Results</h3>
+<table>
+<thead>
+<tr>
+  <th>Symbol</th>
+  <th style="text-align:center">Smart Unfold</th>
+  <th style="text-align:center">Explore Agent</th>
+  <th style="text-align:center">Ratio</th>
+  <th>Completeness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>initializeSession (135 lines)</td>
+  <td style="text-align:center">~1,800 t</td>
+  <td style="text-align:center">27,816 t</td>
+  <td style="text-align:center"><strong>15.5x</strong></td>
+  <td>Both returned full source</td>
+</tr>
+<tr>
+  <td>performGracefulShutdown (48 lines)</td>
+  <td style="text-align:center">~700 t</td>
+  <td style="text-align:center">19,621 t</td>
+  <td style="text-align:center"><strong>28.0x</strong></td>
+  <td>Both returned full source</td>
+</tr>
+<tr>
+  <td>hookCommand (45 lines)</td>
+  <td style="text-align:center">~650 t</td>
+  <td style="text-align:center">18,680 t</td>
+  <td style="text-align:center"><strong>28.7x</strong></td>
+  <td>Both returned full source</td>
+</tr>
+<tr>
+  <td>DatabaseManager.initialize (27 lines)</td>
+  <td style="text-align:center">~400 t</td>
+  <td style="text-align:center">22,334 t</td>
+  <td style="text-align:center"><strong>55.8x</strong></td>
+  <td>Both returned full source</td>
+</tr>
+<tr>
+  <td>startSessionProcessor (158 lines)</td>
+  <td style="text-align:center">~2,100 t</td>
+  <td style="text-align:center">20,906 t</td>
+  <td style="text-align:center"><strong>10.0x</strong></td>
+  <td>Smart Unfold: complete. Explore: <strong>truncated</strong></td>
+</tr>
+<tr>
+  <td><strong>Total</strong></td>
+  <td style="text-align:center"><strong>~5,650 t</strong></td>
+  <td style="text-align:center"><strong>109,357 t</strong></td>
+  <td style="text-align:center"><strong>19.4x</strong></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h3>Analysis</h3>
+<p><strong>The ratio scales inversely with symbol size.</strong> The smallest function (<code>initialize</code>, 27 lines) shows the biggest gap at 55.8x because the Explore agent still reads the entire 235-line file to extract 27 lines. The largest method (<code>startSessionProcessor</code>, 158 lines) narrows to 10x since more of the file is &quot;useful.&quot;</p>
+<p><strong>Smart Unfold returned more complete code.</strong> For the longest method (158 lines), the Explore agent truncated the error handling section with &quot;... error handling continues ...&quot;, while <code>smart_unfold</code> returned the complete implementation. This is because smart_unfold extracts by AST node boundaries, guaranteeing completeness regardless of symbol size.</p>
+<p><strong>Explore agents add zero unique information for targeted reads.</strong> When you already know the file path and symbol name, the agent's overhead is pure waste -- it reads the file, locates the function, and echoes it back. The only addition is a brief explanatory paragraph.</p>
+<h2>Combined Workflow</h2>
+<p>The realistic workflow is discovery followed by targeted reading. Here is the end-to-end cost comparison for understanding a single function:</p>
+<h3>Smart Explore: search + unfold</h3>
+<pre><code>smart_search(&quot;shutdown&quot;, path=&quot;./src&quot;)     ~3,852 tokens
+smart_unfold(&quot;GracefulShutdown.ts&quot;, &quot;performGracefulShutdown&quot;)  ~700 tokens
+────────────────────────────────────────────────────────────────
+Total: ~4,552 tokens (2 tool calls, under 3 seconds)
+</code></pre>
+<h3>Explore Agent: single query</h3>
+<pre><code>&quot;Find and explain the shutdown logic&quot;      ~51,523 tokens
+────────────────────────────────────────────────────────────────
+Total: ~51,523 tokens (18 tool calls, ~43 seconds)
+</code></pre>
+<p><strong>End-to-end ratio: 11.3x</strong> -- and the Smart Explore workflow gives you the actual source code, while the Explore agent gives you a prose summary that may paraphrase or truncate.</p>
+<h2>Quality Assessment</h2>
+<p>Neither approach is universally better. They optimize for different outcomes.</p>
+<h3>Smart Explore Strengths</h3>
+<ul>
+<li><strong>Predictable cost</strong>: 1 tool call per operation, consistent token ranges</li>
+<li><strong>Complete source code</strong>: AST-based extraction guarantees full symbol bodies</li>
+<li><strong>Structural context</strong>: Folded views show every symbol in matching files</li>
+<li><strong>Speed</strong>: Sub-second responses enable rapid iteration</li>
+<li><strong>Composability</strong>: Search, outline, and unfold chain naturally</li>
+</ul>
+<h3>Explore Agent Strengths</h3>
+<ul>
+<li><strong>Synthesized understanding</strong>: Produces architecture narratives, data flow diagrams, and design pattern analysis</li>
+<li><strong>Cross-cutting explanation</strong>: Connects concepts across files that individual symbol reads cannot</li>
+<li><strong>Onboarding quality</strong>: Output reads like documentation, not raw code</li>
+<li><strong>Error handling insight</strong>: Identifies edge cases and design decisions that require reading multiple related functions</li>
+<li><strong>No prior knowledge needed</strong>: Can answer open-ended questions without knowing file paths or symbol names</li>
+</ul>
+<h3>Quality by Task Type</h3>
+<table>
+<thead>
+<tr>
+  <th>Task</th>
+  <th>Better Tool</th>
+  <th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>&quot;Where is X defined?&quot;</td>
+  <td>Smart Explore</td>
+  <td>One call, exact answer</td>
+</tr>
+<tr>
+  <td>&quot;What functions are in this file?&quot;</td>
+  <td>Smart Explore</td>
+  <td>Outline returns complete structural map</td>
+</tr>
+<tr>
+  <td>&quot;Show me this function&quot;</td>
+  <td>Smart Explore</td>
+  <td>Unfold returns exact source, never truncates</td>
+</tr>
+<tr>
+  <td>&quot;How does feature X work end-to-end?&quot;</td>
+  <td>Explore Agent</td>
+  <td>Reads multiple files and synthesizes narrative</td>
+</tr>
+<tr>
+  <td>&quot;What design patterns are used here?&quot;</td>
+  <td>Explore Agent</td>
+  <td>Requires reading and interpreting, not just extracting</td>
+</tr>
+<tr>
+  <td>&quot;Help me understand this codebase&quot;</td>
+  <td>Explore Agent</td>
+  <td>Produces onboarding-quality documentation</td>
+</tr>
+</tbody>
+</table>
+<h2>When to Use Which</h2>
+<p><strong>Use Smart Explore when:</strong></p>
+<ul>
+<li>You know what you are looking for (function name, concept, file)</li>
+<li>You need source code, not explanation</li>
+<li>You are iterating quickly (read, modify, read again)</li>
+<li>Token budget matters (large codebases, long sessions)</li>
+<li>You need file structure at a glance</li>
+</ul>
+<p><strong>Use the Explore Agent when:</strong></p>
+<ul>
+<li>You need synthesized cross-cutting understanding</li>
+<li>The question is open-ended (&quot;how does this system work?&quot;)</li>
+<li>You are writing documentation or architecture reviews</li>
+<li>You need to understand <em>why</em>, not just <em>what</em></li>
+<li>You are onboarding to an unfamiliar codebase</li>
+</ul>
+<p><strong>Use both when:</strong></p>
+<ul>
+<li>Start with Smart Explore for discovery and navigation</li>
+<li>Escalate to Explore Agent only for deep analysis that requires multi-file synthesis</li>
+<li>This hybrid approach captures most of the token savings while preserving access to deep understanding when needed</li>
+</ul>
+<h2>Token Economics Reference</h2>
+<table>
+<thead>
+<tr>
+  <th>Operation</th>
+  <th style="text-align:center">Tokens</th>
+  <th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>smart_search</code></td>
+  <td style="text-align:center">2,000-6,000</td>
+  <td>Cross-file symbol discovery</td>
+</tr>
+<tr>
+  <td><code>smart_outline</code></td>
+  <td style="text-align:center">1,000-2,000</td>
+  <td>Single file structural map</td>
+</tr>
+<tr>
+  <td><code>smart_unfold</code></td>
+  <td style="text-align:center">400-2,100</td>
+  <td>Single symbol full source</td>
+</tr>
+<tr>
+  <td><code>smart_search</code> + <code>smart_unfold</code></td>
+  <td style="text-align:center">3,000-8,000</td>
+  <td>End-to-end: find and read</td>
+</tr>
+<tr>
+  <td>Explore Agent (targeted)</td>
+  <td style="text-align:center">18,000-28,000</td>
+  <td>Single function with explanation</td>
+</tr>
+<tr>
+  <td>Explore Agent (cross-cutting)</td>
+  <td style="text-align:center">39,000-59,000</td>
+  <td>Architecture-level understanding</td>
+</tr>
+<tr>
+  <td>Read (full file)</td>
+  <td style="text-align:center">8,000-15,000+</td>
+  <td>Complete file contents</td>
+</tr>
+</tbody>
+</table>
+<h3>Savings by Workflow</h3>
+<table>
+<thead>
+<tr>
+  <th>Workflow</th>
+  <th style="text-align:center">Smart Explore</th>
+  <th style="text-align:center">Traditional</th>
+  <th style="text-align:center">Savings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Understand one file</td>
+  <td style="text-align:center">outline + unfold (~3,100 t)</td>
+  <td style="text-align:center">Read full file (~12,000 t)</td>
+  <td style="text-align:center"><strong>4x</strong></td>
+</tr>
+<tr>
+  <td>Find a function across codebase</td>
+  <td style="text-align:center">search (~3,500 t)</td>
+  <td style="text-align:center">Explore agent (~50,000 t)</td>
+  <td style="text-align:center"><strong>14x</strong></td>
+</tr>
+<tr>
+  <td>Find and read a specific function</td>
+  <td style="text-align:center">search + unfold (~4,500 t)</td>
+  <td style="text-align:center">Explore agent (~50,000 t)</td>
+  <td style="text-align:center"><strong>11x</strong></td>
+</tr>
+<tr>
+  <td>Navigate a 1,200-line file</td>
+  <td style="text-align:center">outline (~1,500 t)</td>
+  <td style="text-align:center">Read full file (~12,000 t)</td>
+  <td style="text-align:center"><strong>8x</strong></td>
+</tr>
+</tbody>
+</table>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/smart-explore-benchmark.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

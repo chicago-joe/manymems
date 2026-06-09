@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Folder Context Files — manymems docs</title>
+  <meta name="description" content="Automatic per-folder CLAUDE.md files that provide directory-level context to Claude" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Automatic per-folder CLAUDE.md files that provide directory-level context to Claude</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h2>Overview</h2>
+<p>Claude-mem automatically generates <code>CLAUDE.md</code> files in your project folders to provide Claude with directory-level context. These files contain a summary of recent activity in each folder, helping Claude understand what work has been done and where.</p>
+<h2>How It Works</h2>
+<p>When you work with Claude Code in a project, claude-mem tracks which files are read and modified. After each observation is saved, it automatically:</p>
+<ol>
+<li>Identifies unique folder paths from touched files</li>
+<li>Queries recent observations relevant to each folder</li>
+<li>Generates a formatted timeline of activity</li>
+<li>Writes it to <code>CLAUDE.md</code> in that folder (inside <code>&lt;claude-mem-context&gt;</code> tags)</li>
+</ol>
+<h3>What Gets Generated</h3>
+<p>Each folder's <code>CLAUDE.md</code> contains a &quot;Recent Activity&quot; section showing:</p>
+<ul>
+<li>Observation IDs for reference</li>
+<li>Timestamps of when work occurred</li>
+<li>Type indicators (bug fixes, features, discoveries, etc.)</li>
+<li>Brief titles describing the work</li>
+<li>Estimated token counts</li>
+</ul>
+<pre><code class="language-markdown">&lt;claude-mem-context&gt;
+# Recent Activity
+
+### Jan 4, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1234 | 4:30 PM | 🔵 | Implemented user authentication | ~250 |
+| #1235 | &quot; | 🔴 | Fixed login redirect bug | ~180 |
+&lt;/claude-mem-context&gt;
+</code></pre>
+<h3>User Content Preservation</h3>
+<p>The auto-generated content is wrapped in <code>&lt;claude-mem-context&gt;</code> tags. <strong>Any content you write outside these tags is preserved</strong> when the file is regenerated. This means you can:</p>
+<ul>
+<li>Add your own documentation above or below the generated section</li>
+<li>Write folder-specific instructions for Claude</li>
+<li>Include architectural notes or conventions</li>
+</ul>
+<pre><code class="language-markdown"># Authentication Module
+
+This folder contains all authentication-related code.
+Follow the established patterns for new auth providers.
+
+&lt;claude-mem-context&gt;
+... auto-generated content ...
+&lt;/claude-mem-context&gt;
+
+## Manual Notes
+
+- OAuth providers go in /providers/
+- Session handling uses Redis
+</code></pre>
+<h3>Project Root Exclusion</h3>
+<p>The <strong>project root</strong> (folders containing a <code>.git</code> directory) is <strong>excluded</strong> from auto-generation. This is intentional:</p>
+<ul>
+<li>Root <code>CLAUDE.md</code> files typically contain project-wide instructions you've written manually</li>
+<li>Auto-generating at the root could overwrite important project documentation</li>
+<li>Subfolders are where folder-level context is most useful</li>
+</ul>
+<h2>Configuration</h2>
+<h3>Enabling the Feature</h3>
+<p>To enable folder CLAUDE.md generation, edit your settings file:</p>
+<p><strong>1. Open <code>~/.claude-mem/settings.json</code></strong></p>
+<p><strong>2. Add or update this setting:</strong></p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_FOLDER_CLAUDEMD_ENABLED&quot;: &quot;true&quot;
+}
+</code></pre>
+<p><strong>3. Save the file</strong> - changes take effect immediately (no restart needed)</p>
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>&quot;false&quot;</code> (default)</td>
+  <td>Folder CLAUDE.md generation disabled</td>
+</tr>
+<tr>
+  <td><code>&quot;true&quot;</code></td>
+  <td>Auto-generate folder CLAUDE.md files</td>
+</tr>
+</tbody>
+</table>
+<h2>Cleanup Mode</h2>
+<p>The regenerate script includes a <code>--clean</code> mode for removing auto-generated content:</p>
+<pre><code class="language-bash"># Preview what would be cleaned (dry run)
+bun scripts/regenerate-claude-md.ts --clean --dry-run
+
+# Actually clean files
+bun scripts/regenerate-claude-md.ts --clean
+</code></pre>
+<p><strong>What cleanup does:</strong></p>
+<ol>
+<li>Finds all <code>CLAUDE.md</code> files recursively</li>
+<li>Strips <code>&lt;claude-mem-context&gt;...&lt;/claude-mem-context&gt;</code> sections</li>
+<li><strong>Deletes</strong> files that become empty after stripping</li>
+<li><strong>Preserves</strong> files that have user content outside the tags</li>
+</ol>
+<p>This is useful for:</p>
+<ul>
+<li>Preparing a branch for PR (removing generated files)</li>
+<li>Resetting folder context to start fresh</li>
+<li>Removing context before sharing code</li>
+</ul>
+<h2>Git Integration</h2>
+<h3>Should You Commit These Files?</h3>
+<p>This is <strong>your choice</strong> based on your workflow. Here are the trade-offs:</p>
+<h3>Gitignore Pattern</h3>
+<p>To exclude folder CLAUDE.md files from git:</p>
+<pre><code class="language-gitignore"># Ignore auto-generated folder context files
+**/CLAUDE.md
+
+# But keep the root CLAUDE.md if you want
+!CLAUDE.md
+</code></pre>
+<p>Or to ignore all CLAUDE.md files everywhere:</p>
+<pre><code class="language-gitignore">**/CLAUDE.md
+</code></pre>
+<h3>Recommended Workflows</h3>
+<p><strong>For Solo Developers:</strong></p>
+<ul>
+<li>Keep them local (gitignore) for personal context</li>
+<li>Or commit them if you work across multiple machines</li>
+</ul>
+<p><strong>For Teams:</strong></p>
+<ul>
+<li>Discuss with your team which approach works best</li>
+<li>Consider committing them if onboarding is frequent</li>
+<li>Use <code>--clean</code> before PRs if you prefer clean diffs</li>
+</ul>
+<p><strong>Before Merging PRs:</strong></p>
+<pre><code class="language-bash"># Clean up generated files before merge
+bun scripts/regenerate-claude-md.ts --clean
+git add -A
+git commit -m &quot;chore: clean up generated CLAUDE.md files&quot;
+</code></pre>
+<h2>Regenerating Context</h2>
+<p>To manually regenerate all folder CLAUDE.md files from the database:</p>
+<pre><code class="language-bash"># Preview what would be regenerated
+bun scripts/regenerate-claude-md.ts --dry-run
+
+# Regenerate all folders
+bun scripts/regenerate-claude-md.ts
+
+# Regenerate for a specific project only
+bun scripts/regenerate-claude-md.ts --project=my-project
+</code></pre>
+<p>This is useful after:</p>
+<ul>
+<li>Importing observations from another machine</li>
+<li>Database recovery</li>
+<li>Wanting to refresh all folder context</li>
+</ul>
+<h2>Worktree Support</h2>
+<p><strong>New in v9.0</strong>: Claude-mem now supports git worktrees with unified context.</p>
+<p>When you're working in a git worktree, context is automatically gathered from both:</p>
+<ul>
+<li>The parent repository (where the worktree was created)</li>
+<li>The worktree directory itself</li>
+</ul>
+<p>This means observations about shared code are visible regardless of which worktree you're in, giving you a complete picture of recent activity across all related directories.</p>
+<h3>How It Works</h3>
+<ol>
+<li>When generating context, claude-mem detects if your project is a worktree</li>
+<li>It identifies the parent repository automatically</li>
+<li>Timeline queries include both locations</li>
+<li>Results are interleaved chronologically</li>
+</ol>
+<h2>Technical Details</h2>
+<h3>File Format</h3>
+<p>Generated content uses a consistent markdown table format:</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>ID</td>
+  <td>Observation ID (e.g., <code>#1234</code>) or session ID (<code>#S123</code>)</td>
+</tr>
+<tr>
+  <td>Time</td>
+  <td>12-hour format with AM/PM, ditto marks (<code>&quot;</code>) for repeated times</td>
+</tr>
+<tr>
+  <td>T</td>
+  <td>Type emoji indicator</td>
+</tr>
+<tr>
+  <td>Title</td>
+  <td>Brief description of the observation</td>
+</tr>
+<tr>
+  <td>Read</td>
+  <td>Estimated token count (e.g., <code>~250</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Indicators</h3>
+<table>
+<thead>
+<tr>
+  <th>Emoji</th>
+  <th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>🔴</td>
+  <td>Bug fix</td>
+</tr>
+<tr>
+  <td>🟣</td>
+  <td>Feature</td>
+</tr>
+<tr>
+  <td>🔄</td>
+  <td>Refactor</td>
+</tr>
+<tr>
+  <td>✅</td>
+  <td>Change</td>
+</tr>
+<tr>
+  <td>🔵</td>
+  <td>Discovery</td>
+</tr>
+<tr>
+  <td>⚖️</td>
+  <td>Decision</td>
+</tr>
+<tr>
+  <td>🎯</td>
+  <td>Session</td>
+</tr>
+<tr>
+  <td>💬</td>
+  <td>Prompt</td>
+</tr>
+</tbody>
+</table>
+<h3>Atomic Writes</h3>
+<p>Files are written atomically using a temp file + rename pattern. This prevents partial writes if the process is interrupted.</p>
+<h3>Performance</h3>
+<ul>
+<li>Updates happen asynchronously (fire-and-forget)</li>
+<li>Failures are logged but don't block the main workflow</li>
+<li>Only folders with actual file activity are updated</li>
+<li>Deduplication prevents redundant updates for the same folder</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/folder-context.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

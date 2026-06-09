@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw Integration — manymems docs</title>
+  <meta name="description" content="Persistent memory for OpenClaw agents — observation recording, system prompt context injection, and real-time observation feeds" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Persistent memory for OpenClaw agents — observation recording, system prompt context injection, and real-time observation feeds</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h2>Overview</h2>
+<p>The OpenClaw plugin gives claude-mem persistent memory to agents running on the <a href="https://openclaw.ai">OpenClaw</a> gateway. It handles three things:</p>
+<ol>
+<li><strong>Observation recording</strong> — Captures tool usage from OpenClaw's embedded runner and sends it to the claude-mem worker for AI processing</li>
+<li><strong>System prompt context injection</strong> — Injects the observation timeline into each agent's system prompt via the <code>before_prompt_build</code> hook, keeping <code>MEMORY.md</code> free for agent-curated memory</li>
+<li><strong>Observation feed</strong> — Streams new observations to messaging channels (Telegram, Discord, Slack, etc.) in real-time via SSE</li>
+</ol>
+<h2>How It Works</h2>
+<pre><code class="language-plaintext">OpenClaw Gateway
+  │
+  ├── before_agent_start ───→ Init session
+  ├── before_prompt_build ──→ Inject context into system prompt
+  ├── tool_result_persist ──→ Record observation
+  ├── agent_end ────────────→ Summarize + Complete session
+  └── gateway_start ────────→ Reset session tracking + context cache
+                    │
+                    ▼
+         Claude-Mem Worker (localhost:37777)
+           ├── POST /api/sessions/init
+           ├── POST /api/sessions/observations
+           ├── POST /api/sessions/summarize
+           ├── POST /api/sessions/complete
+           ├── GET  /api/context/inject ──→ System prompt context
+           └── GET  /stream ─────────────→ SSE → Messaging channels
+</code></pre>
+<h3>Event Lifecycle</h3>
+<h3>System Prompt Context Injection</h3>
+<p>The plugin injects cross-session observation context into each agent's system prompt via OpenClaw's <code>before_prompt_build</code> hook. The content comes from the worker's <code>GET /api/context/inject?projects=&lt;project&gt;</code> endpoint, which generates a formatted markdown timeline from the SQLite database.</p>
+<p>This approach keeps <code>MEMORY.md</code> under the agent's control for curated long-term memory (decisions, preferences, durable facts), while the observation timeline is delivered through the system prompt where it belongs.</p>
+<h3>Observation Feed (SSE → Messaging)</h3>
+<p>The plugin runs a background service that connects to the worker's SSE stream (<code>GET /stream</code>) and forwards <code>new_observation</code> events to a configured messaging channel. This lets you monitor what your agents are learning in real-time from Telegram, Discord, Slack, or any supported OpenClaw channel.</p>
+<p>The SSE connection uses exponential backoff (1s → 30s) for automatic reconnection.</p>
+<h2>Setting Up the Observation Feed</h2>
+<p>The observation feed sends a formatted message to your OpenClaw channel every time claude-mem creates a new observation. Each message includes the observation title and subtitle so you can follow along as your agents work.</p>
+<p>Messages look like this in your channel:</p>
+<pre><code>🧠 Claude-Mem Observation
+**Implemented retry logic for API client**
+Added exponential backoff with configurable max retries to handle transient failures
+</code></pre>
+<h3>Step 1: Choose your channel</h3>
+<p>The observation feed works with any channel that your OpenClaw gateway has configured. You need two pieces of information:</p>
+<ul>
+<li><strong>Channel type</strong> — The name of the channel plugin registered with OpenClaw (e.g., <code>telegram</code>, <code>discord</code>, <code>slack</code>, <code>signal</code>, <code>whatsapp</code>, <code>line</code>)</li>
+<li><strong>Target ID</strong> — The chat ID, channel ID, or user ID where messages should be sent</li>
+</ul>
+</AccordionGroup>
+
+<h3>Step 2: Add the config to your gateway</h3>
+<p>Add the <code>observationFeed</code> block to your claude-mem plugin config in your OpenClaw gateway configuration:</p>
+<pre><code class="language-json">{
+  &quot;plugins&quot;: {
+    &quot;claude-mem&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;config&quot;: {
+        &quot;project&quot;: &quot;my-project&quot;,
+        &quot;observationFeed&quot;: {
+          &quot;enabled&quot;: true,
+          &quot;channel&quot;: &quot;telegram&quot;,
+          &quot;to&quot;: &quot;123456789&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h3>Step 3: Verify the connection</h3>
+<p>After starting the gateway, check that the feed is connected:</p>
+<ol>
+<li><p><strong>Check the logs</strong> — You should see:</p>
+<pre><code>[claude-mem] Observation feed starting — channel: telegram, target: 123456789
+[claude-mem] Connecting to SSE stream at http://localhost:37777/stream
+[claude-mem] Connected to SSE stream
+</code></pre>
+</li>
+<li><p><strong>Use the status command</strong> — Run <code>/claude_mem_feed</code> in any OpenClaw chat to see:</p>
+<pre><code>Claude-Mem Observation Feed
+Enabled: yes
+Channel: telegram
+Target: 123456789
+Connection: connected
+</code></pre>
+</li>
+<li><p><strong>Trigger a test</strong> — Have an agent do some work. When the worker processes the tool usage into an observation, you'll receive a message in your configured channel.</p>
+</li>
+</ol>
+<h3>Troubleshooting the Feed</h3>
+<table>
+<thead>
+<tr>
+  <th>Symptom</th>
+  <th>Cause</th>
+  <th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Connection: disconnected</code></td>
+  <td>Worker not running or wrong port</td>
+  <td>Check <code>workerPort</code> config, run <code>npm run worker:status</code></td>
+</tr>
+<tr>
+  <td><code>Connection: reconnecting</code></td>
+  <td>Worker was running but connection dropped</td>
+  <td>The plugin auto-reconnects with backoff — wait up to 30s</td>
+</tr>
+<tr>
+  <td><code>Unknown channel type</code> in logs</td>
+  <td>Channel plugin not loaded on gateway</td>
+  <td>Verify your OpenClaw gateway has the channel plugin configured</td>
+</tr>
+<tr>
+  <td>No messages appearing</td>
+  <td>Feed connected but no observations being created</td>
+  <td>Check that agents are running and the worker is processing observations</td>
+</tr>
+<tr>
+  <td><code>Observation feed disabled</code> in logs</td>
+  <td><code>enabled</code> is <code>false</code> or missing</td>
+  <td>Set <code>observationFeed.enabled</code> to <code>true</code></td>
+</tr>
+<tr>
+  <td><code>Observation feed misconfigured</code> in logs</td>
+  <td>Missing <code>channel</code> or <code>to</code></td>
+  <td>Both <code>channel</code> and <code>to</code> are required</td>
+</tr>
+</tbody>
+</table>
+<h2>Installation</h2>
+<p>Run this one-liner to install everything automatically:</p>
+<pre><code class="language-bash">curl -fsSL https://install.cmem.ai/openclaw.sh | bash
+</code></pre>
+<p>The installer handles dependency checks (Bun, uv), plugin installation, memory slot configuration, AI provider setup, worker startup, and optional observation feed configuration.</p>
+<p>You can also pre-select options:</p>
+<pre><code class="language-bash"># With a specific AI provider
+curl -fsSL https://install.cmem.ai/openclaw.sh | bash -s -- --provider=gemini --api-key=YOUR_KEY
+
+# Fully unattended (defaults to Claude Max Plan)
+curl -fsSL https://install.cmem.ai/openclaw.sh | bash -s -- --non-interactive
+
+# Upgrade existing installation
+curl -fsSL https://install.cmem.ai/openclaw.sh | bash -s -- --upgrade
+</code></pre>
+<h3>Manual Configuration</h3>
+<p>Add <code>claude-mem</code> to your OpenClaw gateway's plugin configuration:</p>
+<pre><code class="language-json">{
+  &quot;plugins&quot;: {
+    &quot;claude-mem&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;config&quot;: {
+        &quot;project&quot;: &quot;my-project&quot;,
+        &quot;syncMemoryFile&quot;: true,
+        &quot;workerPort&quot;: 37777,
+        &quot;observationFeed&quot;: {
+          &quot;enabled&quot;: true,
+          &quot;channel&quot;: &quot;telegram&quot;,
+          &quot;to&quot;: &quot;your-chat-id&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h2>Configuration</h2>
+<h2>Commands</h2>
+<h3>/claude_mem_feed</h3>
+<p>Show or toggle the observation feed status.</p>
+<pre><code>/claude_mem_feed        # Show current status
+/claude_mem_feed on     # Request enable
+/claude_mem_feed off    # Request disable
+</code></pre>
+<h3>/claude_mem_status</h3>
+<p>Check worker health and session status.</p>
+<pre><code>/claude_mem_status
+</code></pre>
+<p>Returns worker status, port, active session count, and observation feed connection state.</p>
+<h2>Architecture</h2>
+<p>The plugin uses HTTP calls to the already-running claude-mem worker service rather than spawning subprocesses. This means:</p>
+<ul>
+<li>No <code>bun</code> dependency required on the gateway</li>
+<li>No process spawn overhead per event</li>
+<li>Uses the same worker API that Claude Code hooks use</li>
+<li>All operations are non-blocking (fire-and-forget where possible)</li>
+</ul>
+<h3>Session Tracking</h3>
+<p>Each OpenClaw agent session gets a unique <code>contentSessionId</code> (format: <code>openclaw-&lt;sessionKey&gt;-&lt;timestamp&gt;</code>) that maps to a claude-mem session in the worker. The plugin tracks:</p>
+<ul>
+<li><code>sessionIds</code> — Maps OpenClaw session keys to content session IDs</li>
+<li><code>contextCache</code> — TTL cache (60s) for context injection responses, keyed by project</li>
+</ul>
+<p>Both are cleared on <code>gateway_start</code>.</p>
+<h2>Requirements</h2>
+<ul>
+<li>Claude-mem worker service running on <code>localhost:37777</code> (or configured port)</li>
+<li>OpenClaw gateway with plugin support</li>
+<li>Network access between gateway and worker (localhost only)</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/openclaw-integration.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

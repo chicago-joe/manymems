@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modes &amp; Languages — manymems docs</title>
+  <meta name="description" content="Configure Claude-Mem behavior and language with the Mode System" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Configure Claude-Mem behavior and language with the Mode System</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Modes &amp; Languages</h1>
+<p>Claude-Mem uses a flexible <strong>Mode System</strong> to adapt its behavior, observation types, and output language. This allows you to switch between different workflows (like coding vs. email investigation) or languages without reinstalling the plugin.</p>
+<h2>What is a Mode?</h2>
+<p>A &quot;mode&quot; is a configuration profile that defines:</p>
+<ol>
+<li><strong>Observer Role</strong>: How Claude should analyze your work (e.g., &quot;Software Engineer&quot; vs. &quot;Forensic Analyst&quot;).</li>
+<li><strong>Observation Types</strong>: Valid categories for memory (e.g., &quot;Bug Fix&quot;, &quot;Feature&quot; vs. &quot;Person&quot;, &quot;Organization&quot;).</li>
+<li><strong>Concepts</strong>: Semantic tags for indexing (e.g., &quot;Pattern&quot;, &quot;Trade-off&quot;).</li>
+<li><strong>Language</strong>: The language used for generating observations and summaries.</li>
+</ol>
+<h2>Configuration</h2>
+<p>Set the active mode using the <code>CLAUDE_MEM_MODE</code> setting in <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODE&quot;: &quot;code--es&quot;
+}
+</code></pre>
+<p>Or via environment variable:</p>
+<pre><code class="language-bash">
+</code></pre>
+<h2>Available Modes</h2>
+<h3>Code Mode (Default)</h3>
+<p>The standard mode for software development. Captures bug fixes, features, refactors, and architectural decisions.</p>
+<p><strong>ID:</strong> <code>code</code></p>
+<h3>Code Mode Variants</h3>
+<p>Behavioral variants that change how the code mode operates:</p>
+<table>
+<thead>
+<tr>
+  <th>Variant</th>
+  <th>Mode ID</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Chill</strong></td>
+  <td><code>code--chill</code></td>
+  <td>Produces fewer observations. Only records things &quot;painful to rediscover&quot; - shipped features, architectural decisions, and non-obvious gotchas. Skips routine work and obvious changes.</td>
+</tr>
+</tbody>
+</table>
+<h3>Multilingual Code Modes</h3>
+<p>Inherits all behavior from Code Mode but instructs Claude to generate <strong>all</strong> memory artifacts (titles, narratives, facts, summaries) in the target language.</p>
+<table>
+<thead>
+<tr>
+  <th>Language</th>
+  <th>Mode ID</th>
+  <th>Native Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Arabic</strong></td>
+  <td><code>code--ar</code></td>
+  <td>العربية</td>
+</tr>
+<tr>
+  <td><strong>Bengali</strong></td>
+  <td><code>code--bn</code></td>
+  <td>বাংলা</td>
+</tr>
+<tr>
+  <td><strong>Chinese</strong></td>
+  <td><code>code--zh</code></td>
+  <td>中文</td>
+</tr>
+<tr>
+  <td><strong>Czech</strong></td>
+  <td><code>code--cs</code></td>
+  <td>Čeština</td>
+</tr>
+<tr>
+  <td><strong>Danish</strong></td>
+  <td><code>code--da</code></td>
+  <td>Dansk</td>
+</tr>
+<tr>
+  <td><strong>Dutch</strong></td>
+  <td><code>code--nl</code></td>
+  <td>Nederlands</td>
+</tr>
+<tr>
+  <td><strong>Finnish</strong></td>
+  <td><code>code--fi</code></td>
+  <td>Suomi</td>
+</tr>
+<tr>
+  <td><strong>French</strong></td>
+  <td><code>code--fr</code></td>
+  <td>Français</td>
+</tr>
+<tr>
+  <td><strong>German</strong></td>
+  <td><code>code--de</code></td>
+  <td>Deutsch</td>
+</tr>
+<tr>
+  <td><strong>Greek</strong></td>
+  <td><code>code--el</code></td>
+  <td>Ελληνικά</td>
+</tr>
+<tr>
+  <td><strong>Hebrew</strong></td>
+  <td><code>code--he</code></td>
+  <td>עברית</td>
+</tr>
+<tr>
+  <td><strong>Hindi</strong></td>
+  <td><code>code--hi</code></td>
+  <td>हिन्दी</td>
+</tr>
+<tr>
+  <td><strong>Hungarian</strong></td>
+  <td><code>code--hu</code></td>
+  <td>Magyar</td>
+</tr>
+<tr>
+  <td><strong>Indonesian</strong></td>
+  <td><code>code--id</code></td>
+  <td>Bahasa Indonesia</td>
+</tr>
+<tr>
+  <td><strong>Urdu</strong></td>
+  <td><code>code--ur</code></td>
+  <td>اردو</td>
+</tr>
+<tr>
+  <td><strong>Italian</strong></td>
+  <td><code>code--it</code></td>
+  <td>Italiano</td>
+</tr>
+<tr>
+  <td><strong>Japanese</strong></td>
+  <td><code>code--ja</code></td>
+  <td>日本語</td>
+</tr>
+<tr>
+  <td><strong>Korean</strong></td>
+  <td><code>code--ko</code></td>
+  <td>한국어</td>
+</tr>
+<tr>
+  <td><strong>Norwegian</strong></td>
+  <td><code>code--no</code></td>
+  <td>Norsk</td>
+</tr>
+<tr>
+  <td><strong>Polish</strong></td>
+  <td><code>code--pl</code></td>
+  <td>Polski</td>
+</tr>
+<tr>
+  <td><strong>Portuguese (Brazil)</strong></td>
+  <td><code>code--pt-br</code></td>
+  <td>Português Brasileiro</td>
+</tr>
+<tr>
+  <td><strong>Romanian</strong></td>
+  <td><code>code--ro</code></td>
+  <td>Română</td>
+</tr>
+<tr>
+  <td><strong>Russian</strong></td>
+  <td><code>code--ru</code></td>
+  <td>Русский</td>
+</tr>
+<tr>
+  <td><strong>Spanish</strong></td>
+  <td><code>code--es</code></td>
+  <td>Español</td>
+</tr>
+<tr>
+  <td><strong>Swedish</strong></td>
+  <td><code>code--sv</code></td>
+  <td>Svenska</td>
+</tr>
+<tr>
+  <td><strong>Thai</strong></td>
+  <td><code>code--th</code></td>
+  <td>ภาษาไทย</td>
+</tr>
+<tr>
+  <td><strong>Turkish</strong></td>
+  <td><code>code--tr</code></td>
+  <td>Türkçe</td>
+</tr>
+<tr>
+  <td><strong>Ukrainian</strong></td>
+  <td><code>code--uk</code></td>
+  <td>Українська</td>
+</tr>
+<tr>
+  <td><strong>Vietnamese</strong></td>
+  <td><code>code--vi</code></td>
+  <td>Tiếng Việt</td>
+</tr>
+</tbody>
+</table>
+<h3>Email Investigation Mode</h3>
+<p>A specialized mode for analyzing email dumps (e.g., FOIA releases, corporate archives). Focuses on identifying entities, relationships, timeline events, and key topics.</p>
+<p><strong>ID:</strong> <code>email-investigation</code></p>
+<p><strong>Observation Types:</strong></p>
+<ul>
+<li><code>entity</code>: Person, organization, or email address</li>
+<li><code>relationship</code>: Connection between entities</li>
+<li><code>timeline-event</code>: Time-stamped event in communication sequence</li>
+<li><code>evidence</code>: Supporting documentation or proof</li>
+<li><code>anomaly</code>: Suspicious pattern or irregularity</li>
+<li><code>conclusion</code>: Investigative finding or determination</li>
+</ul>
+<h2>Mode Inheritance</h2>
+<p>The system supports inheritance using the <code>--</code> separator. For example, <code>code--es</code> means:</p>
+<ol>
+<li>Load <code>code</code> (Parent) configuration.</li>
+<li>Load <code>code--es</code> (Child) configuration.</li>
+<li>Merge Child into Parent (Child overrides).</li>
+</ol>
+<p>This allows for lightweight &quot;remix&quot; modes that only change specific aspects (like the language prompt) while keeping the core definitions intact.</p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/modes.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

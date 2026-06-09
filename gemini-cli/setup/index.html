@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini CLI Setup — manymems docs</title>
+  <meta name="description" content="Add persistent memory to Gemini CLI with claude-mem" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Add persistent memory to Gemini CLI with claude-mem</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Gemini CLI Setup</h1>
+<blockquote>
+<p><strong>Give Gemini CLI persistent memory across sessions.</strong></p>
+</blockquote>
+<p>Gemini CLI starts every session from scratch. Claude-mem changes that by capturing observations, decisions, and patterns — then injecting relevant context into each new session.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a> installed and configured</li>
+<li><a href="https://nodejs.org/">Node.js</a> 18+</li>
+<li>The <code>~/.gemini</code> directory must exist (created by Gemini CLI on first run)</li>
+</ul>
+<h2>Installation</h2>
+<h3>Step 1: Install claude-mem</h3>
+<pre><code class="language-bash">npx claude-mem install
+</code></pre>
+<p>The installer will:</p>
+<ol>
+<li>Auto-detect Gemini CLI (checks for <code>~/.gemini</code> directory)</li>
+<li>Prompt you to select <strong>Gemini CLI</strong> from the IDE picker</li>
+<li>Install 8 lifecycle hooks into <code>~/.gemini/settings.json</code></li>
+<li>Inject context configuration into <code>~/.gemini/GEMINI.md</code></li>
+<li>Start the worker service</li>
+</ol>
+<h3>Step 2: Configure an AI provider</h3>
+<p>Claude-mem needs an AI provider to extract observations from your sessions. Choose one:</p>
+<h3>Step 3: Verify installation</h3>
+<pre><code class="language-bash"># Check worker is running
+npx claude-mem status
+
+# Check hooks are installed — look for claude-mem entries
+cat ~/.gemini/settings.json | grep claude-mem
+</code></pre>
+<p>Open http://localhost:37777 to see the memory viewer.</p>
+<h3>Step 4: Start using Gemini CLI</h3>
+<p>Launch Gemini CLI normally. Claude-mem works in the background:</p>
+<pre><code class="language-bash">gemini
+</code></pre>
+<p>On session start, you'll see claude-mem context injected with your recent observations and project history.</p>
+<h2>What gets captured</h2>
+<p>Claude-mem registers 8 of Gemini CLI's 11 lifecycle hooks:</p>
+<table>
+<thead>
+<tr>
+  <th>Hook</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>SessionStart</strong></td>
+  <td>Injects memory context into the session</td>
+</tr>
+<tr>
+  <td><strong>SessionEnd</strong></td>
+  <td>Marks session complete, triggers summary</td>
+</tr>
+<tr>
+  <td><strong>PreCompress</strong></td>
+  <td>Captures session summary before compression</td>
+</tr>
+<tr>
+  <td><strong>Notification</strong></td>
+  <td>Records system events (permissions, etc.)</td>
+</tr>
+<tr>
+  <td><strong>BeforeAgent</strong></td>
+  <td>Captures user prompts</td>
+</tr>
+<tr>
+  <td><strong>AfterAgent</strong></td>
+  <td>Records full agent responses</td>
+</tr>
+<tr>
+  <td><strong>BeforeTool</strong></td>
+  <td>Logs tool invocations before execution</td>
+</tr>
+<tr>
+  <td><strong>AfterTool</strong></td>
+  <td>Captures tool results after execution</td>
+</tr>
+</tbody>
+</table>
+<p>Three model-level hooks (BeforeModel, AfterModel, BeforeToolSelection) are intentionally skipped — they fire per-LLM-call and are too noisy for memory capture.</p>
+<h2>Troubleshooting</h2>
+<h3>Hooks not firing</h3>
+<ol>
+<li><p>Verify hooks exist in settings:</p>
+<pre><code class="language-bash">cat ~/.gemini/settings.json
+</code></pre>
+<p>You should see entries like <code>&quot;SessionStart&quot;</code>, <code>&quot;AfterTool&quot;</code>, etc. with claude-mem commands.</p>
+</li>
+<li><p>Restart Gemini CLI after installation.</p>
+</li>
+<li><p>Re-run the installer:</p>
+<pre><code class="language-bash">npx claude-mem install
+</code></pre>
+</li>
+</ol>
+<h3>Worker not running</h3>
+<pre><code class="language-bash"># Check status
+npx claude-mem status
+
+# View logs
+npx claude-mem logs
+
+# Restart worker
+npx claude-mem restart
+</code></pre>
+<h3>No context appearing at session start</h3>
+<ol>
+<li>Ensure the worker is running (check http://localhost:37777)</li>
+<li>You need at least one previous session with observations for context to appear</li>
+<li>Check your AI provider is configured in <code>~/.claude-mem/settings.json</code></li>
+</ol>
+<h3>Raw escape codes in output</h3>
+<p>If you see characters like <code>[31m</code> or <code>[0m</code> in the session context, your claude-mem version may need updating:</p>
+<pre><code class="language-bash">npx claude-mem install
+</code></pre>
+<p>This was fixed in v10.6.3+ — the Gemini CLI adapter now strips ANSI color codes automatically.</p>
+<h2>Uninstalling</h2>
+<pre><code class="language-bash">npx claude-mem uninstall
+</code></pre>
+<p>This removes hooks from <code>~/.gemini/settings.json</code> and cleans up <code>~/.gemini/GEMINI.md</code>.</p>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/usage/gemini-provider">Gemini Provider</a> — Configure the Gemini AI provider for observation extraction</li>
+<li><a href="/configuration">Configuration</a> — All settings options</li>
+<li><a href="/usage/search-tools">Search Tools</a> — Search your memory from within sessions</li>
+<li><a href="/troubleshooting">Troubleshooting</a> — Common issues and solutions</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/gemini-cli/setup.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

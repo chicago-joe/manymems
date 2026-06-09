@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Endless Mode (Beta) — manymems docs</title>
+  <meta name="description" content="Experimental biomimetic memory architecture for extended sessions" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Experimental biomimetic memory architecture for extended sessions</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Current State of Endless Mode</h1>
+<h2>Core Concept</h2>
+<p>Endless Mode is a <strong>biomimetic memory architecture</strong> that solves Claude's context window exhaustion problem. Instead of keeping full tool outputs in the context window (O(N²) complexity), it:</p>
+<ul>
+<li>Captures compressed observations after each tool use</li>
+<li>Replaces transcripts with low token summaries</li>
+<li>Achieves O(N) linear complexity</li>
+<li>Maintains two-tier memory: working memory (compressed) + archive memory (full transcript on disk, maintained by default claude code functionality)</li>
+</ul>
+<h2>Implementation Status</h2>
+<p><strong>Status</strong>: FUNCTIONAL BUT EXPERIMENTAL</p>
+<p><strong>Current Branch</strong>: <code>beta/endless-mode</code> (ahead of main)</p>
+<p><strong>Recent Activity</strong>:</p>
+<ul>
+<li>Merged main branch changes</li>
+<li>Resolved merge conflicts in save-hook, SessionStore, SessionRoutes</li>
+<li>Updated documentation to remove misleading token reduction claims</li>
+<li>Added important caveats about beta status</li>
+</ul>
+<h2>Key Architecture Components</h2>
+<ol>
+<li><strong>Pre-Tool-Use Hook</strong> - Tracks tool execution start, sends tool_use_id to worker</li>
+<li><strong>Save Hook (PostToolUse)</strong> - <strong>CRITICAL</strong>: Blocks until observation is generated (110s timeout), injects compressed observation back into context</li>
+<li><strong>SessionManager.waitForNextObservation()</strong> - Event-driven wait mechanism (no polling)</li>
+<li><strong>SDKAgent</strong> - Generates observations via Agent SDK, emits completion events</li>
+<li><strong>Database</strong> - Added <code>tool_use_id</code> column for observation correlation</li>
+</ol>
+<h2>Configuration</h2>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_ENDLESS_MODE&quot;: &quot;false&quot;,  // Default: disabled
+  &quot;CLAUDE_MEM_ENDLESS_WAIT_TIMEOUT_MS&quot;: &quot;90000&quot;  // 90 second timeout
+}
+</code></pre>
+<p><strong>Enable via</strong>: Manual checkout of beta branch (see instructions below)</p>
+<h2>Flow</h2>
+<pre><code>Tool Executes → Pre-Hook (track ID) → Tool Completes →
+Save-Hook (BLOCKS) → Worker processes → SDK generates observation →
+Event fired → Hook receives observation → Injects markdown →
+Clears input → Context reduced
+</code></pre>
+<h2>Known Limitations</h2>
+<p>From the documentation:</p>
+<ul>
+<li>⚠️ <strong>Slower than standard mode</strong> - Blocking adds latency</li>
+<li>⚠️ <strong>Still in development</strong> - May have bugs</li>
+<li>⚠️ <strong>Not battle-tested</strong> - New architecture</li>
+<li>⚠️ <strong>Theoretical projections</strong> - Efficiency gains not yet validated in production</li>
+</ul>
+<h2>What's Working</h2>
+<ul>
+<li>✅ Synchronous observation injection</li>
+<li>✅ Event-driven wait mechanism</li>
+<li>✅ Token reduction via input clearing</li>
+<li>✅ Database schema with tool_use_id</li>
+<li>✅ Web UI for version switching</li>
+<li>✅ Graceful timeout fallbacks</li>
+</ul>
+<h2>What's Not Ready</h2>
+<ul>
+<li>❌ Production validation of token savings</li>
+<li>❌ Comprehensive test coverage</li>
+<li>❌ Stable channel release</li>
+<li>❌ Performance benchmarks</li>
+<li>❌ Long-running session data</li>
+</ul>
+<h2>How to Try Endless Mode</h2>
+<p>Endless Mode is currently only available on the beta branch. To try it:</p>
+<pre><code class="language-bash"># Navigate to your claude-mem installation
+cd ~/.claude/plugins/marketplaces/thedotmack/
+
+# Checkout the beta branch
+git checkout beta/endless-mode
+
+# Install dependencies
+npm install
+
+# Restart the worker
+npm run worker:restart
+</code></pre>
+<p><strong>To return to stable:</strong></p>
+<pre><code class="language-bash">cd ~/.claude/plugins/marketplaces/thedotmack/
+git checkout main
+npm install
+npm run worker:restart
+</code></pre>
+<h2>Summary</h2>
+<p>The implementation is architecturally complete and functional, but remains experimental pending production validation of the theoretical efficiency gains.</p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/endless-mode.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progressive Disclosure — manymems docs</title>
+  <meta name="description" content="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Progressive Disclosure: Claude-Mem's Context Priming Philosophy</h1>
+<h2>Core Principle</h2>
+<p><strong>Show what exists and its retrieval cost first. Let the agent decide what to fetch based on relevance and need.</strong></p>
+<hr />
+<h2>What is Progressive Disclosure?</h2>
+<p>Progressive disclosure is an information architecture pattern where you reveal complexity gradually rather than all at once. In the context of AI agents, it means:</p>
+<ol>
+<li><strong>Layer 1 (Index)</strong>: Show lightweight metadata (titles, dates, types, token counts)</li>
+<li><strong>Layer 2 (Details)</strong>: Fetch full content only when needed</li>
+<li><strong>Layer 3 (Deep Dive)</strong>: Read original source files if required</li>
+</ol>
+<p>This mirrors how humans work: We scan headlines before reading articles, review table of contents before diving into chapters, and check file names before opening files.</p>
+<hr />
+<h2>The Problem: Context Pollution</h2>
+<p>Traditional RAG (Retrieval-Augmented Generation) systems fetch everything upfront:</p>
+<pre><code>❌ Traditional Approach:
+┌─────────────────────────────────────┐
+│ Session Start                        │
+│                                      │
+│ [15,000 tokens of past sessions]    │
+│ [8,000 tokens of observations]      │
+│ [12,000 tokens of file summaries]   │
+│                                      │
+│ Total: 35,000 tokens                │
+│ Relevant: ~2,000 tokens (6%)        │
+└─────────────────────────────────────┘
+</code></pre>
+<p><strong>Problems:</strong></p>
+<ul>
+<li>Wastes 94% of attention budget on irrelevant context</li>
+<li>User prompt gets buried under mountain of history</li>
+<li>Agent must process everything before understanding task</li>
+<li>No way to know what's actually useful until after reading</li>
+</ul>
+<hr />
+<h2>Claude-Mem's Solution: Progressive Disclosure</h2>
+<pre><code>✅ Progressive Disclosure Approach:
+┌─────────────────────────────────────┐
+│ Session Start                        │
+│                                      │
+│ Index of 50 observations: ~800 tokens│
+│ ↓                                    │
+│ Agent sees: &quot;🔴 Hook timeout issue&quot;  │
+│ Agent decides: &quot;Relevant!&quot;           │
+│ ↓                                    │
+│ Fetch observation #2543: ~120 tokens│
+│                                      │
+│ Total: 920 tokens                   │
+│ Relevant: 920 tokens (100%)         │
+└─────────────────────────────────────┘
+</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Agent controls its own context consumption</li>
+<li>Directly relevant to current task</li>
+<li>Can fetch more if needed</li>
+<li>Can skip everything if not relevant</li>
+<li>Clear cost/benefit for each retrieval decision</li>
+</ul>
+<hr />
+<h2>How It Works in Claude-Mem</h2>
+<h3>The Index Format</h3>
+<p>Every SessionStart hook provides a compact index:</p>
+<pre><code class="language-markdown">### Oct 26, 2025
+
+**General**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2586 | 12:58 AM | 🔵 | Context hook file exists but is empty | ~51 |
+| #2587 | ″ | 🔵 | Context hook script file is empty | ~46 |
+| #2589 | ″ | 🟡 | Investigated hook debug output docs | ~105 |
+
+**src/hooks/context-hook.ts**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2591 | 1:15 AM | ⚖️ | Stderr messaging abandoned | ~155 |
+| #2592 | 1:16 AM | ⚖️ | Web UI strategy redesigned | ~193 |
+</code></pre>
+<p><strong>What the agent sees:</strong></p>
+<ul>
+<li><strong>What exists</strong>: Observation titles give semantic meaning</li>
+<li><strong>When it happened</strong>: Timestamps for temporal context</li>
+<li><strong>What type</strong>: Icons indicate observation category</li>
+<li><strong>Retrieval cost</strong>: Token counts for informed decisions</li>
+<li><strong>Where to get it</strong>: MCP search tools referenced at bottom</li>
+</ul>
+<h3>The Legend System</h3>
+<pre><code>🎯 session-request  - User's original goal
+🔴 gotcha          - Critical edge case or pitfall
+🟡 problem-solution - Bug fix or workaround
+🔵 how-it-works    - Technical explanation
+🟢 what-changed    - Code/architecture change
+🟣 discovery       - Learning or insight
+🟠 why-it-exists   - Design rationale
+🟤 decision        - Architecture decision
+⚖️ trade-off       - Deliberate compromise
+</code></pre>
+<p><strong>Purpose:</strong></p>
+<ul>
+<li>Visual scanning (humans and AI both benefit)</li>
+<li>Semantic categorization</li>
+<li>Priority signaling (🔴 gotchas are more critical)</li>
+<li>Pattern recognition across sessions</li>
+</ul>
+<h3>Progressive Disclosure Instructions</h3>
+<p>The index includes usage guidance:</p>
+<pre><code class="language-markdown">💡 **Progressive Disclosure:** This index shows WHAT exists and retrieval COST.
+- Use MCP search tools to fetch full observation details on-demand
+- Prefer searching observations over re-reading code for past decisions
+- Critical types (🔴 gotcha, 🟤 decision, ⚖️ trade-off) often worth fetching immediately
+</code></pre>
+<p><strong>What this does:</strong></p>
+<ul>
+<li>Teaches the agent the pattern</li>
+<li>Suggests when to fetch (critical types)</li>
+<li>Recommends search over code re-reading (efficiency)</li>
+<li>Makes the system self-documenting</li>
+</ul>
+<hr />
+<h2>The Philosophy: Context as Currency</h2>
+<h3>Mental Model: Token Budget as Money</h3>
+<p>Think of context window as a bank account:</p>
+<table>
+<thead>
+<tr>
+  <th>Approach</th>
+  <th>Metaphor</th>
+  <th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Dump everything</strong></td>
+  <td>Spending your entire paycheck on groceries you might need someday</td>
+  <td>Waste, clutter, can't afford what you actually need</td>
+</tr>
+<tr>
+  <td><strong>Fetch nothing</strong></td>
+  <td>Refusing to spend any money</td>
+  <td>Starvation, can't accomplish tasks</td>
+</tr>
+<tr>
+  <td><strong>Progressive disclosure</strong></td>
+  <td>Check your pantry, make a shopping list, buy only what you need</td>
+  <td>Efficiency, room for unexpected needs</td>
+</tr>
+</tbody>
+</table>
+<h3>The Attention Budget</h3>
+<p>LLMs have finite attention:</p>
+<ul>
+<li>Every token attends to every other token (n² relationships)</li>
+<li>100,000 token window ≠ 100,000 tokens of useful attention</li>
+<li>Context &quot;rot&quot; happens as window fills</li>
+<li>Later tokens get less attention than earlier ones</li>
+</ul>
+<p><strong>Claude-Mem's approach:</strong></p>
+<ul>
+<li>Start with ~1,000 tokens of index</li>
+<li>Agent has 99,000 tokens free for task</li>
+<li>Agent fetches ~200 tokens when needed</li>
+<li>Final budget: ~98,000 tokens for actual work</li>
+</ul>
+<h3>Design for Autonomy</h3>
+<blockquote>
+<p>&quot;As models improve, let them act intelligently&quot;</p>
+</blockquote>
+<p>Progressive disclosure treats the agent as an <strong>intelligent information forager</strong>, not a passive recipient of pre-selected context.</p>
+<p><strong>Traditional RAG:</strong></p>
+<pre><code>System → [Decides relevance] → Agent
+        ↑
+   Hope this helps!
+</code></pre>
+<p><strong>Progressive Disclosure:</strong></p>
+<pre><code>System → [Shows index] → Agent → [Decides relevance] → [Fetches details]
+                          ↑
+                   You know best!
+</code></pre>
+<p>The agent knows:</p>
+<ul>
+<li>The current task context</li>
+<li>What information would help</li>
+<li>How much budget to spend</li>
+<li>When to stop searching</li>
+</ul>
+<p>We don't.</p>
+<hr />
+<h2>Implementation Principles</h2>
+<h3>1. Make Costs Visible</h3>
+<p>Every item in the index shows token count:</p>
+<pre><code>| #2591 | 1:15 AM | ⚖️ | Stderr messaging abandoned | ~155 |
+                                                        ^^^^
+                                                    Retrieval cost
+</code></pre>
+<p><strong>Why:</strong></p>
+<ul>
+<li>Agent can make informed ROI decisions</li>
+<li>Small observations (~50 tokens) are &quot;cheap&quot; to fetch</li>
+<li>Large observations (~500 tokens) require stronger justification</li>
+<li>Matches how humans think about effort</li>
+</ul>
+<h3>2. Use Semantic Compression</h3>
+<p>Titles compress full observations into ~10 words:</p>
+<p><strong>Bad title:</strong></p>
+<pre><code>Observation about a thing
+</code></pre>
+<p><strong>Good title:</strong></p>
+<pre><code>🔴 Hook timeout issue: 60s default too short for npm install
+</code></pre>
+<p><strong>What makes a good title:</strong></p>
+<ul>
+<li>Specific: Identifies exact issue</li>
+<li>Actionable: Clear what to do</li>
+<li>Self-contained: Doesn't require reading observation</li>
+<li>Searchable: Contains key terms (hook, timeout, npm)</li>
+<li>Categorized: Icon indicates type</li>
+</ul>
+<h3>3. Group by Context</h3>
+<p>Observations are grouped by:</p>
+<ul>
+<li><strong>Date</strong>: Temporal context</li>
+<li><strong>File path</strong>: Spatial context (work on specific files)</li>
+<li><strong>Project</strong>: Logical context</li>
+</ul>
+<pre><code class="language-markdown">**src/hooks/context-hook.ts**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2591 | 1:15 AM | ⚖️ | Stderr messaging abandoned | ~155 |
+| #2594 | 1:17 AM | 🟠 | Removed stderr section from docs | ~93 |
+</code></pre>
+<p><strong>Benefit:</strong> If agent is working on <code>src/hooks/context-hook.ts</code>, related observations are already grouped together.</p>
+<h3>4. Provide Retrieval Tools</h3>
+<p>The index is useless without retrieval mechanisms:</p>
+<pre><code class="language-markdown">*Use claude-mem MCP search to access records with the given ID*
+</code></pre>
+<p><strong>Available MCP tools:</strong></p>
+<ul>
+<li><code>search</code> - Search memory index (Layer 1: Get IDs)</li>
+<li><code>timeline</code> - Get chronological context (Layer 2: See narrative arc)</li>
+<li><code>get_observations</code> - Fetch full details (Layer 3: Deep dive)</li>
+</ul>
+<p>The 3-layer workflow ensures progressive disclosure: index → context → details.</p>
+<hr />
+<h2>Real-World Example</h2>
+<h3>Scenario: Agent asked to fix a bug in hooks</h3>
+<p><strong>Without progressive disclosure:</strong></p>
+<pre><code>SessionStart injects 25,000 tokens of past context
+Agent reads everything
+Agent finds 1 relevant observation (buried in middle)
+Total tokens consumed: 25,000
+Relevant tokens: ~200
+Efficiency: 0.8%
+</code></pre>
+<p><strong>With progressive disclosure:</strong></p>
+<pre><code>SessionStart shows index: ~800 tokens
+Agent sees title: &quot;🔴 Hook timeout issue: 60s too short&quot;
+Agent thinks: &quot;This looks relevant to my bug!&quot;
+Agent fetches observation #2543: ~155 tokens
+Total tokens consumed: 955
+Relevant tokens: 955
+Efficiency: 100%
+</code></pre>
+<h3>The Index Entry</h3>
+<pre><code class="language-markdown">| #2543 | 2:14 PM | 🔴 | Hook timeout: 60s too short for npm install | ~155 |
+</code></pre>
+<p><strong>What the agent learns WITHOUT fetching:</strong></p>
+<ul>
+<li>There's a known gotcha (🔴) about hook timeouts</li>
+<li>It's related to npm install taking too long</li>
+<li>Full details are ~155 tokens (cheap)</li>
+<li>Happened at 2:14 PM (recent)</li>
+</ul>
+<p><strong>Decision tree:</strong></p>
+<pre><code>Is my task related to hooks? → YES
+Is my task related to timeouts? → YES
+Is my task related to npm? → YES
+155 tokens is cheap → FETCH IT
+</code></pre>
+<hr />
+<h2>The Three-Layer Workflow</h2>
+<p>Claude-Mem implements progressive disclosure through a 3-layer workflow pattern:</p>
+<h3>Layer 1: Search (Index)</h3>
+<p>Start by searching to get a compact index with IDs:</p>
+<pre><code class="language-typescript">search({
+  query: &quot;hook timeout&quot;,
+  limit: 10
+})
+</code></pre>
+<p><strong>Returns:</strong></p>
+<pre><code>Found 3 observations matching &quot;hook timeout&quot;:
+
+| ID | Date | Type | Title |
+|----|------|------|-------|
+| #2543 | Oct 26 | gotcha | Hook timeout: 60s too short |
+| #2891 | Oct 25 | how-it-works | Hook timeout configuration |
+| #2102 | Oct 20 | problem-solution | Fixed timeout in CI |
+</code></pre>
+<p><strong>Cost:</strong> ~50-100 tokens per result
+<strong>Value:</strong> Agent can scan and decide which observations are relevant</p>
+<h3>Layer 2: Timeline (Context)</h3>
+<p>Get chronological context around interesting observations:</p>
+<pre><code class="language-typescript">timeline({
+  anchor: 2543,  // Observation ID from search
+  depth_before: 3,
+  depth_after: 3
+})
+</code></pre>
+<p><strong>Returns:</strong> Chronological view showing what happened before/during/after observation #2543</p>
+<p><strong>Cost:</strong> Variable based on depth
+<strong>Value:</strong> Understand narrative arc and context</p>
+<h3>Layer 3: Get Observations (Details)</h3>
+<p>Fetch full details only for relevant observations:</p>
+<pre><code class="language-typescript">get_observations({
+  ids: [2543, 2102]  // Selected from search results
+})
+</code></pre>
+<p><strong>Returns:</strong></p>
+<pre><code>#2543 🔴 Hook timeout: 60s too short for npm install
+─────────────────────────────────────────────────
+Date: Oct 26, 2025 2:14 PM
+Type: gotcha
+Project: claude-mem
+
+Narrative:
+Discovered that the default 60-second hook timeout is insufficient
+for npm install operations, especially with large dependency trees
+or slow network conditions. This causes SessionStart hook to fail
+silently, preventing context injection.
+
+Facts:
+- Default timeout: 60 seconds
+- npm install with cold cache: ~90 seconds
+- Configured timeout: 120 seconds in plugin/hooks/hooks.json:25
+
+Files Modified:
+- plugin/hooks/hooks.json
+
+Concepts: hooks, timeout, npm, configuration
+</code></pre>
+<p><strong>Cost:</strong> ~155 tokens for full details
+<strong>Value:</strong> Complete understanding of the issue</p>
+<hr />
+<h2>Cognitive Load Theory</h2>
+<p>Progressive disclosure is grounded in <strong>Cognitive Load Theory</strong>:</p>
+<h3>Intrinsic Load</h3>
+<p>The inherent difficulty of the task itself.</p>
+<p><strong>Example:</strong> &quot;Fix authentication bug&quot;</p>
+<ul>
+<li>Must understand auth system</li>
+<li>Must understand the bug</li>
+<li>Must write the fix</li>
+</ul>
+<p>This load is unavoidable.</p>
+<h3>Extraneous Load</h3>
+<p>The cognitive burden of poorly presented information.</p>
+<p><strong>Traditional RAG adds extraneous load:</strong></p>
+<ul>
+<li>Scanning irrelevant observations</li>
+<li>Filtering out noise</li>
+<li>Remembering what to ignore</li>
+<li>Re-contextualizing after each section</li>
+</ul>
+<p><strong>Progressive disclosure minimizes extraneous load:</strong></p>
+<ul>
+<li>Scan titles (low effort)</li>
+<li>Fetch only relevant (targeted effort)</li>
+<li>Full attention on current task</li>
+</ul>
+<h3>Germane Load</h3>
+<p>The effort of building mental models and schemas.</p>
+<p><strong>Progressive disclosure supports germane load:</strong></p>
+<ul>
+<li>Consistent structure (legend, grouping)</li>
+<li>Clear categorization (types, icons)</li>
+<li>Semantic compression (good titles)</li>
+<li>Explicit costs (token counts)</li>
+</ul>
+<hr />
+<h2>Anti-Patterns to Avoid</h2>
+<h3>❌ Verbose Titles</h3>
+<p><strong>Bad:</strong></p>
+<pre><code>| #2543 | 2:14 PM | 🔴 | Investigation into the issue where hooks time out | ~155 |
+</code></pre>
+<p><strong>Good:</strong></p>
+<pre><code>| #2543 | 2:14 PM | 🔴 | Hook timeout: 60s too short for npm install | ~155 |
+</code></pre>
+<h3>❌ Hiding Costs</h3>
+<p><strong>Bad:</strong></p>
+<pre><code>| #2543 | 2:14 PM | 🔴 | Hook timeout issue |
+</code></pre>
+<p><strong>Good:</strong></p>
+<pre><code>| #2543 | 2:14 PM | 🔴 | Hook timeout issue | ~155 |
+</code></pre>
+<h3>❌ No Retrieval Path</h3>
+<p><strong>Bad:</strong></p>
+<pre><code>Here are 10 observations. [No instructions on how to get full details]
+</code></pre>
+<p><strong>Good:</strong></p>
+<pre><code>Here are 10 observations.
+*Use MCP search tools to fetch full observation details on-demand*
+</code></pre>
+<h3>❌ Skipping the Index Layer</h3>
+<p><strong>Bad:</strong></p>
+<pre><code class="language-typescript">// Fetching full details immediately
+get_observations({
+  ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  // Guessing which are relevant
+})
+</code></pre>
+<p><strong>Good:</strong></p>
+<pre><code class="language-typescript">// Follow the 3-layer workflow
+// Layer 1: Search for index
+search({
+  query: &quot;hooks&quot;,
+  limit: 20
+})
+
+// Layer 2: Review index, identify 2-3 relevant IDs
+
+// Layer 3: Fetch only relevant observations
+get_observations({
+  ids: [2543, 2891]  // Just the most relevant
+})
+</code></pre>
+<hr />
+<h2>Key Design Decisions</h2>
+<h3>Why Token Counts?</h3>
+<p><strong>Decision:</strong> Show approximate token counts (~155, ~203) rather than exact counts.</p>
+<p><strong>Rationale:</strong></p>
+<ul>
+<li>Communicates scale (50 vs 500) without false precision</li>
+<li>Maps to human intuition (small/medium/large)</li>
+<li>Allows agent to budget attention</li>
+<li>Encourages cost-conscious retrieval</li>
+</ul>
+<h3>Why Icons Instead of Text Labels?</h3>
+<p><strong>Decision:</strong> Use emoji icons (🔴, 🟡, 🔵) rather than text (GOTCHA, PROBLEM, HOWTO).</p>
+<p><strong>Rationale:</strong></p>
+<ul>
+<li>Visual scanning (pattern recognition)</li>
+<li>Token efficient (1 char vs 10 chars)</li>
+<li>Language-agnostic</li>
+<li>Aesthetically distinct</li>
+<li>Works for both humans and AI</li>
+</ul>
+<h3>Why Index-First, Not Smart Pre-Fetch?</h3>
+<p><strong>Decision:</strong> Always show index first, even if we &quot;know&quot; what's relevant.</p>
+<p><strong>Rationale:</strong></p>
+<ul>
+<li>We can't know what's relevant better than the agent</li>
+<li>Pre-fetching assumes we understand the task</li>
+<li>Agent knows current context, we don't</li>
+<li>Respects agent autonomy</li>
+<li>Fails gracefully (can always fetch more)</li>
+</ul>
+<h3>Why Group by File Path?</h3>
+<p><strong>Decision:</strong> Group observations by file path in addition to date.</p>
+<p><strong>Rationale:</strong></p>
+<ul>
+<li>Spatial locality: Work on file X likely needs context about file X</li>
+<li>Reduces scanning effort</li>
+<li>Matches how developers think</li>
+<li>Clear semantic boundaries</li>
+</ul>
+<hr />
+<h2>Measuring Success</h2>
+<p>Progressive disclosure is working when:</p>
+<h3>✅ Low Waste Ratio</h3>
+<pre><code>Relevant Tokens / Total Context Tokens &gt; 80%
+</code></pre>
+<p>Most of the context consumed is actually useful.</p>
+<h3>✅ Selective Fetching</h3>
+<pre><code>Index Shown: 50 observations
+Details Fetched: 2-3 observations
+</code></pre>
+<p>Agent is being selective, not fetching everything.</p>
+<h3>✅ Fast Task Completion</h3>
+<pre><code>Session with index: 30 seconds to find relevant context
+Session without: 90 seconds scanning all context
+</code></pre>
+<p>Time-to-relevant-information is faster.</p>
+<h3>✅ Appropriate Depth</h3>
+<pre><code>Simple task: Only index needed
+Medium task: 1-2 observations fetched
+Complex task: 5-10 observations + code reads
+</code></pre>
+<p>Depth scales with task complexity.</p>
+<hr />
+<h2>Future Enhancements</h2>
+<h3>Adaptive Index Size</h3>
+<pre><code class="language-typescript">// Vary index size based on session type
+SessionStart({ source: &quot;startup&quot; }):
+  → Show last 10 sessions (small index)
+
+SessionStart({ source: &quot;resume&quot; }):
+  → Show only current session (micro index)
+
+SessionStart({ source: &quot;compact&quot; }):
+  → Show last 20 sessions (larger index)
+</code></pre>
+<h3>Relevance Scoring</h3>
+<pre><code class="language-typescript">// Use embeddings to pre-sort index by relevance
+search({
+  query: &quot;authentication bug&quot;,
+  orderBy: &quot;relevance&quot;  // Based on semantic similarity (future enhancement)
+})
+</code></pre>
+<h3>Cost Forecasting</h3>
+<pre><code class="language-markdown">💡 **Budget Estimate:**
+- Fetching all 🔴 gotchas: ~450 tokens
+- Fetching all file-related: ~1,200 tokens
+- Fetching everything: ~8,500 tokens
+</code></pre>
+<h3>Progressive Detail Levels</h3>
+<pre><code>Layer 1: Index (titles only)
+Layer 2: Summaries (2-3 sentences)
+Layer 3: Full details (complete observation)
+Layer 4: Source files (referenced code)
+</code></pre>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li><strong>Show, don't tell</strong>: Index reveals what exists without forcing consumption</li>
+<li><strong>Cost-conscious</strong>: Make retrieval costs visible for informed decisions</li>
+<li><strong>Agent autonomy</strong>: Let the agent decide what's relevant</li>
+<li><strong>Semantic compression</strong>: Good titles make or break the system</li>
+<li><strong>Consistent structure</strong>: Patterns reduce cognitive load</li>
+<li><strong>Two-tier everything</strong>: Index first, details on-demand</li>
+<li><strong>Context as currency</strong>: Spend wisely on high-value information</li>
+</ol>
+<hr />
+<h2>Remember</h2>
+<blockquote>
+<p>&quot;The best interface is one that disappears when not needed, and appears exactly when it is.&quot;</p>
+</blockquote>
+<p>Progressive disclosure respects the agent's intelligence and autonomy. We provide the map; the agent chooses the path.</p>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="context-engineering">Context Engineering for AI Agents</a> - Foundational principles</li>
+<li><a href="architecture/overview">Claude-Mem Architecture</a> - How it all fits together</li>
+<li>Cognitive Load Theory (Sweller, 1988)</li>
+<li>Information Foraging Theory (Pirolli &amp; Card, 1999)</li>
+<li>Progressive Disclosure (Nielsen Norman Group)</li>
+</ul>
+<hr />
+<p><em>This philosophy emerged from real-world usage of Claude-Mem across hundreds of coding sessions. The pattern works because it aligns with both human cognition and LLM attention mechanics.</em></p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/progressive-disclosure.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

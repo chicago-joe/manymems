@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Export/Import — manymems docs</title>
+  <meta name="description" content="Share knowledge across claude-mem installations with duplicate prevention" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Share knowledge across claude-mem installations with duplicate prevention</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Memory Export/Import Scripts</h1>
+<p>Share your claude-mem knowledge with other users! These scripts allow you to export specific memories (observations, sessions, summaries, and prompts) and import them into another claude-mem installation.</p>
+<h2>Use Cases</h2>
+<ul>
+<li><strong>Share Windows compatibility knowledge</strong> with Windows users</li>
+<li><strong>Share bug fix patterns</strong> with contributors</li>
+<li><strong>Share project-specific learnings</strong> across teams</li>
+<li><strong>Backup specific memory sets</strong> for safekeeping</li>
+</ul>
+<h2>How It Works</h2>
+<h3>Export Script</h3>
+<p>Searches the database using <strong>hybrid search</strong> (combines ChromaDB vector embeddings with FTS5 full-text search) and exports all matching:</p>
+<ul>
+<li><strong>Observations</strong> - Individual learnings and discoveries</li>
+<li><strong>Sessions</strong> - Session metadata</li>
+<li><strong>Summaries</strong> - Session summaries</li>
+<li><strong>Prompts</strong> - User prompts that led to the work</li>
+</ul>
+<p>Output is a portable JSON file that can be shared.</p>
+<blockquote>
+<p><strong>Privacy Note:</strong> Export files contain all matching memory data in plain text. Review exports before sharing to ensure no sensitive information (API keys, passwords, private paths) is included.</p>
+</blockquote>
+<h3>Import Script</h3>
+<p>Imports memories with <strong>duplicate prevention</strong>:</p>
+<ul>
+<li>Checks if each record already exists before inserting</li>
+<li>Skips duplicates automatically</li>
+<li>Maintains data integrity with transactional imports</li>
+<li>Reports what was imported vs. skipped</li>
+</ul>
+<p><strong>Duplicate Detection Strategy:</strong></p>
+<ul>
+<li><strong>Sessions</strong>: By <code>claude_session_id</code> (unique)</li>
+<li><strong>Summaries</strong>: By <code>sdk_session_id</code> (unique)</li>
+<li><strong>Observations</strong>: By <code>sdk_session_id</code> + <code>title</code> + <code>created_at_epoch</code> (composite)</li>
+<li><strong>Prompts</strong>: By <code>claude_session_id</code> + <code>prompt_number</code> (composite)</li>
+</ul>
+<h2>Usage</h2>
+<h3>Export Memories</h3>
+<pre><code class="language-bash"># Export all Windows-related memories
+npx tsx scripts/export-memories.ts &quot;windows&quot; windows-memories.json
+
+# Export bug fixes
+npx tsx scripts/export-memories.ts &quot;bugfix&quot; bugfixes.json
+
+# Export specific feature work
+npx tsx scripts/export-memories.ts &quot;progressive disclosure&quot; progressive-disclosure.json
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<ol>
+<li><code>&lt;query&gt;</code> - Search query (uses hybrid semantic + full-text search)</li>
+<li><code>&lt;output-file&gt;</code> - Output JSON file path</li>
+<li><code>--project=name</code> - Optional: filter results to a specific project</li>
+</ol>
+<p><strong>Example Output:</strong></p>
+<pre><code>🔍 Searching for: &quot;windows&quot;
+✅ Found 54 observations
+✅ Found 12 sessions
+✅ Found 12 summaries
+✅ Found 7 prompts
+
+📦 Export complete!
+📄 Output: windows-memories.json
+📊 Stats:
+   • 54 observations
+   • 12 sessions
+   • 12 summaries
+   • 7 prompts
+</code></pre>
+<h3>Import Memories</h3>
+<pre><code class="language-bash"># Import from an export file
+npx tsx scripts/import-memories.ts windows-memories.json
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<ol>
+<li><code>&lt;input-file&gt;</code> - Input JSON file (from export script)</li>
+</ol>
+<p><strong>Example Output:</strong></p>
+<pre><code>📦 Import file: windows-memories.json
+📅 Exported: 2025-12-10T23:45:00.000Z
+🔍 Query: &quot;windows&quot;
+📊 Contains:
+   • 54 observations
+   • 12 sessions
+   • 12 summaries
+   • 7 prompts
+
+🔄 Importing sessions...
+   ✅ Imported: 12, Skipped: 0
+🔄 Importing summaries...
+   ✅ Imported: 12, Skipped: 0
+🔄 Importing observations...
+   ✅ Imported: 54, Skipped: 0
+🔄 Importing prompts...
+   ✅ Imported: 7, Skipped: 0
+
+✅ Import complete!
+📊 Summary:
+   Sessions:     12 imported, 0 skipped
+   Summaries:    12 imported, 0 skipped
+   Observations: 54 imported, 0 skipped
+   Prompts:      7 imported, 0 skipped
+</code></pre>
+<h3>Re-importing (Duplicate Prevention)</h3>
+<p>If you run the import again on the same file, duplicates are automatically skipped:</p>
+<pre><code>🔄 Importing sessions...
+   ✅ Imported: 0, Skipped: 12  ← All skipped (already exist)
+🔄 Importing summaries...
+   ✅ Imported: 0, Skipped: 12
+🔄 Importing observations...
+   ✅ Imported: 0, Skipped: 54
+🔄 Importing prompts...
+   ✅ Imported: 0, Skipped: 7
+</code></pre>
+<h2>Sharing Memories</h2>
+<h3>For Export Authors</h3>
+<ol>
+<li><p><strong>Export your memories:</strong></p>
+<pre><code class="language-bash">npx tsx scripts/export-memories.ts &quot;windows&quot; windows-memories.json
+</code></pre>
+</li>
+<li><p><strong>Share the JSON file</strong> via:</p>
+<ul>
+<li>GitHub gist</li>
+<li>Project repository (<code>shared-memories/</code>)</li>
+<li>Direct file transfer</li>
+<li>Package in releases</li>
+</ul>
+</li>
+<li><p><strong>Document what's included:</strong></p>
+<ul>
+<li>What query was used</li>
+<li>What knowledge is contained</li>
+<li>Who might benefit from it</li>
+</ul>
+</li>
+</ol>
+<h3>For Import Users</h3>
+<ol>
+<li><p><strong>Download the export file</strong> to your local machine</p>
+</li>
+<li><p><strong>Review what's in it</strong> (optional):</p>
+<pre><code class="language-bash">cat windows-memories.json | jq '.totalObservations, .totalSessions'
+</code></pre>
+</li>
+<li><p><strong>Import into your database:</strong></p>
+<pre><code class="language-bash">npx tsx scripts/import-memories.ts windows-memories.json
+</code></pre>
+</li>
+<li><p><strong>Verify import</strong> by searching:</p>
+<pre><code class="language-bash">curl &quot;http://localhost:37777/api/search?query=windows&amp;format=index&amp;limit=10&quot;
+</code></pre>
+</li>
+</ol>
+<h2>JSON Export Format</h2>
+<pre><code class="language-json">{
+  &quot;exportedAt&quot;: &quot;2025-12-10T23:45:00.000Z&quot;,
+  &quot;exportedAtEpoch&quot;: 1733876700000,
+  &quot;query&quot;: &quot;windows&quot;,
+  &quot;totalObservations&quot;: 54,
+  &quot;totalSessions&quot;: 12,
+  &quot;totalSummaries&quot;: 12,
+  &quot;totalPrompts&quot;: 7,
+  &quot;observations&quot;: [ /* array of observation objects */ ],
+  &quot;sessions&quot;: [ /* array of session objects */ ],
+  &quot;summaries&quot;: [ /* array of summary objects */ ],
+  &quot;prompts&quot;: [ /* array of prompt objects */ ]
+}
+</code></pre>
+<h2>Safety Features</h2>
+<p>✅ <strong>Duplicate Prevention</strong> - Won't re-import existing records
+✅ <strong>Transactional</strong> - All-or-nothing imports (database stays consistent)
+✅ <strong>Read-only Export</strong> - Export script opens database in read-only mode
+✅ <strong>Dependency Ordering</strong> - Sessions imported before observations/summaries
+✅ <strong>Validation</strong> - Checks database exists before starting</p>
+<h2>Advanced Usage</h2>
+<h3>Export by Project</h3>
+<pre><code class="language-bash"># Export only claude-mem project memories
+npx tsx scripts/export-memories.ts &quot;bugfix&quot; bugfixes.json --project=claude-mem
+
+# Export all memories for a specific project
+npx tsx scripts/export-memories.ts &quot;&quot; all-project.json --project=my-app
+</code></pre>
+<h3>Export by Type</h3>
+<pre><code class="language-bash"># Export only discoveries
+npx tsx scripts/export-memories.ts &quot;type:discovery&quot; discoveries.json
+
+# Export only bug fixes
+npx tsx scripts/export-memories.ts &quot;type:bugfix&quot; bugfixes.json
+</code></pre>
+<h3>Export by Date Range</h3>
+<p>You can filter the export after exporting:</p>
+<pre><code class="language-bash"># Export all memories, then filter manually with jq
+npx tsx scripts/export-memories.ts &quot;&quot; all-memories.json
+cat all-memories.json | jq '.observations |= map(select(.created_at_epoch &gt; 1700000000000))' &gt; recent-memories.json
+</code></pre>
+<h3>Combine Multiple Exports</h3>
+<pre><code class="language-bash"># Export different topics
+npx tsx scripts/export-memories.ts &quot;windows&quot; windows.json
+npx tsx scripts/export-memories.ts &quot;linux&quot; linux.json
+
+# Import both
+npx tsx scripts/import-memories.ts windows.json
+npx tsx scripts/import-memories.ts linux.json
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Database Not Found</h3>
+<pre><code>❌ Database not found at: /Users/you/.claude-mem/claude-mem.db
+</code></pre>
+<p><strong>Solution:</strong> Make sure claude-mem is installed and has been run at least once.</p>
+<h3>Import File Not Found</h3>
+<pre><code>❌ Input file not found: windows-memories.json
+</code></pre>
+<p><strong>Solution:</strong> Check the file path. Use absolute paths if needed.</p>
+<h3>Partial Import</h3>
+<p>If import fails mid-way, the transaction is rolled back - your database remains unchanged. Fix the issue and try again.</p>
+<h2>Contributing Memory Sets</h2>
+<p>If you've exported valuable knowledge that others might benefit from:</p>
+<ol>
+<li>Create a PR to the <code>shared-memories/</code> directory</li>
+<li>Include a README describing what's in the export</li>
+<li>Tag with relevant keywords (windows, linux, bugfix, etc.)</li>
+<li>Community members can then import your knowledge!</li>
+</ol>
+<h2>Examples of Useful Exports</h2>
+<p><strong>Windows Compatibility Knowledge:</strong></p>
+<pre><code class="language-bash">npx tsx scripts/export-memories.ts &quot;windows compatibility installation&quot; windows-fixes.json
+</code></pre>
+<p><strong>Progressive Disclosure Architecture:</strong></p>
+<pre><code class="language-bash">npx tsx scripts/export-memories.ts &quot;progressive disclosure architecture token&quot; pd-patterns.json
+</code></pre>
+<p><strong>Bug Fix Patterns:</strong></p>
+<pre><code class="language-bash">npx tsx scripts/export-memories.ts &quot;bugfix error handling&quot; bugfix-patterns.json
+</code></pre>
+<p><strong>Performance Optimization:</strong></p>
+<pre><code class="language-bash">npx tsx scripts/export-memories.ts &quot;performance optimization caching&quot; perf-tips.json
+</code></pre>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/export-import.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

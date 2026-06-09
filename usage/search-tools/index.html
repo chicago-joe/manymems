@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Search — manymems docs</title>
+  <meta name="description" content="Search your project history with MCP tools" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Search your project history with MCP tools</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Memory Search with MCP Tools</h1>
+<p>Claude-mem provides persistent memory across sessions through <strong>4 MCP tools</strong> that follow a token-efficient <strong>3-layer workflow pattern</strong>.</p>
+<h2>Overview</h2>
+<p>Instead of fetching all historical data upfront (expensive), claude-mem uses a progressive disclosure approach:</p>
+<ol>
+<li><strong>Search</strong> → Get a compact index with IDs (~50-100 tokens/result)</li>
+<li><strong>Timeline</strong> → Get context around interesting results</li>
+<li><strong>Get Observations</strong> → Fetch full details ONLY for filtered IDs</li>
+</ol>
+<p>This achieves <strong>~10x token savings</strong> compared to traditional RAG approaches.</p>
+<h2>The 3-Layer Workflow</h2>
+<h3>Layer 1: Search (Index)</h3>
+<p>Start by searching to get a lightweight index of results:</p>
+<pre><code>search(query=&quot;authentication bug&quot;, type=&quot;bugfix&quot;, limit=10)
+</code></pre>
+<p><strong>Returns:</strong> Compact table with IDs, titles, dates, types
+<strong>Cost:</strong> ~50-100 tokens per result
+<strong>Purpose:</strong> Survey what exists before fetching details</p>
+<h3>Layer 2: Timeline (Context)</h3>
+<p>Get chronological context around specific observations:</p>
+<pre><code>timeline(anchor=&lt;observation_id&gt;, depth_before=3, depth_after=3)
+</code></pre>
+<p>Or search and get timeline in one step:</p>
+<pre><code>timeline(query=&quot;authentication&quot;, depth_before=2, depth_after=2)
+</code></pre>
+<p><strong>Returns:</strong> Chronological view showing what was happening before/after
+<strong>Cost:</strong> Variable, depends on depth
+<strong>Purpose:</strong> Understand narrative arc and context</p>
+<h3>Layer 3: Get Observations (Details)</h3>
+<p>Fetch full details only for relevant observations:</p>
+<pre><code>get_observations(ids=[123, 456, 789])
+</code></pre>
+<p><strong>Returns:</strong> Complete observation details (narrative, facts, files, concepts)
+<strong>Cost:</strong> ~500-1000 tokens per observation
+<strong>Purpose:</strong> Deep dive on specific, validated items</p>
+<h3>Why This Works</h3>
+<p><strong>Traditional Approach:</strong></p>
+<ul>
+<li>Fetch everything upfront: 20,000 tokens</li>
+<li>Relevance: ~10% (2,000 tokens actually useful)</li>
+<li>Waste: 18,000 tokens on irrelevant context</li>
+</ul>
+<p><strong>3-Layer Approach:</strong></p>
+<ul>
+<li>Search index: 1,000 tokens (10 results)</li>
+<li>Timeline context: 500 tokens (around 2 key results)</li>
+<li>Fetch details: 1,500 tokens (3 observations)</li>
+<li><strong>Total: 3,000 tokens, 100% relevant</strong></li>
+</ul>
+<h2>Available Tools</h2>
+<h3><code>__IMPORTANT</code> - Workflow Documentation</h3>
+<p>Always visible reminder of the 3-layer workflow pattern. Helps Claude understand how to use the search tools efficiently.</p>
+<p><strong>Usage:</strong> Automatically shown, no need to invoke</p>
+<h3><code>search</code> - Search Memory Index</h3>
+<p>Search your memory and get a compact index with IDs.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>query</code> - Full-text search query (supports AND, OR, NOT, phrase searches)</li>
+<li><code>limit</code> - Maximum results (default: 20)</li>
+<li><code>offset</code> - Skip first N results for pagination</li>
+<li><code>type</code> - Filter by observation type (bugfix, feature, decision, discovery, refactor, change)</li>
+<li><code>obs_type</code> - Filter by record type (observation, session, prompt)</li>
+<li><code>project</code> - Filter by project name</li>
+<li><code>dateStart</code> - Filter by start date (YYYY-MM-DD)</li>
+<li><code>dateEnd</code> - Filter by end date (YYYY-MM-DD)</li>
+<li><code>orderBy</code> - Sort order (date_desc, date_asc, relevance)</li>
+</ul>
+<p><strong>Returns:</strong> Compact index table with IDs, titles, dates, types</p>
+<p><strong>Example:</strong></p>
+<pre><code>search(query=&quot;database migration&quot;, type=&quot;bugfix&quot;, limit=5, orderBy=&quot;date_desc&quot;)
+</code></pre>
+<h3><code>timeline</code> - Get Chronological Context</h3>
+<p>Get a chronological view of observations around a specific point or query.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>anchor</code> - Observation ID to center timeline around (optional if query provided)</li>
+<li><code>query</code> - Search query to find anchor automatically (optional if anchor provided)</li>
+<li><code>depth_before</code> - Number of observations before anchor (default: 3)</li>
+<li><code>depth_after</code> - Number of observations after anchor (default: 3)</li>
+<li><code>project</code> - Filter by project name</li>
+</ul>
+<p><strong>Returns:</strong> Chronological list showing what happened before/during/after</p>
+<p><strong>Example:</strong></p>
+<pre><code>timeline(anchor=12345, depth_before=5, depth_after=5)
+</code></pre>
+<p>Or search-based:</p>
+<pre><code>timeline(query=&quot;implemented JWT auth&quot;, depth_before=3, depth_after=3)
+</code></pre>
+<h3><code>get_observations</code> - Fetch Full Details</h3>
+<p>Fetch complete observation details by IDs. <strong>Always batch multiple IDs in a single call for efficiency.</strong></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>ids</code> - Array of observation IDs (required)</li>
+<li><code>orderBy</code> - Sort order (date_desc, date_asc)</li>
+<li><code>limit</code> - Maximum observations to return</li>
+<li><code>project</code> - Filter by project name</li>
+</ul>
+<p><strong>Returns:</strong> Complete observation details including narrative, facts, files, concepts</p>
+<p><strong>Example:</strong></p>
+<pre><code>get_observations(ids=[123, 456, 789, 1011])
+</code></pre>
+<p><strong>Important:</strong> Always batch IDs instead of making separate calls per observation.</p>
+<h2>Common Use Cases</h2>
+<h3>Debugging Issues</h3>
+<p><strong>Scenario:</strong> Find what went wrong with database connections</p>
+<pre><code>Step 1: search(query=&quot;error database connection&quot;, type=&quot;bugfix&quot;, limit=10)
+  → Review index, identify observations #245, #312, #489
+
+Step 2: timeline(anchor=312, depth_before=3, depth_after=3)
+  → See what was happening around the fix
+
+Step 3: get_observations(ids=[312, 489])
+  → Get full details on relevant fixes
+</code></pre>
+<h3>Understanding Decisions</h3>
+<p><strong>Scenario:</strong> Review architectural choices about authentication</p>
+<pre><code>Step 1: search(query=&quot;authentication&quot;, type=&quot;decision&quot;, limit=5)
+  → Find decision observations
+
+Step 2: get_observations(ids=[&lt;relevant_ids&gt;])
+  → Get full decision rationale, trade-offs, facts
+</code></pre>
+<h3>Code Archaeology</h3>
+<p><strong>Scenario:</strong> Find when a specific file was modified</p>
+<pre><code>Step 1: search(query=&quot;worker-service.ts&quot;, limit=20)
+  → Get all observations mentioning that file
+
+Step 2: timeline(query=&quot;worker-service.ts refactor&quot;, depth_before=2, depth_after=2)
+  → See what led to and followed from the refactor
+
+Step 3: get_observations(ids=[&lt;specific_observation_ids&gt;])
+  → Get implementation details
+</code></pre>
+<h3>Feature History</h3>
+<p><strong>Scenario:</strong> Track how a feature evolved</p>
+<pre><code>Step 1: search(query=&quot;dark mode&quot;, type=&quot;feature&quot;, orderBy=&quot;date_asc&quot;)
+  → Chronological view of feature work
+
+Step 2: timeline(anchor=&lt;first_observation_id&gt;, depth_after=10)
+  → See the full development timeline
+
+Step 3: get_observations(ids=[&lt;key_milestones&gt;])
+  → Deep dive on critical implementation points
+</code></pre>
+<h3>Learning from Past Work</h3>
+<p><strong>Scenario:</strong> Review refactoring patterns</p>
+<pre><code>Step 1: search(type=&quot;refactor&quot;, limit=10, orderBy=&quot;date_desc&quot;)
+  → Recent refactoring work
+
+Step 2: get_observations(ids=[&lt;interesting_ids&gt;])
+  → Study the patterns and approaches used
+</code></pre>
+<h3>Context Recovery</h3>
+<p><strong>Scenario:</strong> Restore context after time away from project</p>
+<pre><code>Step 1: search(query=&quot;project-name&quot;, limit=10, orderBy=&quot;date_desc&quot;)
+  → See recent work
+
+Step 2: timeline(anchor=&lt;most_recent_id&gt;, depth_before=10)
+  → Understand what led to current state
+
+Step 3: get_observations(ids=[&lt;critical_observations&gt;])
+  → Refresh memory on key decisions
+</code></pre>
+<h2>Search Query Syntax</h2>
+<p>The <code>query</code> parameter supports SQLite FTS5 full-text search syntax:</p>
+<h3>Boolean Operators</h3>
+<pre><code>query=&quot;authentication AND JWT&quot;           # Both terms must appear
+query=&quot;OAuth OR JWT&quot;                      # Either term can appear
+query=&quot;security NOT deprecated&quot;           # Exclude deprecated items
+</code></pre>
+<h3>Phrase Searches</h3>
+<pre><code>query='&quot;database migration&quot;'             # Exact phrase match
+</code></pre>
+<h3>Column-Specific Searches</h3>
+<pre><code>query=&quot;title:authentication&quot;             # Search in title only
+query=&quot;content:database&quot;                  # Search in content only
+query=&quot;concepts:security&quot;                 # Search in concepts only
+</code></pre>
+<h3>Combining Operators</h3>
+<pre><code>query='&quot;user auth&quot; AND (JWT OR session) NOT deprecated'
+</code></pre>
+<h2>Token Management</h2>
+<h3>Token Efficiency Best Practices</h3>
+<ol>
+<li><strong>Always start with search</strong> - Get index first (~50-100 tokens/result)</li>
+<li><strong>Use small limits</strong> - Start with 3-5 results, increase if needed</li>
+<li><strong>Filter before fetching</strong> - Use type, date, project filters</li>
+<li><strong>Batch get_observations</strong> - Always group multiple IDs in one call</li>
+<li><strong>Use timeline strategically</strong> - Get context only when narrative matters</li>
+</ol>
+<h3>Token Cost Estimates</h3>
+<table>
+<thead>
+<tr>
+  <th>Operation</th>
+  <th>Tokens per Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>search (index)</td>
+  <td>50-100</td>
+</tr>
+<tr>
+  <td>timeline (per observation)</td>
+  <td>100-200</td>
+</tr>
+<tr>
+  <td>get_observations (full details)</td>
+  <td>500-1,000</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example Comparison:</strong></p>
+<p><strong>Inefficient:</strong></p>
+<pre><code># Fetching 20 full observations upfront: 10,000-20,000 tokens
+get_observations(ids=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
+</code></pre>
+<p><strong>Efficient:</strong></p>
+<pre><code># Search index: ~1,000 tokens
+search(query=&quot;bug fix&quot;, limit=20)
+
+# Review IDs, identify 3 relevant observations
+
+# Fetch only relevant: ~1,500-3,000 tokens
+get_observations(ids=[5, 12, 18])
+
+# Total: 2,500-4,000 tokens (vs 10,000-20,000)
+</code></pre>
+<h2>Advanced Filtering</h2>
+<h3>Date Ranges</h3>
+<pre><code>search(
+  query=&quot;performance optimization&quot;,
+  dateStart=&quot;2025-10-01&quot;,
+  dateEnd=&quot;2025-10-31&quot;
+)
+</code></pre>
+<h3>Multiple Types</h3>
+<p>For observations of multiple types, make multiple searches or use broader query:</p>
+<pre><code>search(query=&quot;database&quot;, type=&quot;bugfix&quot;, limit=10)
+search(query=&quot;database&quot;, type=&quot;feature&quot;, limit=10)
+</code></pre>
+<h3>Project-Specific</h3>
+<pre><code>search(query=&quot;API&quot;, project=&quot;my-app&quot;, limit=15)
+</code></pre>
+<h3>Pagination</h3>
+<pre><code># First page
+search(query=&quot;refactor&quot;, limit=10, offset=0)
+
+# Second page
+search(query=&quot;refactor&quot;, limit=10, offset=10)
+
+# Third page
+search(query=&quot;refactor&quot;, limit=10, offset=20)
+</code></pre>
+<h2>Result Metadata</h2>
+<p>All observations include rich metadata:</p>
+<ul>
+<li><strong>ID</strong> - Unique observation identifier</li>
+<li><strong>Type</strong> - bugfix, feature, decision, discovery, refactor, change</li>
+<li><strong>Date</strong> - When the work occurred</li>
+<li><strong>Title</strong> - Concise description</li>
+<li><strong>Concepts</strong> - Tagged themes (e.g., security, performance, architecture)</li>
+<li><strong>Files Read</strong> - Files examined during work</li>
+<li><strong>Files Modified</strong> - Files changed during work</li>
+<li><strong>Narrative</strong> - Story of what happened and why</li>
+<li><strong>Facts</strong> - Key factual points (decisions made, patterns used, metrics)</li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>No Results Found</h3>
+<ol>
+<li><p><strong>Broaden your search:</strong></p>
+<pre><code># Too specific
+search(query=&quot;JWT authentication implementation with RS256&quot;)
+
+# Better
+search(query=&quot;authentication&quot;)
+</code></pre>
+</li>
+<li><p><strong>Check database has data:</strong></p>
+<pre><code class="language-bash">curl &quot;http://localhost:37777/api/search?query=test&quot;
+</code></pre>
+</li>
+<li><p><strong>Try without filters:</strong></p>
+<pre><code># Remove type/date filters to see if data exists
+search(query=&quot;your-search-term&quot;)
+</code></pre>
+</li>
+</ol>
+<h3>IDs Not Found in get_observations</h3>
+<p><strong>Error:</strong> &quot;Observation IDs not found: [123, 456]&quot;</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>IDs from different project (use <code>project</code> parameter)</li>
+<li>IDs were deleted</li>
+<li>Typo in ID numbers</li>
+</ul>
+<p><strong>Solution:</strong></p>
+<pre><code># Verify IDs exist
+search(query=&quot;&lt;related-search&gt;&quot;)
+
+# Use correct project filter
+get_observations(ids=[123, 456], project=&quot;correct-project-name&quot;)
+</code></pre>
+<h3>Token Limit Errors</h3>
+<p><strong>Error:</strong> Response exceeds token limits</p>
+<p><strong>Solution:</strong> Use the 3-layer workflow to reduce upfront costs:</p>
+<pre><code># Instead of fetching 50 full observations:
+# get_observations(ids=[1,2,3,...,50])  # 25,000-50,000 tokens!
+
+# Do this:
+search(query=&quot;&lt;your-query&gt;&quot;, limit=50)  # ~2,500-5,000 tokens
+# Review index, identify 5 relevant observations
+get_observations(ids=[&lt;5-most-relevant&gt;])  # ~2,500-5,000 tokens
+# Total: 5,000-10,000 tokens (50-80% savings)
+</code></pre>
+<h3>Search Performance</h3>
+<p>If searches seem slow:</p>
+<ol>
+<li>Be more specific in queries (helps FTS5 index)</li>
+<li>Use date range filters to narrow scope</li>
+<li>Specify project filter when possible</li>
+<li>Use smaller limit values</li>
+</ol>
+<h2>Best Practices</h2>
+<ol>
+<li><strong>Index First, Details Later</strong> - Always start with search to survey options</li>
+<li><strong>Filter Before Fetching</strong> - Use search parameters to narrow results</li>
+<li><strong>Batch ID Fetches</strong> - Group multiple IDs in one get_observations call</li>
+<li><strong>Use Timeline for Context</strong> - When narrative matters, timeline shows the story</li>
+<li><strong>Specific Queries</strong> - More specific = better relevance</li>
+<li><strong>Small Limits Initially</strong> - Start with 3-5 results, expand if needed</li>
+<li><strong>Review Before Deep Dive</strong> - Check index before fetching full details</li>
+</ol>
+<h2>Technical Details</h2>
+<p><strong>Architecture:</strong> MCP tools are a thin wrapper over the Worker HTTP API (localhost:37777). The MCP server translates tool calls into HTTP requests to the worker service, which handles all business logic, database queries, and Chroma vector search.</p>
+<p><strong>MCP Server:</strong> Located at <code>~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs</code></p>
+<p><strong>Worker Service:</strong> Express API on port 37777, managed by Bun</p>
+<p><strong>Database:</strong> SQLite FTS5 full-text search on <code>~/.claude-mem/claude-mem.db</code></p>
+<p><strong>Vector Search:</strong> Chroma embeddings for semantic search (underlying implementation)</p>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/progressive-disclosure">Progressive Disclosure</a> - Philosophy behind 3-layer workflow</li>
+<li><a href="/architecture/overview">Architecture Overview</a> - System components</li>
+<li><a href="/architecture/database">Database Schema</a> - Understanding the data structure</li>
+<li><a href="/usage/claude-desktop">Claude Desktop Setup</a> - Installation and configuration</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/search-tools.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

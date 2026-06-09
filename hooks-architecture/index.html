@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hooks Architecture — manymems docs</title>
+  <meta name="description" content="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>How Claude-Mem Uses Hooks: A Lifecycle-Driven Architecture</h1>
+<h2>Core Principle</h2>
+<p><strong>Observe the main Claude Code session from the outside, process observations in the background, inject context at the right time.</strong></p>
+<hr />
+<h2>The Big Picture</h2>
+<p>Claude-Mem is fundamentally a <strong>hook-driven system</strong>. Every piece of functionality happens in response to lifecycle events:</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│              CLAUDE CODE SESSION                         │
+│  (Main session - user interacting with Claude)          │
+│                                                          │
+│  SessionStart → UserPromptSubmit → Tool Use → Stop      │
+│     ↓ ↓ ↓            ↓               ↓          ↓        │
+│  [3 Hooks]        [Hook]          [Hook]     [Hook]     │
+└─────────────────────────────────────────────────────────┘
+    ↓ ↓ ↓             ↓               ↓          ↓
+┌─────────────────────────────────────────────────────────┐
+│                  CLAUDE-MEM SYSTEM                       │
+│                                                          │
+│  Smart      Worker      Context    New        Obs       │
+│  Install    Start       Inject     Session    Capture   │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Key insight:</strong> Claude-Mem doesn't interrupt or modify Claude Code's behavior. It observes from the outside and provides value through lifecycle hooks.</p>
+<hr />
+<h2>Why Hooks?</h2>
+<h3>The Non-Invasive Requirement</h3>
+<p>Claude-Mem had several architectural constraints:</p>
+<ol>
+<li><strong>Can't modify Claude Code</strong>: It's a closed-source binary</li>
+<li><strong>Must be fast</strong>: Can't slow down the main session</li>
+<li><strong>Must be reliable</strong>: Can't break Claude Code if it fails</li>
+<li><strong>Must be portable</strong>: Works on any project without configuration</li>
+</ol>
+<p><strong>Solution:</strong> External command hooks configured via settings.json</p>
+<h3>The Hook System Advantage</h3>
+<p>Claude Code's hook system provides exactly what we need:</p>
+<hr />
+<h2>The Hook Scripts</h2>
+<p>Claude-Mem uses lifecycle hook scripts across 5 lifecycle events. Runtime setup is handled out-of-band by <code>npx claude-mem install</code> (and <code>npx claude-mem repair</code>); the Setup hook only runs a sub-100ms <code>version-check.js</code> to flag stale installs. SessionStart runs 2 hooks in sequence: worker-service start, then context-hook.</p>
+<h3>Setup Hook: Version Check</h3>
+<p><strong>Purpose:</strong> Detect stale installs caused by external plugin upgrades and prompt the user to repair.</p>
+<p><strong>Note:</strong> Runtime installation (Bun, uv, <code>bun install</code> in the plugin cache) is performed by <code>npx claude-mem install</code> and <code>npx claude-mem repair</code> — the Setup hook itself never installs anything.</p>
+<p><strong>When:</strong> Claude Code Setup phase, before every session.</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Reads the <code>.install-version</code> marker written by the npx installer.</li>
+<li>Compares it against the currently loaded plugin version.</li>
+<li>On mismatch, writes <code>run: npx claude-mem repair</code> to stderr.</li>
+<li>Always exits 0 (non-blocking, sub-100ms).</li>
+</ol>
+<p><strong>Configuration:</strong></p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;Setup&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;node ${CLAUDE_PLUGIN_ROOT}/scripts/version-check.js&quot;,
+        &quot;timeout&quot;: 60
+      }]
+    }]
+  }
+}
+</code></pre>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>✅ Sub-100ms version-marker check (no I/O beyond reading the marker)</li>
+<li>✅ Always exit 0 — never blocks a session</li>
+<li>✅ Clear repair instructions on stderr when the plugin was upgraded externally (e.g. <code>claude plugin update</code>)</li>
+</ul>
+<p><strong>Source:</strong> <code>scripts/version-check.js</code>. The matching installer logic lives in <code>npx claude-mem install</code> / <code>npx claude-mem repair</code>, which install Bun + uv globally, run <code>bun install</code> in the plugin cache, and write the <code>.install-version</code> marker — all behind a visible clack spinner.</p>
+<hr />
+<h3>Hook 1: SessionStart - Context Injection</h3>
+<p><strong>Purpose:</strong> Inject relevant context from previous sessions</p>
+<p><strong>When:</strong> Claude Code starts (runs after the worker-start SessionStart entry)</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Extracts project name from current working directory</li>
+<li>Queries SQLite for recent session summaries (last 10)</li>
+<li>Queries SQLite for recent observations (configurable, default 50)</li>
+<li>Formats as progressive disclosure index</li>
+<li>Outputs to stdout (automatically injected into context)</li>
+</ol>
+<p><strong>Key decisions:</strong></p>
+<ul>
+<li>✅ Runs on startup, clear, and compact</li>
+<li>✅ 300-second timeout (allows for npm install if needed)</li>
+<li>✅ Progressive disclosure format (index, not full details)</li>
+<li>✅ Configurable observation count via <code>CLAUDE_MEM_CONTEXT_OBSERVATIONS</code></li>
+</ul>
+<p><strong>Output format:</strong></p>
+<pre><code class="language-markdown"># [claude-mem] recent context
+
+**Legend:** 🎯 session-request | 🔴 gotcha | 🟡 problem-solution ...
+
+### Oct 26, 2025
+
+**General**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2586 | 12:58 AM | 🔵 | Context hook file empty | ~51 |
+
+*Use MCP search tools to access full details*
+</code></pre>
+<p><strong>Source:</strong> <code>src/hooks/context-hook.ts</code> → <code>plugin/scripts/context-hook.js</code></p>
+<hr />
+<h3>Hook 2: UserPromptSubmit (New Session Hook)</h3>
+<p><strong>Purpose:</strong> Initialize session tracking when user submits a prompt</p>
+<p><strong>When:</strong> Before Claude processes the user's message</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Reads user prompt and session ID from stdin</li>
+<li>Creates new session record in SQLite</li>
+<li>Saves raw user prompt for full-text search (v4.2.0+)</li>
+<li>Starts Bun worker service if not running</li>
+<li>Returns immediately (non-blocking)</li>
+</ol>
+<p><strong>Configuration:</strong></p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;UserPromptSubmit&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;${CLAUDE_PLUGIN_ROOT}/scripts/new-hook.js&quot;
+      }]
+    }]
+  }
+}
+</code></pre>
+<p><strong>Key decisions:</strong></p>
+<ul>
+<li>✅ No matcher (runs for all prompts)</li>
+<li>✅ Creates session record immediately</li>
+<li>✅ Stores raw prompts for search (privacy note: local SQLite only)</li>
+<li>✅ Auto-starts worker service</li>
+<li>✅ Suppresses output (<code>suppressOutput: true</code>)</li>
+</ul>
+<p><strong>Database operations:</strong></p>
+<pre><code class="language-sql">INSERT INTO sdk_sessions (claude_session_id, project, user_prompt, ...)
+VALUES (?, ?, ?, ...)
+
+INSERT INTO user_prompts (session_id, prompt, prompt_number, ...)
+VALUES (?, ?, ?, ...)
+</code></pre>
+<p><strong>Source:</strong> <code>src/hooks/new-hook.ts</code> → <code>plugin/scripts/new-hook.js</code></p>
+<hr />
+<h3>Hook 3: PostToolUse (Save Observation Hook)</h3>
+<p><strong>Purpose:</strong> Capture tool execution observations for later processing</p>
+<p><strong>When:</strong> Immediately after any tool completes successfully</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Receives tool name, input, output from stdin</li>
+<li>Finds active session for current project</li>
+<li>Enqueues observation in observation_queue table</li>
+<li>Returns immediately (processing happens in worker)</li>
+</ol>
+<p><strong>Configuration:</strong></p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;PostToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;*&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;${CLAUDE_PLUGIN_ROOT}/scripts/save-hook.js&quot;
+      }]
+    }]
+  }
+}
+</code></pre>
+<p><strong>Key decisions:</strong></p>
+<ul>
+<li>✅ Matcher: <code>*</code> (captures all tools)</li>
+<li>✅ Non-blocking (just enqueues, doesn't process)</li>
+<li>✅ Worker processes observations asynchronously</li>
+<li>✅ Parallel execution safe (each hook gets own stdin)</li>
+</ul>
+<p><strong>Database operations:</strong></p>
+<pre><code class="language-sql">INSERT INTO observation_queue (session_id, tool_name, tool_input, tool_output, ...)
+VALUES (?, ?, ?, ?, ...)
+</code></pre>
+<p><strong>What gets queued:</strong></p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;abc123&quot;,
+  &quot;tool_name&quot;: &quot;Edit&quot;,
+  &quot;tool_input&quot;: {
+    &quot;file_path&quot;: &quot;/path/to/file.ts&quot;,
+    &quot;old_string&quot;: &quot;...&quot;,
+    &quot;new_string&quot;: &quot;...&quot;
+  },
+  &quot;tool_output&quot;: {
+    &quot;success&quot;: true,
+    &quot;linesChanged&quot;: 5
+  },
+  &quot;created_at_epoch&quot;: 1698765432
+}
+</code></pre>
+<p><strong>Source:</strong> <code>src/hooks/save-hook.ts</code> → <code>plugin/scripts/save-hook.js</code></p>
+<hr />
+<h3>Hook 4: Stop Hook (Summary Generation)</h3>
+<p><strong>Purpose:</strong> Generate AI-powered session summaries during the session</p>
+<p><strong>When:</strong> When Claude stops (triggered by Stop lifecycle event)</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Gathers session observations from database</li>
+<li>Sends to Claude Agent SDK for summarization</li>
+<li>Processes response and extracts structured summary</li>
+<li>Stores in session_summaries table</li>
+</ol>
+<p><strong>Configuration:</strong></p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;Stop&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;${CLAUDE_PLUGIN_ROOT}/scripts/summary-hook.js&quot;
+      }]
+    }]
+  }
+}
+</code></pre>
+<p><strong>Key decisions:</strong></p>
+<ul>
+<li>✅ Triggered by Stop lifecycle event</li>
+<li>✅ Multiple summaries per session (v4.2.0+)</li>
+<li>✅ Summaries are checkpoints, not endings</li>
+<li>✅ Uses Claude Agent SDK for AI compression</li>
+</ul>
+<p><strong>Summary structure:</strong></p>
+<pre><code class="language-xml">&lt;summary&gt;
+  &lt;request&gt;User's original request&lt;/request&gt;
+  &lt;investigated&gt;What was examined&lt;/investigated&gt;
+  &lt;learned&gt;Key discoveries&lt;/learned&gt;
+  &lt;completed&gt;Work finished&lt;/completed&gt;
+  &lt;next_steps&gt;Remaining tasks&lt;/next_steps&gt;
+  &lt;files_read&gt;
+    &lt;file&gt;path/to/file1.ts&lt;/file&gt;
+    &lt;file&gt;path/to/file2.ts&lt;/file&gt;
+  &lt;/files_read&gt;
+  &lt;files_modified&gt;
+    &lt;file&gt;path/to/file3.ts&lt;/file&gt;
+  &lt;/files_modified&gt;
+  &lt;notes&gt;Additional context&lt;/notes&gt;
+&lt;/summary&gt;
+</code></pre>
+<p><strong>Source:</strong> <code>src/hooks/summary-hook.ts</code> → <code>plugin/scripts/summary-hook.js</code></p>
+<hr />
+<h3>Hook 5: SessionEnd (Cleanup Hook)</h3>
+<p><strong>Purpose:</strong> Mark sessions as completed when they end</p>
+<p><strong>When:</strong> Claude Code session ends (not on <code>/clear</code>)</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Marks session as completed in database</li>
+<li>Allows worker to finish processing</li>
+<li>Performs graceful cleanup</li>
+</ol>
+<p><strong>Configuration:</strong></p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;SessionEnd&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-hook.js&quot;
+      }]
+    }]
+  }
+}
+</code></pre>
+<p><strong>Key decisions:</strong></p>
+<ul>
+<li>✅ Graceful completion (v4.1.0+)</li>
+<li>✅ No longer sends DELETE to workers</li>
+<li>✅ Skips cleanup on <code>/clear</code> commands</li>
+<li>✅ Preserves ongoing sessions</li>
+</ul>
+<p><strong>Why graceful cleanup?</strong></p>
+<p><strong>Old approach (v3):</strong></p>
+<pre><code class="language-typescript">// ❌ Aggressive cleanup
+SessionEnd → DELETE /worker/session → Worker stops immediately
+</code></pre>
+<p><strong>Problems:</strong></p>
+<ul>
+<li>Interrupted summary generation</li>
+<li>Lost pending observations</li>
+<li>Race conditions</li>
+</ul>
+<p><strong>New approach (v4.1.0+):</strong></p>
+<pre><code class="language-typescript">// ✅ Graceful completion
+SessionEnd → UPDATE sessions SET completed_at = NOW()
+Worker sees completion → Finishes processing → Exits naturally
+</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Worker finishes important operations</li>
+<li>Summaries complete successfully</li>
+<li>Clean state transitions</li>
+</ul>
+<p><strong>Source:</strong> <code>src/hooks/cleanup-hook.ts</code> → <code>plugin/scripts/cleanup-hook.js</code></p>
+<hr />
+<h2>Hook Execution Flow</h2>
+<h3>Session Lifecycle</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant Claude
+    participant Hooks
+    participant Worker
+    participant DB
+
+    User-&gt;&gt;Claude: Start Claude Code
+    Claude-&gt;&gt;Hooks: SessionStart hook
+    Hooks-&gt;&gt;DB: Query recent context
+    DB--&gt;&gt;Hooks: Session summaries + observations
+    Hooks--&gt;&gt;Claude: Inject context
+    Note over Claude: Context available for session
+
+    User-&gt;&gt;Claude: Submit prompt
+    Claude-&gt;&gt;Hooks: UserPromptSubmit hook
+    Hooks-&gt;&gt;DB: Create session record
+    Hooks-&gt;&gt;Worker: Start worker (if not running)
+    Worker--&gt;&gt;DB: Ready to process
+
+    Claude-&gt;&gt;Claude: Execute tools
+    Claude-&gt;&gt;Hooks: PostToolUse (multiple times)
+    Hooks-&gt;&gt;DB: Queue observations
+    Note over Worker: Polls queue, processes observations
+
+    Worker-&gt;&gt;Worker: AI compression
+    Worker-&gt;&gt;DB: Store compressed observations
+    Worker-&gt;&gt;Hooks: Trigger summary hook
+    Hooks-&gt;&gt;DB: Store session summary
+
+    User-&gt;&gt;Claude: Finish
+    Claude-&gt;&gt;Hooks: SessionEnd hook
+    Hooks-&gt;&gt;DB: Mark session complete
+    Worker-&gt;&gt;DB: Check completion
+    Worker-&gt;&gt;Worker: Finish processing
+    Worker-&gt;&gt;Worker: Exit gracefully
+</code></pre>
+<h3>Hook Timing</h3>
+<table>
+<thead>
+<tr>
+  <th>Event</th>
+  <th>Timing</th>
+  <th>Blocking</th>
+  <th>Timeout</th>
+  <th>Output Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Setup (version-check)</strong></td>
+  <td>Before session</td>
+  <td>No</td>
+  <td>60s</td>
+  <td>stderr hint on stale install (always exit 0)</td>
+</tr>
+<tr>
+  <td><strong>SessionStart (worker-start)</strong></td>
+  <td>Before session</td>
+  <td>No</td>
+  <td>60s</td>
+  <td>stderr (log only)</td>
+</tr>
+<tr>
+  <td><strong>SessionStart (context)</strong></td>
+  <td>Before session</td>
+  <td>No</td>
+  <td>60s</td>
+  <td>JSON → additionalContext (silent)</td>
+</tr>
+<tr>
+  <td><strong>UserPromptSubmit</strong></td>
+  <td>Before processing</td>
+  <td>No</td>
+  <td>60s</td>
+  <td>stdout → context</td>
+</tr>
+<tr>
+  <td><strong>PostToolUse</strong></td>
+  <td>After tool</td>
+  <td>No</td>
+  <td>120s</td>
+  <td>Transcript only</td>
+</tr>
+<tr>
+  <td><strong>Summary</strong></td>
+  <td>Worker triggered</td>
+  <td>No</td>
+  <td>120s</td>
+  <td>Database</td>
+</tr>
+<tr>
+  <td><strong>SessionEnd</strong></td>
+  <td>On exit</td>
+  <td>No</td>
+  <td>120s</td>
+  <td>Log only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>The Worker Service Architecture</h2>
+<h3>Why a Background Worker?</h3>
+<p><strong>Problem:</strong> Hooks must be fast (&lt; 1 second)</p>
+<p><strong>Reality:</strong> AI compression takes 5-30 seconds per observation</p>
+<p><strong>Solution:</strong> Hooks enqueue observations, worker processes async</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                   HOOK (Fast)                            │
+│  1. Read stdin (&lt; 1ms)                                  │
+│  2. Insert into queue (&lt; 10ms)                          │
+│  3. Return success (&lt; 20ms total)                       │
+└─────────────────────────────────────────────────────────┘
+                        ↓ (queue)
+┌─────────────────────────────────────────────────────────┐
+│                 WORKER (Slow)                            │
+│  1. Poll queue every 1s                                 │
+│  2. Process observation via Claude SDK (5-30s)          │
+│  3. Parse and store results                             │
+│  4. Mark observation processed                          │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>Bun Process Management</h3>
+<p><strong>Technology:</strong> Bun (JavaScript runtime and process manager)</p>
+<p><strong>Why Bun:</strong></p>
+<ul>
+<li>Auto-restart on failure</li>
+<li>Fast startup and low memory footprint</li>
+<li>Built-in TypeScript support</li>
+<li>Cross-platform (works on macOS, Linux, Windows)</li>
+<li>No separate process manager needed</li>
+</ul>
+<p><strong>Worker lifecycle:</strong></p>
+<pre><code class="language-bash"># Started by hooks automatically (if not running)
+npm run worker:start
+
+# Status check
+npm run worker:status
+
+# View logs
+npm run worker:logs
+
+# Restart
+npm run worker:restart
+
+# Stop
+npm run worker:stop
+</code></pre>
+<h3>Worker HTTP API</h3>
+<p><strong>Technology:</strong> Express.js REST API on the worker's per-user port (default <code>37700 + (uid % 100)</code>, override via <code>CLAUDE_MEM_WORKER_PORT</code>)</p>
+<p><strong>Endpoints:</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Endpoint</th>
+  <th>Method</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>/health</code></td>
+  <td>GET</td>
+  <td>Health check</td>
+</tr>
+<tr>
+  <td><code>/sessions</code></td>
+  <td>POST</td>
+  <td>Create session</td>
+</tr>
+<tr>
+  <td><code>/sessions/:id</code></td>
+  <td>GET</td>
+  <td>Get session status</td>
+</tr>
+<tr>
+  <td><code>/sessions/:id</code></td>
+  <td>PATCH</td>
+  <td>Update session</td>
+</tr>
+<tr>
+  <td><code>/observations</code></td>
+  <td>POST</td>
+  <td>Enqueue observation</td>
+</tr>
+<tr>
+  <td><code>/observations/:id</code></td>
+  <td>GET</td>
+  <td>Get observation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why HTTP API?</strong></p>
+<ul>
+<li>Language-agnostic (hooks can be any language)</li>
+<li>Easy debugging (curl commands)</li>
+<li>Standard error handling</li>
+<li>Proper async handling</li>
+</ul>
+<hr />
+<h2>Design Patterns</h2>
+<h3>Pattern 1: Fire-and-Forget Hooks</h3>
+<p><strong>Principle:</strong> Hooks should return immediately, not wait for completion</p>
+<pre><code class="language-typescript">// ❌ Bad: Hook waits for processing
+
+  const observation = parseInput(stdin);
+  await processObservation(observation);  // BLOCKS!
+  return success();
+}
+
+// ✅ Good: Hook enqueues and returns
+
+  const observation = parseInput(stdin);
+  await enqueueObservation(observation);  // Fast
+  return success();  // Immediate
+}
+</code></pre>
+<h3>Pattern 2: Queue-Based Processing</h3>
+<p><strong>Principle:</strong> Decouple capture from processing</p>
+<pre><code>Hook (capture) → Queue (buffer) → Worker (process)
+</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Parallel hook execution safe</li>
+<li>Worker failure doesn't affect hooks</li>
+<li>Retry logic centralized</li>
+<li>Backpressure handling</li>
+</ul>
+<h3>Pattern 3: Graceful Degradation</h3>
+<p><strong>Principle:</strong> Memory system failure shouldn't break Claude Code</p>
+<pre><code class="language-typescript">try {
+  await captureObservation();
+} catch (error) {
+  // Log error, but don't throw
+  console.error('Memory capture failed:', error);
+  return { continue: true, suppressOutput: true };
+}
+</code></pre>
+<p><strong>Failure modes:</strong></p>
+<ul>
+<li>Database locked → Skip observation, log error</li>
+<li>Worker crashed → Auto-restart via Bun</li>
+<li>Network issue → Retry with exponential backoff</li>
+<li>Disk full → Warn user, disable memory</li>
+</ul>
+<h3>Pattern 4: Progressive Enhancement</h3>
+<p><strong>Principle:</strong> Core functionality works without memory, memory enhances it</p>
+<pre><code>Without memory: Claude Code works normally
+With memory:    Claude Code + context from past sessions
+Memory broken:  Falls back to working normally
+</code></pre>
+<hr />
+<h2>Hook Debugging</h2>
+<h3>Debug Mode</h3>
+<p>Enable detailed hook execution logs:</p>
+<pre><code class="language-bash">claude --debug
+</code></pre>
+<p><strong>Output:</strong></p>
+<pre><code>[DEBUG] Executing hooks for PostToolUse:Write
+[DEBUG] Getting matching hook commands for PostToolUse with query: Write
+[DEBUG] Found 1 hook matchers in settings
+[DEBUG] Matched 1 hooks for query &quot;Write&quot;
+[DEBUG] Found 1 hook commands to execute
+[DEBUG] Executing hook command: ${CLAUDE_PLUGIN_ROOT}/scripts/save-hook.js with timeout 60000ms
+[DEBUG] Hook command completed with status 0: {&quot;continue&quot;:true,&quot;suppressOutput&quot;:true}
+</code></pre>
+<h3>Common Issues</h3>
+</AccordionGroup>
+
+<h3>Testing Hooks Manually</h3>
+<pre><code class="language-bash"># Test context hook
+echo '{
+  &quot;session_id&quot;: &quot;test123&quot;,
+  &quot;cwd&quot;: &quot;/Users/alex/projects/my-app&quot;,
+  &quot;hook_event_name&quot;: &quot;SessionStart&quot;,
+  &quot;source&quot;: &quot;startup&quot;
+}' | node plugin/scripts/context-hook.js
+
+# Test save hook
+echo '{
+  &quot;session_id&quot;: &quot;test123&quot;,
+  &quot;tool_name&quot;: &quot;Edit&quot;,
+  &quot;tool_input&quot;: {&quot;file_path&quot;: &quot;test.ts&quot;},
+  &quot;tool_output&quot;: {&quot;success&quot;: true}
+}' | node plugin/scripts/save-hook.js
+
+# Test with actual Claude Code
+claude --debug
+/hooks  # View registered hooks
+# Submit prompt and watch debug output
+</code></pre>
+<hr />
+<h2>Performance Considerations</h2>
+<h3>Hook Execution Time</h3>
+<p><strong>Target:</strong> &lt; 100ms per hook</p>
+<p><strong>Actual measurements:</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Hook</th>
+  <th>Average</th>
+  <th>p95</th>
+  <th>p99</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Setup (version-check, marker matches)</td>
+  <td>8ms</td>
+  <td>20ms</td>
+  <td>40ms</td>
+</tr>
+<tr>
+  <td>Setup (version-check, marker mismatch — stderr hint, still non-blocking)</td>
+  <td>10ms</td>
+  <td>25ms</td>
+  <td>50ms</td>
+</tr>
+<tr>
+  <td>SessionStart (context)</td>
+  <td>45ms</td>
+  <td>120ms</td>
+  <td>250ms</td>
+</tr>
+<tr>
+  <td>SessionStart (user-message)</td>
+  <td>5ms</td>
+  <td>10ms</td>
+  <td>15ms</td>
+</tr>
+<tr>
+  <td>UserPromptSubmit</td>
+  <td>12ms</td>
+  <td>25ms</td>
+  <td>50ms</td>
+</tr>
+<tr>
+  <td>PostToolUse</td>
+  <td>8ms</td>
+  <td>15ms</td>
+  <td>30ms</td>
+</tr>
+<tr>
+  <td>SessionEnd</td>
+  <td>5ms</td>
+  <td>10ms</td>
+  <td>20ms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why the Setup hook stays fast:</strong></p>
+<ul>
+<li>The Setup hook only reads the <code>.install-version</code> marker — no <code>npm install</code>, no spawned subprocesses.</li>
+<li>All heavy lifting (Bun + uv install, <code>bun install</code> inside the plugin cache) happens in <code>npx claude-mem install</code> / <code>npx claude-mem repair</code>, which run with a visible clack spinner outside the session lifecycle.</li>
+<li>On marker mismatch the hook prints a one-line <code>run: npx claude-mem repair</code> hint to stderr and exits 0; the user opts into the slow path explicitly.</li>
+</ul>
+<h3>Database Performance</h3>
+<p><strong>Schema optimizations:</strong></p>
+<ul>
+<li>Indexes on <code>project</code>, <code>created_at_epoch</code>, <code>claude_session_id</code></li>
+<li>FTS5 virtual tables for full-text search</li>
+<li>WAL mode for concurrent reads/writes</li>
+</ul>
+<p><strong>Query patterns:</strong></p>
+<pre><code class="language-sql">-- Fast: Uses index on (project, created_at_epoch)
+SELECT * FROM session_summaries
+WHERE project = ?
+ORDER BY created_at_epoch DESC
+LIMIT 10
+
+-- Fast: Uses index on claude_session_id
+SELECT * FROM sdk_sessions
+WHERE claude_session_id = ?
+LIMIT 1
+
+-- Fast: FTS5 full-text search
+SELECT * FROM observations_fts
+WHERE observations_fts MATCH ?
+ORDER BY rank
+LIMIT 20
+</code></pre>
+<h3>Worker Throughput</h3>
+<p><strong>Bottleneck:</strong> Claude API latency (5-30s per observation)</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>Process observations sequentially (simpler, more predictable)</li>
+<li>Skip low-value observations (TodoWrite, ListMcpResourcesTool)</li>
+<li>Batch summaries (generate every N observations, not every observation)</li>
+</ul>
+<p><strong>Future optimization:</strong></p>
+<ul>
+<li>Parallel processing (multiple workers)</li>
+<li>Smart batching (combine related observations)</li>
+<li>Lazy summarization (summarize only when needed)</li>
+</ul>
+<hr />
+<h2>Security Considerations</h2>
+<h3>Hook Command Safety</h3>
+<p><strong>Risk:</strong> Hooks execute arbitrary commands with user permissions</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li><strong>Frozen at startup:</strong> Hook configuration captured at start, changes require review</li>
+<li><strong>User review required:</strong> <code>/hooks</code> menu shows changes, requires approval</li>
+<li><strong>Plugin isolation:</strong> <code>${CLAUDE_PLUGIN_ROOT}</code> prevents path traversal</li>
+<li><strong>Input validation:</strong> Hooks validate stdin schema before processing</li>
+</ol>
+<h3>Data Privacy</h3>
+<p><strong>What gets stored:</strong></p>
+<ul>
+<li>User prompts (raw text) - v4.2.0+</li>
+<li>Tool inputs and outputs</li>
+<li>File paths read/modified</li>
+<li>Session summaries</li>
+</ul>
+<p><strong>Privacy guarantees:</strong></p>
+<ul>
+<li>All data stored locally in <code>~/.claude-mem/claude-mem.db</code></li>
+<li>No cloud uploads (API calls only for AI compression)</li>
+<li>SQLite file permissions: user-only read/write</li>
+<li>No analytics or telemetry</li>
+</ul>
+<h3>API Key Protection</h3>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>Anthropic API key in <code>~/.anthropic/api_key</code> or <code>ANTHROPIC_API_KEY</code> env var</li>
+<li>Worker inherits environment from Claude Code</li>
+<li>Never logged or stored in database</li>
+</ul>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li><strong>Hooks are interfaces</strong>: They define clean boundaries between systems</li>
+<li><strong>Non-blocking is critical</strong>: Hooks must return fast, workers do the heavy lifting</li>
+<li><strong>Graceful degradation</strong>: Memory system can fail without breaking Claude Code</li>
+<li><strong>Queue-based decoupling</strong>: Capture and processing happen independently</li>
+<li><strong>Progressive disclosure</strong>: Context injection uses index-first approach</li>
+<li><strong>Lifecycle alignment</strong>: Each hook has a clear, single purpose</li>
+</ol>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="https://docs.claude.com/claude-code/hooks">Claude Code Hooks Reference</a> - Official documentation</li>
+<li><a href="progressive-disclosure">Progressive Disclosure</a> - Context priming philosophy</li>
+<li><a href="architecture-evolution">Architecture Evolution</a> - v3 to v4 journey</li>
+<li><a href="architecture/worker-service">Worker Service Design</a> - Background processing details</li>
+</ul>
+<hr />
+<p><em>The hook-driven architecture enables Claude-Mem to be both powerful and invisible. Users never notice the memory system working - it just makes Claude smarter over time.</em></p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/hooks-architecture.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

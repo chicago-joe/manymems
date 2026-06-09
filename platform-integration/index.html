@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platform Integration Guide — manymems docs</title>
+  <meta name="description" content="Complete reference for integrating claude-mem worker service into VSCode extensions, IDE plugins, and CLI tools" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Complete reference for integrating claude-mem worker service into VSCode extensions, IDE plugins, and CLI tools</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h2>Quick Reference</h2>
+<h3>Worker Service Basics</h3>
+<pre><code class="language-typescript">// Resolve the worker port at runtime. The default is per-user (37700 + uid % 100),
+// or whatever the user set via CLAUDE_MEM_WORKER_PORT / settings.json. Read it from
+// process.env.CLAUDE_MEM_WORKER_PORT, then ~/.claude-mem/settings.json
+// (CLAUDE_MEM_WORKER_PORT key), then fall back to the deterministic default.
+const WORKER_BASE_URL = `http://127.0.0.1:${workerPort}`;
+</code></pre>
+<h3>Most Common Operations</h3>
+<pre><code class="language-typescript">// Health check
+GET /api/health
+
+// Create/get session and queue observation
+POST /api/sessions/observations
+Body: { claudeSessionId, tool_name, tool_input, tool_response, cwd }
+
+// Queue summary
+POST /api/sessions/summarize
+Body: { claudeSessionId, last_user_message, last_assistant_message }
+
+// Complete session
+POST /api/sessions/complete
+Body: { claudeSessionId }
+
+// Search observations
+GET /api/search?query=authentication&amp;type=observations&amp;format=index&amp;limit=20
+
+// Get recent context for project
+GET /api/context/recent?project=my-project&amp;limit=3
+</code></pre>
+<h3>Environment Variables</h3>
+<pre><code class="language-bash">CLAUDE_MEM_MODEL=claude-haiku-4-5-20251001  # Default Claude model for observations/summaries
+CLAUDE_MEM_CONTEXT_OBSERVATIONS=50          # Observations injected at SessionStart
+CLAUDE_MEM_WORKER_PORT=                     # Optional override; default = 37700 + (uid % 100)
+CLAUDE_MEM_DATA_DIR=                        # Optional override for the data directory
+CLAUDE_MEM_PYTHON_VERSION=3.13              # Python version for chroma-mcp
+</code></pre>
+<h3>Build Commands (Local Development)</h3>
+<pre><code class="language-bash">npm run build                 # Compile TypeScript (hooks + worker)
+npm run sync-marketplace      # Copy to ~/.claude/plugins
+npm run worker:restart        # Restart worker
+npm run worker:logs           # View worker logs
+npm run worker:status         # Check worker status
+</code></pre>
+<h2>Worker Architecture</h2>
+<h3>Request Flow</h3>
+<pre><code class="language-plaintext">Platform Hook/Extension
+  → HTTP Request to Worker (`${WORKER_BASE_URL}` — per-user, default 37700+uid%100)
+    → Route Handler (SessionRoutes/DataRoutes/SearchRoutes/etc.)
+      → Domain Service (SessionManager/SearchManager/DatabaseManager)
+        → Database (SQLite3 + Chroma vector DB)
+          → SSE Broadcast (real-time UI updates)
+</code></pre>
+<h3>Domain Services</h3>
+<h3>Route Organization</h3>
+</AccordionGroup>
+
+<h2>API Reference</h2>
+<h3>Session Lifecycle (SessionRoutes)</h3>
+<h4>Create/Get Session + Queue Observation (New API)</h4>
+<h4>Queue Summary (New API)</h4>
+<h4>Complete Session (New API)</h4>
+<h4>Legacy Endpoints (Still Supported)</h4>
+<h3>Data Retrieval (DataRoutes)</h3>
+<h4>Get Paginated Data</h4>
+<pre><code class="language-json">{
+  &quot;items&quot;: [...],
+  &quot;hasMore&quot;: boolean,
+  &quot;offset&quot;: number,
+  &quot;limit&quot;: number
+}
+</code></pre>
+<h4>Get by ID</h4>
+<h4>Get Database Stats</h4>
+<pre><code class="language-http">GET /api/stats
+</code></pre>
+<pre><code class="language-json">{
+  &quot;worker&quot;: {
+    &quot;version&quot;: &quot;7.0.0&quot;,
+    &quot;uptime&quot;: 12345,
+    &quot;activeSessions&quot;: 2,
+    &quot;sseClients&quot;: 1,
+    &quot;port&quot;: 37742
+  },
+  &quot;database&quot;: {
+    &quot;path&quot;: &quot;~/.claude-mem/claude-mem.db&quot;,
+    &quot;size&quot;: 1048576,
+    &quot;observations&quot;: 500,
+    &quot;sessions&quot;: 50,
+    &quot;summaries&quot;: 25
+  }
+}
+</code></pre>
+<h4>Get Projects List</h4>
+<pre><code class="language-http">GET /api/projects
+</code></pre>
+<pre><code class="language-json">{
+  &quot;projects&quot;: [&quot;claude-mem&quot;, &quot;other-project&quot;, ...]
+}
+</code></pre>
+<h4>Get Processing Status</h4>
+<pre><code class="language-http">GET /api/processing-status
+</code></pre>
+<pre><code class="language-json">{
+  &quot;isProcessing&quot;: boolean,
+  &quot;queueDepth&quot;: number
+}
+</code></pre>
+<h3>Search Operations (SearchRoutes)</h3>
+<h4>Unified Search</h4>
+<pre><code class="language-http">GET /api/search?query=authentication&amp;type=observations&amp;format=index&amp;limit=20
+</code></pre>
+<pre><code class="language-json">{
+  &quot;observations&quot;: [...],
+  &quot;sessions&quot;: [...],
+  &quot;prompts&quot;: [...]
+}
+</code></pre>
+<h4>Unified Timeline</h4>
+<pre><code class="language-http">GET /api/timeline?anchor=123&amp;depth_before=10&amp;depth_after=10&amp;project=my-project
+</code></pre>
+<pre><code class="language-json">[
+  { &quot;type&quot;: &quot;observation&quot;, &quot;id&quot;: 120, &quot;created_at_epoch&quot;: ..., ... },
+  { &quot;type&quot;: &quot;session&quot;, &quot;id&quot;: 5, &quot;created_at_epoch&quot;: ..., ... },
+  { &quot;type&quot;: &quot;observation&quot;, &quot;id&quot;: 123, &quot;created_at_epoch&quot;: ..., ... }
+]
+</code></pre>
+<h4>Semantic Shortcuts</h4>
+<h4>Search by Concept</h4>
+<pre><code class="language-http">GET /api/search/by-concept?concept=discovery&amp;format=index&amp;limit=10&amp;project=my-project
+</code></pre>
+<h4>Search by File Path</h4>
+<pre><code class="language-http">GET /api/search/by-file?filePath=src/services/worker-service.ts&amp;format=index&amp;limit=10
+</code></pre>
+<h4>Search by Type</h4>
+<pre><code class="language-http">GET /api/search/by-type?type=bugfix&amp;format=index&amp;limit=10
+</code></pre>
+<h4>Get Recent Context</h4>
+<pre><code class="language-http">GET /api/context/recent?project=my-project&amp;limit=3
+</code></pre>
+<pre><code class="language-json">{
+  &quot;summaries&quot;: [...],
+  &quot;observations&quot;: [...]
+}
+</code></pre>
+<h4>Context Preview (for Settings UI)</h4>
+<pre><code class="language-http">GET /api/context/preview?project=my-project
+</code></pre>
+<h4>Context Injection (for Hooks)</h4>
+<pre><code class="language-http">GET /api/context/inject?project=my-project&amp;colors=true
+</code></pre>
+<h3>Settings &amp; Configuration (SettingsRoutes)</h3>
+<h4>Get/Update User Settings</h4>
+<h4>MCP Server Status/Toggle</h4>
+<h4>Git Branch Operations</h4>
+<h3>Viewer &amp; Real-Time Updates (ViewerRoutes)</h3>
+<h4>Health Check</h4>
+<pre><code class="language-http">GET /api/health
+</code></pre>
+<pre><code class="language-json">{ &quot;status&quot;: &quot;ok&quot; }
+</code></pre>
+<h4>Viewer UI</h4>
+<pre><code class="language-http">GET /
+</code></pre>
+<h4>SSE Stream</h4>
+<pre><code class="language-http">GET /stream
+</code></pre>
+<h2>Data Models</h2>
+<h3>Active Session (In-Memory)</h3>
+<pre><code class="language-typescript">interface ActiveSession {
+  sessionDbId: number;                  // Database ID (numeric)
+  claudeSessionId: string;              // Claude session identifier (string)
+  sdkSessionId: string | null;          // SDK session ID
+  project: string;                      // Project name
+  userPrompt: string;                   // Current user prompt text
+  pendingMessages: PendingMessage[];    // Queue of pending operations
+  abortController: AbortController;     // For cancellation
+  generatorPromise: Promise&lt;void&gt; | null; // SDK agent promise
+  lastPromptNumber: number;             // Last processed prompt number
+  startTime: number;                    // Session start timestamp
+  cumulativeInputTokens: number;        // Total input tokens
+  cumulativeOutputTokens: number;       // Total output tokens
+}
+
+interface PendingMessage {
+  type: 'observation' | 'summarize';
+  tool_name?: string;
+  tool_input?: any;
+  tool_response?: any;
+  prompt_number?: number;
+  cwd?: string;
+  last_user_message?: string;
+  last_assistant_message?: string;
+}
+</code></pre>
+<h3>Database Entities</h3>
+<h3>Search Results</h3>
+<pre><code class="language-typescript">interface ObservationSearchResult {
+  id: number;
+  title: string;
+  subtitle?: string;
+  summary: string;
+  facts: string[];         // Parsed from JSON
+  concepts: string[];      // Parsed from JSON
+  files_touched: string[]; // Parsed from JSON
+  obs_type: string;
+  project: string;
+  created_at_epoch: number;
+  prompt_number: number;
+  rank?: number;           // FTS5 rank score
+}
+
+interface SessionSummarySearchResult {
+  id: number;
+  summary_text: string;
+  facts: string[];
+  concepts: string[];
+  files_touched: string[];
+  project: string;
+  created_at_epoch: number;
+  rank?: number;
+}
+
+interface UserPromptSearchResult {
+  id: number;
+  claude_session_id: string;
+  project: string;
+  prompt_number: number;
+  prompt_text: string;
+  created_at_epoch: number;
+  rank?: number;
+}
+</code></pre>
+<h3>Timeline Item</h3>
+<pre><code class="language-typescript">interface TimelineItem {
+  type: 'observation' | 'session' | 'prompt';
+  id: number;
+  created_at_epoch: number;
+  // Entity-specific fields based on type
+}
+</code></pre>
+<h2>Integration Patterns</h2>
+<h3>Mapping Claude Code Hooks to Worker API</h3>
+<h3>VSCode Extension Integration</h3>
+<h4>Language Model Tool Registration</h4>
+<pre><code class="language-typescript">
+
+interface SearchTool extends vscode.LanguageModelChatTool {
+  invoke(
+    options: vscode.LanguageModelToolInvocationOptions&lt;{ query: string }&gt;,
+    token: vscode.CancellationToken
+  ): vscode.ProviderResult&lt;vscode.LanguageModelToolResult&gt;;
+}
+
+const searchTool: SearchTool = {
+  invoke: async (options, token) =&gt; {
+    const { query } = options.input;
+
+    try {
+      const response = await fetch(
+        `${WORKER_BASE_URL}/api/search?query=${encodeURIComponent(query)}&amp;format=index&amp;limit=10`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.statusText}`);
+      }
+
+      const results = await response.json();
+
+      // Format results for language model
+      return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(JSON.stringify(results, null, 2))
+      ]);
+    } catch (error) {
+      return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(`Error: ${error.message}`)
+      ]);
+    }
+  }
+};
+
+// Register tool
+vscode.lm.registerTool('claude-mem-search', searchTool);
+</code></pre>
+<h4>Chat Participant Implementation</h4>
+<pre><code class="language-typescript">const participant = vscode.chat.createChatParticipant('claude-mem', async (request, context, stream, token) =&gt; {
+  const claudeSessionId = context.session.id;
+
+  // First message in conversation - no initialization needed
+  // Session is auto-created on first observation
+
+  // Process user message
+  stream.markdown(`Searching memory for: ${request.prompt}\n\n`);
+
+  const response = await fetch(
+    `${WORKER_BASE_URL}/api/search?query=${encodeURIComponent(request.prompt)}&amp;format=index&amp;limit=5`
+  );
+
+  const results = await response.json();
+
+  if (results.observations?.length &gt; 0) {
+    stream.markdown('**Found observations:**\n');
+    for (const obs of results.observations) {
+      stream.markdown(`- ${obs.title} (${obs.project})\n`);
+    }
+  }
+
+  return { metadata: { command: 'search' } };
+});
+</code></pre>
+<h2>Error Handling &amp; Resilience</h2>
+<h3>Connection Failures</h3>
+<pre><code class="language-typescript">async function callWorkerWithFallback(
+  endpoint: string,
+  options?: RequestInit
+): Promise {
+  try {
+    const response = await fetch(`${WORKER_BASE_URL}${endpoint}`, {
+      ...options,
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Worker unavailable (${endpoint}):`, error);
+    return null; // Graceful degradation
+  }
+}
+</code></pre>
+<h3>Retry Logic with Exponential Backoff</h3>
+<pre><code class="language-typescript">async function retryWithBackoff(
+  fn: () =&gt; Promise,
+  maxRetries = 3,
+  baseDelay = 100
+): Promise {
+  for (let attempt = 0; attempt &lt; maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise(resolve =&gt; setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+</code></pre>
+<h3>Worker Health Check</h3>
+<pre><code class="language-typescript">async function isWorkerHealthy(): Promise&lt;boolean&gt; {
+  try {
+    const response = await fetch(`${WORKER_BASE_URL}/api/health`, {
+      signal: AbortSignal.timeout(2000)
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+</code></pre>
+<h3>Privacy Tag Handling</h3>
+<h3>Custom Error Classes</h3>
+<pre><code class="language-typescript">class WorkerUnavailableError extends Error {
+  constructor() {
+    super('Claude-mem worker is not running or unreachable');
+    this.name = 'WorkerUnavailableError';
+  }
+}
+
+class WorkerTimeoutError extends Error {
+  constructor(endpoint: string) {
+    super(`Worker request timed out: ${endpoint}`);
+    this.name = 'WorkerTimeoutError';
+  }
+}
+</code></pre>
+<h3>SSE Stream Error Handling</h3>
+<pre><code class="language-typescript">function connectToSSE(onEvent: (event: any) =&gt; void) {
+  const eventSource = new EventSource(`${WORKER_BASE_URL}/stream`);
+
+  eventSource.onmessage = (event) =&gt; {
+    try {
+      const data = JSON.parse(event.data);
+      onEvent(data);
+    } catch (error) {
+      console.error('SSE parse error:', error);
+    }
+  };
+
+  eventSource.onerror = (error) =&gt; {
+    console.error('SSE connection error:', error);
+    eventSource.close();
+
+    // Reconnect after 5 seconds
+    setTimeout(() =&gt; connectToSSE(onEvent), 5000);
+  };
+
+  return eventSource;
+}
+</code></pre>
+<h2>Development Workflow</h2>
+<h3>Project Structure (Recommended)</h3>
+<pre><code class="language-plaintext">vscode-extension/
+├── src/
+│   ├── extension.ts              # Extension entry point
+│   ├── services/
+│   │   ├── WorkerClient.ts       # HTTP client for worker
+│   │   └── MemoryManager.ts      # High-level memory operations
+│   ├── chat/
+│   │   └── participant.ts        # Chat participant implementation
+│   └── tools/
+│       ├── search.ts             # Search language model tool
+│       └── context.ts            # Context injection tool
+├── package.json
+├── tsconfig.json
+└── README.md
+</code></pre>
+<h3>Build Configuration (esbuild)</h3>
+<pre><code class="language-javascript">// build.js
+const esbuild = require('esbuild');
+
+esbuild.build({
+  entryPoints: ['src/extension.ts'],
+  bundle: true,
+  outfile: 'dist/extension.js',
+  external: ['vscode'],
+  format: 'cjs',
+  platform: 'node',
+  target: 'node18',
+  sourcemap: true
+}).catch(() =&gt; process.exit(1));
+</code></pre>
+<h3>package.json (VSCode Extension)</h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;claude-mem-vscode&quot;,
+  &quot;displayName&quot;: &quot;Claude-Mem&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;engines&quot;: {
+    &quot;vscode&quot;: &quot;^1.95.0&quot;
+  },
+  &quot;activationEvents&quot;: [
+    &quot;onStartupFinished&quot;
+  ],
+  &quot;main&quot;: &quot;./dist/extension.js&quot;,
+  &quot;contributes&quot;: {
+    &quot;chatParticipants&quot;: [
+      {
+        &quot;id&quot;: &quot;claude-mem&quot;,
+        &quot;name&quot;: &quot;memory&quot;,
+        &quot;description&quot;: &quot;Search your persistent memory&quot;
+      }
+    ],
+    &quot;languageModelTools&quot;: [
+      {
+        &quot;name&quot;: &quot;claude-mem-search&quot;,
+        &quot;displayName&quot;: &quot;Search Memory&quot;,
+        &quot;description&quot;: &quot;Search persistent memory for observations, sessions, and prompts&quot;
+      }
+    ]
+  },
+  &quot;scripts&quot;: {
+    &quot;build&quot;: &quot;node build.js&quot;,
+    &quot;watch&quot;: &quot;node build.js --watch&quot;,
+    &quot;package&quot;: &quot;vsce package&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;@types/vscode&quot;: &quot;^1.95.0&quot;,
+    &quot;esbuild&quot;: &quot;^0.19.0&quot;,
+    &quot;typescript&quot;: &quot;^5.3.0&quot;
+  }
+}
+</code></pre>
+<h3>Local Testing Loop</h3>
+<h3>Debug Configuration (.vscode/launch.json)</h3>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;0.2.0&quot;,
+  &quot;configurations&quot;: [
+    {
+      &quot;name&quot;: &quot;Run Extension&quot;,
+      &quot;type&quot;: &quot;extensionHost&quot;,
+      &quot;request&quot;: &quot;launch&quot;,
+      &quot;args&quot;: [
+        &quot;--extensionDevelopmentPath=${workspaceFolder}&quot;
+      ],
+      &quot;outFiles&quot;: [
+        &quot;${workspaceFolder}/dist/**/*.js&quot;
+      ],
+      &quot;preLaunchTask&quot;: &quot;npm: build&quot;
+    }
+  ]
+}
+</code></pre>
+<h2>Testing Strategy</h2>
+<h3>Unit Tests (Worker Client)</h3>
+<pre><code class="language-typescript">
+
+
+describe('WorkerClient', () =&gt; {
+  it('should check worker health', async () =&gt; {
+    const client = new WorkerClient();
+    const healthy = await client.isHealthy();
+    expect(healthy).toBe(true);
+  });
+
+  it('should queue observation', async () =&gt; {
+    const client = new WorkerClient();
+    const result = await client.queueObservation({
+      claudeSessionId: 'test-123',
+      tool_name: 'Bash',
+      tool_input: { command: 'ls' },
+      tool_response: { stdout: 'file1.txt' },
+      cwd: '/tmp'
+    });
+    expect(result.status).toBe('queued');
+  });
+
+  it('should search observations', async () =&gt; {
+    const client = new WorkerClient();
+    const results = await client.search({ query: 'test', limit: 5 });
+    expect(results).toHaveProperty('observations');
+  });
+});
+</code></pre>
+<h3>Integration Tests (With Worker Spawning)</h3>
+<pre><code class="language-typescript">
+
+
+describe('Worker Integration', () =&gt; {
+  let workerProcess: ReturnType&lt;typeof spawn&gt;;
+
+  beforeAll(async () =&gt; {
+    // Start worker process
+    workerProcess = spawn('node', ['dist/worker-service.js'], {
+      env: { ...process.env, CLAUDE_MEM_WORKER_PORT: '37778' }
+    });
+
+    // Wait for worker to be ready
+    await new Promise(resolve =&gt; setTimeout(resolve, 2000));
+  });
+
+  afterAll(() =&gt; {
+    workerProcess.kill();
+  });
+
+  it('should respond to health check', async () =&gt; {
+    const response = await fetch('http://localhost:37778/api/health');
+    expect(response.ok).toBe(true);
+  });
+});
+</code></pre>
+<h3>Manual Testing Checklist</h3>
+</AccordionGroup>
+
+<h2>Code Examples</h2>
+<h3>Complete WorkerClient Implementation</h3>
+<h3>Search Language Model Tool</h3>
+<pre><code class="language-typescript">
+
+
+
+  const client = new WorkerClient();
+
+  const searchTool = vscode.lm.registerTool('claude-mem-search', {
+    description: 'Search persistent memory for observations, sessions, and prompts',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query text'
+        },
+        type: {
+          type: 'string',
+          enum: ['observations', 'sessions', 'prompts'],
+          description: 'Type of results to return'
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of results',
+          default: 10
+        }
+      },
+      required: ['query']
+    },
+    invoke: async (options, token) =&gt; {
+      const { query, type, limit = 10 } = options.input;
+
+      try {
+        const results = await client.search({
+          query,
+          type,
+          format: 'index',
+          limit
+        });
+
+        // Format results for language model
+        let formatted = '';
+
+        if (results.observations?.length &gt; 0) {
+          formatted += '## Observations\n\n';
+          for (const obs of results.observations) {
+            formatted += `- **${obs.title}** (${obs.project})\n`;
+            formatted += `  ${obs.summary}\n`;
+            if (obs.concepts?.length &gt; 0) {
+              formatted += `  Concepts: ${obs.concepts.join(', ')}\n`;
+            }
+            formatted += '\n';
+          }
+        }
+
+        return new vscode.LanguageModelToolResult([
+          new vscode.LanguageModelTextPart(formatted)
+        ]);
+      } catch (error) {
+        return new vscode.LanguageModelToolResult([
+          new vscode.LanguageModelTextPart(`Error: ${error.message}`)
+        ]);
+      }
+    }
+  });
+
+  context.subscriptions.push(searchTool);
+}
+</code></pre>
+<h2>Critical Implementation Notes</h2>
+<h2>Additional Resources</h2>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/platform-integration.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

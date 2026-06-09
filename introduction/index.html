@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction — manymems docs</title>
+  <meta name="description" content="Team memory and code-provenance dashboard for Claude Code" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Team memory and code-provenance dashboard for Claude Code</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>manymems</h1>
+<p><strong>Open-source memory and code-provenance dashboard</strong></p>
+<p>manymems captures Claude Code sessions into a local SQLite index with FTS5 search, then surfaces them through a team-oriented dashboard. Each session's observations — file reads, writes, tool calls — get linked to Git commits and previous context, giving teams visibility into how AI-assisted work shapes their codebase.</p>
+<h2>Quick Start</h2>
+<p>Clone the repository and run the development worker:</p>
+<pre><code class="language-bash">git clone https://github.com/chicago-joe/manymems.git
+cd manymems
+npm install
+npm run build
+</code></pre>
+<p>Start the worker on port 37778:</p>
+<pre><code class="language-bash">
+CLAUDE_MEM_DATA_DIR=~/.claude-mem \
+CLAUDE_MEM_WORKER_PORT=37778 \
+CLAUDE_MEM_WORKER_HOST=127.0.0.1 \
+CLAUDE_MEM_CHROMA_ENABLED=false \
+CLAUDE_MEM_LOG_LEVEL=warn \
+  bun plugin/scripts/worker-service.cjs --daemon
+</code></pre>
+<p>Open http://localhost:37778 in your browser. The dashboard captures all Claude Code sessions automatically via hooks.</p>
+<h2>Key Features</h2>
+<ul>
+<li><strong>Session Capture</strong> - Automatically records file reads, writes, and all tool calls via Claude Code hooks</li>
+<li><strong>Dashboard UI</strong> - Prefect Cloud-style dark interface with observation timeline and drill-down</li>
+<li><strong>Local SQLite Index</strong> - FTS5 full-text search across all captured sessions</li>
+<li><strong>Git Attribution</strong> - Links observations to commits with author and timestamp</li>
+<li><strong>API Explorer</strong> - Browse the worker HTTP API directly from the dashboard</li>
+<li><strong>MCP Search Tools</strong> - Query sessions and observations from any Claude Code session</li>
+<li><strong>Privacy by Default</strong> - No network calls; all data stays local unless you sync it</li>
+</ul>
+<h2>How It Works</h2>
+<pre><code>┌───────────────────────────────────────────────────────────┐
+│ Claude Code Hook → Capture tool usage &amp; prompts          │
+└───────────────────────────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────┐
+│ Local Worker (port 37778) → Index into SQLite + FTS5      │
+└───────────────────────────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────┐
+│ Dashboard Web UI → Search, filter, drill into sessions    │
+└───────────────────────────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────┐
+│ MCP Tools → Query from Claude Code for future context     │
+└───────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Core Components:</strong></p>
+<ol>
+<li><strong>Claude Code Hooks</strong> - Capture observations at SessionStart, PostToolUse, SessionEnd</li>
+<li><strong>Worker Service</strong> - Bun-based Express HTTP API on port 37778</li>
+<li><strong>SQLite Database</strong> - Stores sessions, observations, and metadata with FTS5 indexing</li>
+<li><strong>Web Viewer</strong> - React dashboard with real-time SSE updates</li>
+<li><strong>MCP Search Tools</strong> - Natural language query interface for Claude Code</li>
+</ol>
+<p>See <a href="architecture/overview">Architecture Overview</a> for details.</p>
+<h2>System Requirements</h2>
+<ul>
+<li><strong>Node.js</strong>: 20.0.0 or higher</li>
+<li><strong>Bun</strong> ≥ 1.0</li>
+<li><strong>Git</strong>: for commit attribution</li>
+<li><strong>SQLite 3</strong> — bundled via <code>bun:sqlite</code></li>
+</ul>
+<h2>Next Steps</h2>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/introduction.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

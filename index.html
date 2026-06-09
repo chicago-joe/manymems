@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>manymems — AI-native team memory for Claude Code</title>
+  <meta name="description" content="Persistent, searchable memory that captures intent, decisions, and code provenance across every Claude Code session." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<div class="landing">
+  <section class="hero">
+    <div class="hero-badge">Open Source &middot; Apache-2.0</div>
+    <h1 class="hero-title">
+      Team memory for
+      <span class="accent">Claude Code</span>
+    </h1>
+    <p class="hero-subtitle">
+      manymems captures intent, decisions, and code provenance across every session —
+      so your team never re-discovers what it already knows.
+    </p>
+    <div class="hero-cta">
+      <a href="http://localhost:37778" class="btn-primary" target="_blank" rel="noopener">
+        Open Dashboard &rarr;
+      </a>
+      <a href="/introduction" class="btn-secondary">
+        Read the Docs
+      </a>
+    </div>
+  </section>
+
+  <section class="features">
+    <h2 class="features-heading">What it does</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9881;</div>
+        <h3>Persistent memory</h3>
+        <p>Every session is captured and indexed. Ask what changed last week — get a real answer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128269;</div>
+        <h3>Semantic search</h3>
+        <p>Find past decisions, bug fixes, and architectural choices with natural-language queries.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128101;</div>
+        <h3>Team provenance</h3>
+        <p>Every code change linked to the intent behind it — who decided what, and why.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3>Zero-friction capture</h3>
+        <p>Automatic observation capture via Claude Code hooks — no manual notes required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128336;</div>
+        <h3>Timeline view</h3>
+        <p>Browse the full history of a file, feature, or decision with provenance drill-down.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128279;</div>
+        <h3>Multi-platform</h3>
+        <p>Works with Claude Code, Cursor, Gemini CLI, and any AI coding assistant via MCP.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="quickstart">
+    <h2>Quick start</h2>
+    <div class="code-block">
+      <pre><code>claude mcp add manymems npx @chicago-joe/manymems</code></pre>
+    </div>
+    <p>Then open the dashboard at <a href="http://localhost:37778" target="_blank" rel="noopener">localhost:37778</a> or read the <a href="/installation">installation guide</a>.</p>
+  </section>
+
+  <section class="doc-links">
+    <h2>Explore the docs</h2>
+    <div class="doc-link-grid">
+      
+    </div>
+  </section>
+</div>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual Recovery — manymems docs</title>
+  <meta name="description" content="Recover stuck observations after worker crashes or restarts" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Recover stuck observations after worker crashes or restarts</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Manual Recovery Guide</h1>
+<h2>Overview</h2>
+<p>Claude-mem's manual recovery system helps you recover observations that get stuck in the processing queue after worker crashes, system restarts, or unexpected shutdowns.</p>
+<p><strong>Key Change in v5.x</strong>: Automatic recovery on worker startup is now disabled. This gives you explicit control over when reprocessing happens, preventing unexpected duplicate observations.</p>
+<h2>When Do You Need Manual Recovery?</h2>
+<p>You should trigger manual recovery when:</p>
+<ul>
+<li><strong>Worker crashed or restarted</strong> - Observations were queued but worker stopped before processing</li>
+<li><strong>No new summaries appearing</strong> - Observations are being saved but not processed into summaries</li>
+<li><strong>Stuck messages detected</strong> - Messages showing as &quot;processing&quot; for &gt;5 minutes</li>
+<li><strong>System crashes</strong> - Unexpected shutdowns left messages in incomplete states</li>
+</ul>
+<h2>Quick Start</h2>
+<h3>Using the CLI Tool (Recommended)</h3>
+<p>The interactive CLI tool is the safest and easiest way to recover stuck observations:</p>
+<pre><code class="language-bash"># Check status and prompt for recovery
+bun scripts/check-pending-queue.ts
+</code></pre>
+<p>This will:</p>
+<ol>
+<li>Check worker health</li>
+<li>Show queue summary (pending, processing, failed, stuck counts)</li>
+<li>Display sessions with pending work</li>
+<li>Prompt you to confirm recovery</li>
+<li>Show recently processed messages for feedback</li>
+</ol>
+<h3>Auto-Process Without Prompts</h3>
+<p>For scripting or when you're confident recovery is needed:</p>
+<pre><code class="language-bash"># Auto-process without prompting
+bun scripts/check-pending-queue.ts --process
+
+# Limit to 5 sessions
+bun scripts/check-pending-queue.ts --process --limit 5
+</code></pre>
+<h2>Understanding Queue States</h2>
+<p>Messages progress through these lifecycle states:</p>
+<ol>
+<li><strong>pending</strong> → Queued, waiting to process</li>
+<li><strong>processing</strong> → Currently being processed by SDK agent</li>
+<li><strong>processed</strong> → Completed successfully</li>
+<li><strong>failed</strong> → Failed after 3 retry attempts</li>
+</ol>
+<h3>Stuck Detection</h3>
+<p>Messages in <code>processing</code> state for <strong>&gt;5 minutes</strong> are considered stuck:</p>
+<ul>
+<li>They're automatically reset to <code>pending</code> on worker startup</li>
+<li>They're NOT automatically reprocessed (requires manual trigger)</li>
+<li>They appear in the <code>stuckCount</code> field when checking queue status</li>
+</ul>
+<h2>Recovery Methods</h2>
+<h3>Method 1: Interactive CLI Tool</h3>
+<p><strong>Best for</strong>: Regular users, interactive sessions, when you want visibility into what's happening</p>
+<pre><code class="language-bash">bun scripts/check-pending-queue.ts
+</code></pre>
+<p><strong>Example Output</strong>:</p>
+<pre><code>Checking worker health...
+Worker is healthy ✓
+
+Queue Summary:
+  Pending: 12 messages
+  Processing: 2 messages (1 stuck)
+  Failed: 0 messages
+  Recently Processed: 5 messages in last 30 minutes
+
+Sessions with pending work: 3
+  Session 44: 5 pending, 1 processing (age: 2m)
+  Session 45: 4 pending, 1 processing (age: 7m - STUCK)
+  Session 46: 2 pending
+
+Would you like to process these pending queues? (y/n)
+</code></pre>
+<p><strong>Features</strong>:</p>
+<ul>
+<li>✅ Pre-flight health check (verifies worker is running)</li>
+<li>✅ Detailed queue breakdown by session</li>
+<li>✅ Age tracking for stuck detection</li>
+<li>✅ Confirmation prompt (prevents accidental reprocessing)</li>
+<li>✅ Non-interactive mode with <code>--process</code> flag</li>
+<li>✅ Session limit control with <code>--limit N</code></li>
+</ul>
+<h3>Method 2: HTTP API</h3>
+<p><strong>Best for</strong>: Automation, scripting, integration with monitoring systems</p>
+<h4>Check Queue Status</h4>
+<pre><code class="language-bash">curl http://localhost:37777/api/pending-queue
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;queue&quot;: {
+    &quot;messages&quot;: [
+      {
+        &quot;id&quot;: 123,
+        &quot;session_db_id&quot;: 45,
+        &quot;claude_session_id&quot;: &quot;abc123&quot;,
+        &quot;message_type&quot;: &quot;observation&quot;,
+        &quot;status&quot;: &quot;pending&quot;,
+        &quot;retry_count&quot;: 0,
+        &quot;created_at_epoch&quot;: 1730886600000
+      }
+    ],
+    &quot;totalPending&quot;: 12,
+    &quot;totalProcessing&quot;: 2,
+    &quot;totalFailed&quot;: 0,
+    &quot;stuckCount&quot;: 1
+  },
+  &quot;recentlyProcessed&quot;: [...],
+  &quot;sessionsWithPendingWork&quot;: [44, 45, 46]
+}
+</code></pre>
+<p><strong>Key Fields</strong>:</p>
+<ul>
+<li><code>totalPending</code> - Messages waiting to process</li>
+<li><code>totalProcessing</code> - Messages currently processing</li>
+<li><code>stuckCount</code> - Processing messages &gt;5 minutes old</li>
+<li><code>sessionsWithPendingWork</code> - Session IDs needing recovery</li>
+</ul>
+<h4>Trigger Recovery</h4>
+<pre><code class="language-bash">curl -X POST http://localhost:37777/api/pending-queue/process \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;sessionLimit&quot;: 10}'
+</code></pre>
+<p><strong>Response</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;totalPendingSessions&quot;: 15,
+  &quot;sessionsStarted&quot;: 10,
+  &quot;sessionsSkipped&quot;: 2,
+  &quot;startedSessionIds&quot;: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+}
+</code></pre>
+<p><strong>Response Fields</strong>:</p>
+<ul>
+<li><code>totalPendingSessions</code> - Total sessions with pending messages in database</li>
+<li><code>sessionsStarted</code> - Sessions we started processing this request</li>
+<li><code>sessionsSkipped</code> - Sessions already processing (prevents duplicate agents)</li>
+<li><code>startedSessionIds</code> - Database IDs of sessions we started</li>
+</ul>
+<h2>Best Practices</h2>
+<h3>1. Always Check Before Recovery</h3>
+<pre><code class="language-bash"># Check queue status first
+curl http://localhost:37777/api/pending-queue
+
+# Or use CLI tool which checks automatically
+bun scripts/check-pending-queue.ts
+</code></pre>
+<h3>2. Start with Low Session Limits</h3>
+<pre><code class="language-bash"># Process only 5 sessions at a time
+bun scripts/check-pending-queue.ts --process --limit 5
+</code></pre>
+<p>This prevents overwhelming the worker with too many concurrent SDK agents.</p>
+<h3>3. Monitor During Recovery</h3>
+<p>Watch worker logs while recovery runs:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+<p>Look for:</p>
+<ul>
+<li>SDK agent starts: <code>Starting SDK agent for session...</code></li>
+<li>Processing completions: <code>Processed observation...</code></li>
+<li>Errors: <code>ERROR</code> or <code>Failed to process...</code></li>
+</ul>
+<h3>4. Verify Recovery Success</h3>
+<p>Check recently processed messages:</p>
+<pre><code class="language-bash">curl http://localhost:37777/api/pending-queue | jq '.recentlyProcessed'
+</code></pre>
+<p>Or use the CLI tool which shows this automatically.</p>
+<h3>5. Handle Failed Messages</h3>
+<p>Messages that fail 3 times are marked <code>failed</code> and won't auto-retry:</p>
+<pre><code class="language-bash"># View failed messages
+sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT id, session_db_id, message_type, retry_count
+  FROM pending_messages
+  WHERE status = 'failed'
+  ORDER BY completed_at_epoch DESC;
+&quot;
+</code></pre>
+<p>You can manually reset them if needed:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  UPDATE pending_messages
+  SET status = 'pending', retry_count = 0
+  WHERE status = 'failed';
+&quot;
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Recovery Not Working</h3>
+<p><strong>Symptom</strong>: Triggered recovery but messages still pending</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p><strong>Verify worker health</strong>:</p>
+<pre><code class="language-bash">curl http://localhost:37777/health
+</code></pre>
+</li>
+<li><p><strong>Check worker logs for errors</strong>:</p>
+<pre><code class="language-bash">npm run worker:logs | grep -i error
+</code></pre>
+</li>
+<li><p><strong>Restart worker</strong>:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+<li><p><strong>Check database integrity</strong>:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;PRAGMA integrity_check;&quot;
+</code></pre>
+</li>
+</ol>
+<h3>Messages Stuck Forever</h3>
+<p><strong>Symptom</strong>: Messages show as &quot;processing&quot; for hours</p>
+<p><strong>Solution</strong>: Force reset stuck messages</p>
+<pre><code class="language-bash"># Reset all stuck messages to pending
+sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  UPDATE pending_messages
+  SET status = 'pending', started_processing_at_epoch = NULL
+  WHERE status = 'processing';
+&quot;
+
+# Then trigger recovery
+bun scripts/check-pending-queue.ts --process
+</code></pre>
+<h3>Worker Crashes During Recovery</h3>
+<p><strong>Symptom</strong>: Worker stops while processing recovered messages</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p><strong>Check available memory</strong>:</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p><strong>Reduce session limit</strong>:</p>
+<pre><code class="language-bash">bun scripts/check-pending-queue.ts --process --limit 3
+</code></pre>
+</li>
+<li><p><strong>Check for SDK errors in logs</strong>:</p>
+<pre><code class="language-bash">npm run worker:logs | grep -i &quot;sdk&quot;
+</code></pre>
+</li>
+<li><p><strong>Increase worker memory</strong> (if using custom runner):</p>
+<pre><code class="language-bash">export NODE_OPTIONS=&quot;--max-old-space-size=4096&quot;
+npm run worker:restart
+</code></pre>
+</li>
+</ol>
+<h2>Advanced Usage</h2>
+<h3>Direct Database Inspection</h3>
+<p>View all pending messages:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT
+    id,
+    session_db_id,
+    message_type,
+    status,
+    retry_count,
+    datetime(created_at_epoch/1000, 'unixepoch') as created_at,
+    datetime(started_processing_at_epoch/1000, 'unixepoch') as started_at,
+    CAST((strftime('%s', 'now') * 1000 - started_processing_at_epoch) / 60000 AS INTEGER) as age_minutes
+  FROM pending_messages
+  WHERE status IN ('pending', 'processing')
+  ORDER BY created_at_epoch;
+&quot;
+</code></pre>
+<h3>Count Messages by Status</h3>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT status, COUNT(*) as count
+  FROM pending_messages
+  GROUP BY status;
+&quot;
+</code></pre>
+<h3>Find Sessions with Pending Work</h3>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT
+    session_db_id,
+    COUNT(*) as pending_count,
+    GROUP_CONCAT(message_type) as message_types
+  FROM pending_messages
+  WHERE status IN ('pending', 'processing')
+  GROUP BY session_db_id;
+&quot;
+</code></pre>
+<h3>View Recent Failures</h3>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT
+    id,
+    session_db_id,
+    message_type,
+    retry_count,
+    datetime(completed_at_epoch/1000, 'unixepoch') as failed_at
+  FROM pending_messages
+  WHERE status = 'failed'
+  ORDER BY completed_at_epoch DESC
+  LIMIT 10;
+&quot;
+</code></pre>
+<h2>Integration Examples</h2>
+<h3>Cron Job for Automatic Recovery</h3>
+<pre><code class="language-bash">#!/bin/bash
+# Run every hour to process stuck queues
+
+# Check if worker is healthy
+if curl -f http://localhost:37777/health &gt; /dev/null 2&gt;&amp;1; then
+  # Auto-process up to 5 sessions
+  bun scripts/check-pending-queue.ts --process --limit 5
+else
+  echo &quot;Worker not healthy, skipping recovery&quot;
+  exit 1
+fi
+</code></pre>
+<h3>Monitoring Script</h3>
+<pre><code class="language-bash">#!/bin/bash
+# Alert if stuck count exceeds threshold
+
+STUCK_COUNT=$(curl -s http://localhost:37777/api/pending-queue | jq '.queue.stuckCount')
+
+if [ &quot;$STUCK_COUNT&quot; -gt 5 ]; then
+  echo &quot;WARNING: $STUCK_COUNT stuck messages detected&quot;
+  # Send alert (email, Slack, etc.)
+fi
+</code></pre>
+<h3>Pre-Shutdown Recovery</h3>
+<pre><code class="language-bash">#!/bin/bash
+# Process pending queues before system shutdown
+
+echo &quot;Processing pending queues before shutdown...&quot;
+bun scripts/check-pending-queue.ts --process --limit 20
+
+echo &quot;Waiting for processing to complete...&quot;
+sleep 10
+
+echo &quot;Stopping worker...&quot;
+claude-mem stop
+</code></pre>
+<h2>Migration Note</h2>
+<p>If you're upgrading from v4.x to v5.x:</p>
+<p><strong>v4.x Behavior</strong> (Automatic Recovery):</p>
+<ul>
+<li>Worker automatically recovered stuck messages on startup</li>
+<li>No user control over reprocessing timing</li>
+</ul>
+<p><strong>v5.x Behavior</strong> (Manual Recovery):</p>
+<ul>
+<li>Stuck messages detected but NOT automatically reprocessed</li>
+<li>User must explicitly trigger recovery via CLI or API</li>
+<li>Prevents unexpected duplicate observations</li>
+<li>Provides explicit control over when processing happens</li>
+</ul>
+<p><strong>Migration Steps</strong>:</p>
+<ol>
+<li>Upgrade to v5.x</li>
+<li>Check for stuck messages: <code>bun scripts/check-pending-queue.ts</code></li>
+<li>Process if needed: <code>bun scripts/check-pending-queue.ts --process</code></li>
+<li>Add recovery to your workflow (cron job, pre-shutdown script, etc.)</li>
+</ol>
+<h2>See Also</h2>
+<ul>
+<li><a href="../architecture/worker-service">Worker Service Architecture</a> - Technical details on queue processing</li>
+<li><a href="../troubleshooting#manual-recovery-for-stuck-observations">Troubleshooting - Manual Recovery</a> - Common issues and solutions</li>
+<li><a href="../architecture/database">Database Schema</a> - Pending messages table structure</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/manual-recovery.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

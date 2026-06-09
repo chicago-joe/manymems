@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture Overview — manymems docs</title>
+  <meta name="description" content="System components and data flow in Claude-Mem" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">System components and data flow in Claude-Mem</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Architecture Overview</h1>
+<h2>System Components</h2>
+<p>Claude-Mem operates as a Claude Code plugin with the following core components:</p>
+<ol>
+<li><strong>Plugin Hooks</strong> - Lifecycle events (Setup version-check + 5 lifecycle hooks: SessionStart, UserPromptSubmit, PreToolUse for <code>Read</code>, PostToolUse, Stop)</li>
+<li><strong>Worker Service</strong> - Express HTTP API on a per-user port; processes observations via the Claude Agent SDK (or Gemini / OpenRouter)</li>
+<li><strong>Database Layer</strong> - SQLite + FTS5 (and optional Chroma for semantic search)</li>
+<li><strong>Search Tools</strong> - HTTP API + the <code>mem-search</code> skill / MCP server for progressive disclosure search</li>
+<li><strong>Viewer UI</strong> - React-based real-time memory stream served by the worker</li>
+</ol>
+<h2>Technology Stack</h2>
+<table>
+<thead>
+<tr>
+  <th>Layer</th>
+  <th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Language</strong></td>
+  <td>TypeScript (ES2022, ESNext modules)</td>
+</tr>
+<tr>
+  <td><strong>Runtime</strong></td>
+  <td>Node.js 20+ and Bun ≥ 1.0</td>
+</tr>
+<tr>
+  <td><strong>Database</strong></td>
+  <td>SQLite 3 with bun:sqlite driver</td>
+</tr>
+<tr>
+  <td><strong>Vector Store</strong></td>
+  <td>Chroma (optional, for semantic search)</td>
+</tr>
+<tr>
+  <td><strong>HTTP Server</strong></td>
+  <td>Express.js 5</td>
+</tr>
+<tr>
+  <td><strong>Real-time</strong></td>
+  <td>Server-Sent Events (SSE)</td>
+</tr>
+<tr>
+  <td><strong>UI Framework</strong></td>
+  <td>React + TypeScript</td>
+</tr>
+<tr>
+  <td><strong>AI SDK</strong></td>
+  <td>@anthropic-ai/claude-agent-sdk (or Gemini / OpenRouter)</td>
+</tr>
+<tr>
+  <td><strong>Build Tool</strong></td>
+  <td>esbuild (bundles TypeScript)</td>
+</tr>
+<tr>
+  <td><strong>Process Manager</strong></td>
+  <td>Bun</td>
+</tr>
+<tr>
+  <td><strong>Testing</strong></td>
+  <td><code>bun test</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Data Flow</h2>
+<h3>Memory Pipeline</h3>
+<pre><code>Hook (stdin) → Database → Worker Service → SDK Processor → Database → Next Session Hook
+</code></pre>
+<ol>
+<li><strong>Input</strong>: Claude Code sends tool execution data via stdin to hooks</li>
+<li><strong>Storage</strong>: Hooks write observations to SQLite database</li>
+<li><strong>Processing</strong>: Worker service reads observations, processes via SDK</li>
+<li><strong>Output</strong>: Processed summaries written back to database</li>
+<li><strong>Retrieval</strong>: Next session's context hook reads summaries from database</li>
+</ol>
+<h3>Search Pipeline</h3>
+<pre><code>User Query → MCP Tools Invoked → HTTP API → SessionSearch Service → FTS5 Database → Search Results → Claude
+</code></pre>
+<ol>
+<li><strong>User Query</strong>: User asks naturally: &quot;What bugs did we fix?&quot;</li>
+<li><strong>MCP Tools Invoked</strong>: Claude recognizes intent and invokes MCP search tools</li>
+<li><strong>HTTP API</strong>: MCP tools call HTTP endpoint (e.g., <code>/api/search/observations</code>)</li>
+<li><strong>SessionSearch</strong>: Worker service queries FTS5 virtual tables</li>
+<li><strong>Format</strong>: Results formatted and returned via MCP</li>
+<li><strong>Return</strong>: Claude presents formatted results to user</li>
+</ol>
+<p>Uses 3-layer progressive disclosure: search → timeline → get_observations</p>
+<h2>Session Lifecycle</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│ 0. Setup Hook Fires (version-check.js)                          │
+│    Sub-100ms read of .install-version; on mismatch prints       │
+│    &quot;run: npx claude-mem repair&quot; to stderr. Always exits 0.      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Session Starts → Worker-start, then Context Hook             │
+│    Starts Bun worker if needed, injects context from previous   │
+│    sessions (configurable observation count)                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. User Types Prompt → UserPromptSubmit Hook Fires              │
+│    Creates session in database, saves raw user prompt for FTS5  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Claude Uses Tools → PostToolUse Hook Fires (100+ times)      │
+│    Captures tool executions, sends to worker for AI compression │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Worker Processes → Claude Agent SDK Analyzes                 │
+│    Extracts structured learnings via iterative AI processing    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. Claude Stops → Summary Hook Fires                            │
+│    Generates final summary with request, completions, learnings │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 6. Session Ends → Cleanup Hook Fires                            │
+│    Marks session complete (graceful, not DELETE), ready for     │
+│    next session context. Skips on /clear to preserve ongoing    │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h2>Directory Structure</h2>
+<pre><code>claude-mem/
+├── src/
+│   ├── hooks/                  # TypeScript hook implementations (built via esbuild)
+│   ├── sdk/                    # Claude Agent SDK integration
+│   ├── services/
+│   │   ├── worker-service.ts   # Express HTTP + SSE service (worker entry point)
+│   │   ├── sync/ChromaSync.ts  # Optional Chroma vector index
+│   │   └── sqlite/             # SQLite + FTS5 storage layer
+│   ├── ui/viewer/              # React + TypeScript web viewer
+│   ├── shared/                 # Shared utilities (paths, settings defaults)
+│   └── utils/                  # Logging, platform, tag-stripping helpers
+│
+├── scripts/                    # Build + utility scripts
+│
+├── plugin/                     # Plugin distribution (synced to marketplace)
+│   ├── .claude-plugin/plugin.json
+│   ├── hooks/hooks.json        # Hook registration (Setup + 5 lifecycle hooks)
+│   ├── scripts/                # Built executables
+│   │   ├── version-check.js    # Setup-phase marker check (sub-100ms)
+│   │   ├── bun-runner.js       # Resolves Bun and runs worker-service.cjs
+│   │   ├── worker-service.cjs  # Worker daemon + lifecycle hook dispatcher
+│   │   ├── worker-cli.js       # CLI shim
+│   │   ├── worker-wrapper.cjs  # Process wrapper
+│   │   ├── mcp-server.cjs      # MCP search server
+│   │   ├── statusline-counts.js
+│   │   └── context-generator.cjs
+│   ├── skills/                 # Agent skills (mem-search, make-plan, do, etc.)
+│   └── ui/viewer.html          # Self-contained React bundle
+│
+├── tests/                      # Test suite (`bun test`)
+├── docs/                       # Mintlify documentation
+└── openclaw/                   # OpenClaw integration plugin
+</code></pre>
+<h2>Component Details</h2>
+<h3>1. Plugin Hooks</h3>
+<p>The plugin registers a Setup-phase <code>version-check.js</code> plus five lifecycle hooks. Each lifecycle event invokes <code>bun-runner.js</code> to spawn <code>worker-service.cjs</code> with a <code>hook claude-code &lt;event&gt;</code> argument; the worker process is the single dispatcher for all hook logic. Events:</p>
+<ul>
+<li><strong>Setup</strong> → <code>version-check.js</code> (sub-100ms marker check; never installs anything)</li>
+<li><strong>SessionStart</strong> → start worker, then <code>hook claude-code context</code> (context injection)</li>
+<li><strong>UserPromptSubmit</strong> → <code>hook claude-code session-init</code></li>
+<li><strong>PreToolUse</strong> (matcher <code>Read</code>) → <code>hook claude-code file-context</code></li>
+<li><strong>PostToolUse</strong> (matcher <code>*</code>) → <code>hook claude-code observation</code></li>
+<li><strong>Stop</strong> → <code>hook claude-code summarize</code> (summary generation)</li>
+</ul>
+<p>The actual runtime install (Bun, uv, <code>bun install</code>) is performed by <code>npx claude-mem install</code> / <code>npx claude-mem repair</code> with a visible installer spinner; the Setup hook itself only reads the <code>.install-version</code> marker.</p>
+<p>See <a href="/architecture/hooks">Plugin Hooks</a> for detailed hook documentation.</p>
+<h3>2. Worker Service</h3>
+<p>Express.js HTTP server on a per-user port (default <code>37700 + (uid % 100)</code>, override via <code>CLAUDE_MEM_WORKER_PORT</code>) with:</p>
+<ul>
+<li>Search HTTP API endpoints</li>
+<li>Viewer UI HTTP/SSE endpoints</li>
+<li>Async observation processing via the Claude Agent SDK (or Gemini / OpenRouter)</li>
+<li>Real-time updates via Server-Sent Events</li>
+<li>Auto-managed by Bun</li>
+</ul>
+<p>See <a href="/architecture/worker-service">Worker Service</a> for HTTP API and endpoints.</p>
+<h3>3. Database Layer</h3>
+<p>SQLite3 with bun:sqlite driver featuring:</p>
+<ul>
+<li>FTS5 virtual tables for full-text search</li>
+<li>SessionStore for CRUD operations</li>
+<li>SessionSearch for FTS5 queries</li>
+<li>Location: <code>~/.claude-mem/claude-mem.db</code></li>
+</ul>
+<p>See <a href="/architecture/database">Database Architecture</a> for schema and FTS5 search.</p>
+<h3>4. mem-search Skill (v5.4.0+)</h3>
+<p>Skill-based search with progressive disclosure providing 10 search operations:</p>
+<ul>
+<li>Search observations, sessions, prompts (full-text FTS5)</li>
+<li>Filter by type, concept, file</li>
+<li>Get recent context, timeline, timeline by query</li>
+<li>API help documentation</li>
+</ul>
+<p><strong>Token Savings</strong>: ~2,250 tokens per session vs MCP approach</p>
+<ul>
+<li>Skill frontmatter: ~250 tokens (loaded at session start)</li>
+<li>Full instructions: ~2,500 tokens (loaded on-demand when invoked)</li>
+<li>HTTP API endpoints instead of MCP tools</li>
+</ul>
+<p><strong>Skill Enhancement (v5.5.0)</strong>: Renamed from &quot;search&quot; to &quot;mem-search&quot; for better scope differentiation. Effectiveness increased from 67% to 100% with enhanced triggers and comprehensive documentation.</p>
+<p>See <a href="/architecture/search-architecture">Search Architecture</a> for technical details and examples.</p>
+<h3>5. Viewer UI</h3>
+<p>React + TypeScript web interface served by the worker on its configured port (default <code>http://127.0.0.1:&lt;worker-port&gt;</code>) featuring:</p>
+<ul>
+<li>Real-time memory stream via Server-Sent Events</li>
+<li>Infinite scroll pagination with automatic deduplication</li>
+<li>Project filtering and settings persistence</li>
+<li>GPU-accelerated animations</li>
+<li>Self-contained HTML bundle (viewer.html)</li>
+</ul>
+<p>Built with esbuild into a single file deployment.</p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/architecture/overview.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

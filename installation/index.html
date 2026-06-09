@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation — manymems docs</title>
+  <meta name="description" content="Install Claude-Mem plugin for persistent memory across sessions" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Install Claude-Mem plugin for persistent memory across sessions</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Installation Guide</h1>
+<h2>Quick Start</h2>
+<h3>Option 1: npx (Recommended)</h3>
+<p>Install and configure Claude-Mem with a single command:</p>
+<pre><code class="language-bash">npx claude-mem install
+</code></pre>
+<p>The interactive installer will:</p>
+<ul>
+<li>Run a runtime check (auto-installs Bun and uv if missing)</li>
+<li>Detect your installed IDEs (Claude Code, Cursor, Gemini CLI, Windsurf, OpenCode, Codex CLI) and let you multi-select which ones to wire up</li>
+<li>Offer to install Claude Code if it isn't found</li>
+<li>Prompt for an LLM provider (Claude Code auth, Gemini API key, or OpenRouter API key)</li>
+<li>Prompt for the Claude model used to compress observations (Haiku / Sonnet / Opus) when the Claude provider is selected</li>
+<li>Copy plugin files into the marketplace directory and register the plugin</li>
+<li>Auto-start the worker service</li>
+</ul>
+<h3>Option 2: Plugin Marketplace</h3>
+<p>Install Claude-Mem directly from the plugin marketplace inside Claude Code:</p>
+<pre><code class="language-bash">/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+</code></pre>
+<p>Both methods will automatically configure hooks and start the worker service. Start a new Claude Code session and you'll see context from previous sessions automatically loaded.</p>
+<blockquote>
+<p><strong>Important:</strong> Claude-Mem is published on npm, but running <code>npm install -g claude-mem</code> installs the
+<strong>SDK/library only</strong>. It does <strong>not</strong> register plugin hooks or start the worker service.
+Always install via <code>npx claude-mem install</code> or the <code>/plugin</code> commands above.</p>
+</blockquote>
+<h2>System Requirements</h2>
+<ul>
+<li><strong>Node.js</strong>: 20.0.0 or higher</li>
+<li><strong>Bun</strong> ≥ 1.0 (auto-installed by <code>npx claude-mem install</code> if missing)</li>
+<li><strong>uv</strong> (auto-installed if missing — provides Python for Chroma's embedding service)</li>
+<li><strong>Claude Code</strong> or another supported IDE (Cursor, Gemini CLI, Windsurf, OpenCode, Codex CLI, OpenClaw)</li>
+<li><strong>SQLite 3</strong>: bundled via <code>bun:sqlite</code></li>
+</ul>
+<h2>Advanced Installation</h2>
+<p>For development or testing, you can clone and build from source:</p>
+<h3>Clone and Build</h3>
+<pre><code class="language-bash"># Clone the repository
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem
+
+# Install dependencies
+npm install
+
+# Build hooks and worker service
+npm run build
+
+# Worker service will auto-start on first Claude Code session
+# Or manually start with:
+npm run worker:start
+
+# Verify worker is running
+npm run worker:status
+</code></pre>
+<h3>Post-Installation Verification</h3>
+<h4>1. Automatic Dependency Installation</h4>
+<p>Dependencies are installed automatically by <code>npx claude-mem install</code> and <code>npx claude-mem repair</code>. Heavy lifting (Bun + uv install, <code>bun install</code> inside the plugin cache) happens behind a visible installer spinner. The Setup hook only performs a sub-100ms <code>version-check.js</code> read of the <code>.install-version</code> marker — on mismatch it prints <code>run: npx claude-mem repair</code> to stderr and exits 0, so it never blocks a session. Works cross-platform on Windows, macOS, and Linux.</p>
+<h4>2. Verify Plugin Installation</h4>
+<p>Check that hooks are configured in Claude Code:</p>
+<pre><code class="language-bash">cat plugin/hooks/hooks.json
+</code></pre>
+<h4>3. Data Directory Location</h4>
+<p>Data is stored in <code>~/.claude-mem/</code>:</p>
+<ul>
+<li>Database: <code>~/.claude-mem/claude-mem.db</code></li>
+<li>PID file: <code>~/.claude-mem/.worker.pid</code></li>
+<li>Port file: <code>~/.claude-mem/.worker.port</code></li>
+<li>Logs: <code>~/.claude-mem/logs/worker-YYYY-MM-DD.log</code></li>
+<li>Settings: <code>~/.claude-mem/settings.json</code></li>
+</ul>
+<p>Override with environment variable:</p>
+<pre><code class="language-bash">
+</code></pre>
+<h4>4. Check Worker Logs</h4>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+<h4>5. Test Context Retrieval</h4>
+<pre><code class="language-bash">npm run test:context
+</code></pre>
+<h2>Upgrading</h2>
+<p>Upgrades are automatic when updating via the plugin marketplace. After an external upgrade (for example <code>claude plugin update</code>), the Setup hook detects a version-marker mismatch and asks you to run <code>npx claude-mem repair</code>, which installs any missing runtime dependencies and refreshes the marker.</p>
+<p>See <a href="https://github.com/thedotmack/claude-mem/blob/main/CHANGELOG.md">CHANGELOG</a> for complete version history.</p>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="usage/getting-started">Getting Started Guide</a> - Learn how Claude-Mem works automatically</li>
+<li><a href="usage/search-tools">MCP Search Tools</a> - Query your project history</li>
+<li><a href="configuration">Configuration</a> - Customize Claude-Mem behavior</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/installation.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started — manymems docs</title>
+  <meta name="description" content="Learn how Claude-Mem works automatically in the background" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Learn how Claude-Mem works automatically in the background</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Getting Started with Claude-Mem</h1>
+<h2>Automatic Operation</h2>
+<p>Claude-Mem works automatically once installed. No manual intervention required!</p>
+<h3>The Full Cycle</h3>
+<ol>
+<li><strong>Start Claude Code</strong> - Context from last 10 sessions appears automatically</li>
+<li><strong>Work normally</strong> - Every tool execution is captured</li>
+<li><strong>Claude finishes responding</strong> - Stop hook automatically generates and saves a summary</li>
+<li><strong>Next session</strong> - Previous work appears in context</li>
+</ol>
+<h3>What Gets Captured</h3>
+<p>Every time Claude uses a tool, claude-mem captures it:</p>
+<ul>
+<li><strong>Read</strong> - File reads and content access</li>
+<li><strong>Write</strong> - New file creation</li>
+<li><strong>Edit</strong> - File modifications</li>
+<li><strong>Bash</strong> - Command executions</li>
+<li><strong>Glob</strong> - File pattern searches</li>
+<li><strong>Grep</strong> - Content searches</li>
+<li>And all other Claude Code tools</li>
+</ul>
+<h3>What Gets Processed</h3>
+<p>The worker service processes tool observations and extracts:</p>
+<ul>
+<li><strong>Title</strong> - Brief description of what happened</li>
+<li><strong>Subtitle</strong> - Additional context</li>
+<li><strong>Narrative</strong> - Detailed explanation</li>
+<li><strong>Facts</strong> - Key learnings as bullet points</li>
+<li><strong>Concepts</strong> - Relevant tags and categories</li>
+<li><strong>Type</strong> - Classification (decision, bugfix, feature, etc.)</li>
+<li><strong>Files</strong> - Which files were read or modified</li>
+</ul>
+<h3>Session Summaries</h3>
+<p>When Claude finishes responding (triggering the Stop hook), a summary is automatically generated with:</p>
+<ul>
+<li><strong>Request</strong> - What you asked for</li>
+<li><strong>Investigated</strong> - What Claude explored</li>
+<li><strong>Learned</strong> - Key discoveries and insights</li>
+<li><strong>Completed</strong> - What was accomplished</li>
+<li><strong>Next Steps</strong> - What to do next</li>
+</ul>
+<h3>Context Injection</h3>
+<p>When you start a new Claude Code session, the SessionStart hook:</p>
+<ol>
+<li>Queries the database for recent observations in your project (default: 50)</li>
+<li>Retrieves recent session summaries for context</li>
+<li>Displays observations in a chronological timeline with session markers</li>
+<li>Shows full summary details (Investigated, Learned, Completed, Next Steps) <strong>only if the summary was generated after the last observation</strong></li>
+<li>Injects formatted context into Claude's initial context</li>
+</ol>
+<p><strong>Summary Display Logic:</strong></p>
+<p>The most recent summary's full details appear at the end of the context display <strong>only when</strong> the summary was generated after the most recent observation. This ensures you see summary details when they represent the latest state of your project, but not when new observations have been captured since the last summary.</p>
+<p>For example:</p>
+<ul>
+<li>✅ <strong>Shows summary</strong>: Last observation at 2:00 PM, summary generated at 2:05 PM → Summary details appear</li>
+<li>❌ <strong>Hides summary</strong>: Summary generated at 2:00 PM, new observation at 2:05 PM → Summary details hidden (outdated)</li>
+</ul>
+<p>This prevents showing stale summaries when new work has been captured but not yet summarized.</p>
+<p>This means Claude &quot;remembers&quot; what happened in previous sessions!</p>
+<h2>Manual Commands (Optional)</h2>
+<h3>Worker Management</h3>
+<p>The worker auto-starts on the first SessionStart hook, so you usually don't need these commands. They're handy for diagnostics.</p>
+<pre><code class="language-bash"># Start worker service (optional - auto-starts automatically)
+npm run worker:start
+
+# Stop worker service
+npm run worker:stop
+
+# Restart worker service
+npm run worker:restart
+
+# View worker logs
+npm run worker:logs
+
+# Check worker status
+npm run worker:status
+</code></pre>
+<h3>Testing</h3>
+<pre><code class="language-bash"># Run all tests
+npm test
+
+# Test context injection
+npm run test:context
+
+# Verbose context test
+npm run test:context:verbose
+</code></pre>
+<h3>Development</h3>
+<pre><code class="language-bash"># Build hooks and worker
+npm run build
+
+# Build only hooks
+npm run build:hooks
+
+# Publish to NPM (maintainers only)
+npm run publish:npm
+</code></pre>
+<h2>Viewing Stored Context</h2>
+<p>Context is stored in SQLite database at <code>~/.claude-mem/claude-mem.db</code>.</p>
+<p>Query the database directly:</p>
+<pre><code class="language-bash"># Open database
+sqlite3 ~/.claude-mem/claude-mem.db
+
+# View recent sessions
+SELECT session_id, project, created_at, status
+FROM sdk_sessions
+ORDER BY created_at DESC
+LIMIT 10;
+
+# View session summaries
+SELECT session_id, request, completed, learned
+FROM session_summaries
+ORDER BY created_at DESC
+LIMIT 5;
+
+# View observations for a session
+SELECT tool_name, created_at
+FROM observations
+WHERE session_id = 'YOUR_SESSION_ID';
+</code></pre>
+<h2>Understanding Progressive Disclosure</h2>
+<p>Context injection uses progressive disclosure for efficient token usage:</p>
+<h3>Layer 1: Index Display (Session Start)</h3>
+<ul>
+<li>Shows observation titles with token cost estimates</li>
+<li>Displays session markers in chronological timeline</li>
+<li>Groups observations by file for visual clarity</li>
+<li>Shows full summary details <strong>only if</strong> generated after last observation</li>
+<li>Token cost: ~50-200 tokens for index view</li>
+</ul>
+<h3>Layer 2: On-Demand Details (MCP Tools)</h3>
+<ul>
+<li>Ask naturally: &quot;What bugs did we fix?&quot; or &quot;How did we implement X?&quot;</li>
+<li>Claude auto-invokes MCP search tools to fetch full details</li>
+<li>Search by concept, file, type, or keyword</li>
+<li>Timeline context around specific observations</li>
+<li>Token cost: ~100-500 tokens per observation fetched</li>
+<li>Uses 3-layer workflow: search → timeline → get_observations</li>
+</ul>
+<h3>Layer 3: Perfect Recall (Code Access)</h3>
+<ul>
+<li>Read source files directly when needed</li>
+<li>Access original transcripts and raw data</li>
+<li>Full context available on-demand</li>
+</ul>
+<p>This ensures efficient token usage while maintaining access to complete history when needed.</p>
+<h2>Multi-Prompt Sessions &amp; <code>/clear</code> Behavior</h2>
+<p>Claude-Mem supports sessions that span multiple user prompts:</p>
+<ul>
+<li><strong>prompt_counter</strong>: Tracks total prompts in a session</li>
+<li><strong>prompt_number</strong>: Identifies specific prompt within session</li>
+<li><strong>Session continuity</strong>: Observations and summaries link across prompts</li>
+</ul>
+<h3>Important Note About <code>/clear</code></h3>
+<p>When you use <code>/clear</code>, the session doesn't end - it continues with a new prompt number. This means:</p>
+<ul>
+<li>✅ <strong>Context is re-injected</strong> from recent sessions (SessionStart hook fires with <code>source: &quot;clear&quot;</code>)</li>
+<li>✅ <strong>Observations are still being captured</strong> and added to the current session</li>
+<li>✅ <strong>A summary will be generated</strong> when Claude finishes responding (Stop hook fires)</li>
+</ul>
+<p>The <code>/clear</code> command clears the conversation context visible to Claude AND re-injects fresh context from recent sessions, while the underlying session continues tracking observations.</p>
+<h2>Searching Your History</h2>
+<p>Claude-Mem provides MCP tools for querying your project history. Simply ask naturally:</p>
+<pre><code>&quot;What bugs did we fix last session?&quot;
+&quot;How did we implement authentication?&quot;
+&quot;What changes were made to worker-service.ts?&quot;
+&quot;Show me recent work on this project&quot;
+</code></pre>
+<p>Claude automatically recognizes your intent and invokes the MCP search tools, which use a 3-layer workflow (search → timeline → get_observations) for efficient token usage.</p>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/usage/search-tools">Skill-Based Search</a> - Learn how to search your project history</li>
+<li><a href="/architecture/overview">Architecture Overview</a> - Understand how it works</li>
+<li><a href="/troubleshooting">Troubleshooting</a> - Common issues and solutions</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/getting-started.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

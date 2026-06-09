@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursor + Gemini Setup — manymems docs</title>
+  <meta name="description" content="Use Claude-Mem in Cursor with Google&#39;s free Gemini API" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Use Claude-Mem in Cursor with Google&#39;s free Gemini API</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Cursor + Gemini Setup</h1>
+<p>This guide walks you through setting up Claude-Mem in Cursor using Google's Gemini API. Gemini offers a generous free tier that handles typical individual usage.</p>
+<h2>Step 1: Get a Gemini API Key</h2>
+<ol>
+<li>Go to <a href="https://aistudio.google.com/apikey">Google AI Studio</a></li>
+<li>Sign in with your Google account</li>
+<li>Accept the Terms of Service</li>
+<li>Click <strong>Create API key</strong></li>
+<li>Choose or create a Google Cloud project</li>
+<li>Copy your API key - you'll need it in Step 3</li>
+</ol>
+<h2>Step 2: Clone and Build Claude-Mem</h2>
+<pre><code class="language-bash"># Clone the repository
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem
+
+# Install dependencies
+bun install
+
+# Build the project
+bun run build
+</code></pre>
+<h2>Step 3: Configure Gemini Provider</h2>
+<h3>Option A: Interactive Setup (Recommended)</h3>
+<p>Run the setup wizard which guides you through everything:</p>
+<pre><code class="language-bash">bun run cursor:setup
+</code></pre>
+<p>The wizard will:</p>
+<ol>
+<li>Detect you don't have Claude Code</li>
+<li>Ask you to choose Gemini as your provider</li>
+<li>Prompt for your API key</li>
+<li>Install hooks automatically</li>
+<li>Start the worker</li>
+</ol>
+<h3>Option B: Manual Configuration</h3>
+<p>Create the settings file manually:</p>
+<pre><code class="language-bash"># Create settings directory
+mkdir -p ~/.claude-mem
+
+# Create settings file with Gemini configuration
+cat &gt; ~/.claude-mem/settings.json &lt;&lt; 'EOF'
+{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;gemini&quot;,
+  &quot;CLAUDE_MEM_GEMINI_API_KEY&quot;: &quot;YOUR_GEMINI_API_KEY&quot;
+}
+EOF
+</code></pre>
+<p>Replace <code>YOUR_GEMINI_API_KEY</code> with your actual API key.</p>
+<p>Then install hooks and start the worker:</p>
+<pre><code class="language-bash">bun run cursor:install
+bun run worker:start
+</code></pre>
+<h2>Step 4: Restart Cursor</h2>
+<p>Close and reopen Cursor IDE for the hooks to take effect.</p>
+<h2>Step 5: Verify Installation</h2>
+<pre><code class="language-bash"># Check worker is running
+bun run worker:status
+
+# Check hooks are installed
+bun run cursor:status
+</code></pre>
+<p>Open http://localhost:37777 to see the memory viewer.</p>
+<h2>Available Gemini Models</h2>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>Free Tier RPM</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>gemini-2.5-flash-lite</code></td>
+  <td>10 (4,000 with billing)</td>
+  <td><strong>Default.</strong> Fastest, highest free tier RPM</td>
+</tr>
+<tr>
+  <td><code>gemini-2.5-flash</code></td>
+  <td>5 (1,000 with billing)</td>
+  <td>Higher capability</td>
+</tr>
+<tr>
+  <td><code>gemini-3-flash-preview</code></td>
+  <td>5 (1,000 with billing)</td>
+  <td>Latest model</td>
+</tr>
+</tbody>
+</table>
+<p>To change the model, update your settings:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;gemini&quot;,
+  &quot;CLAUDE_MEM_GEMINI_API_KEY&quot;: &quot;your-key&quot;,
+  &quot;CLAUDE_MEM_GEMINI_MODEL&quot;: &quot;gemini-2.5-flash&quot;
+}
+</code></pre>
+<h2>Rate Limiting</h2>
+<p>Claude-mem automatically handles rate limiting for free tier usage:</p>
+<ul>
+<li>Requests are spaced to stay within limits</li>
+<li>Processing may be slightly slower but stays within quota</li>
+<li>No errors or lost observations</li>
+</ul>
+<p><strong>To remove rate limiting:</strong> Enable billing on your Google Cloud project, then add to settings:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_GEMINI_BILLING_ENABLED&quot;: true
+}
+</code></pre>
+<p>You'll still use the free quota but with much higher rate limits.</p>
+<h2>Troubleshooting</h2>
+<h3>&quot;Gemini API key not configured&quot;</h3>
+<p>Ensure your settings file exists and has the correct format:</p>
+<pre><code class="language-bash">cat ~/.claude-mem/settings.json
+</code></pre>
+<p>Should output something like:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;gemini&quot;,
+  &quot;CLAUDE_MEM_GEMINI_API_KEY&quot;: &quot;AIza...&quot;
+}
+</code></pre>
+<h3>Rate limit errors (HTTP 429)</h3>
+<p>You're exceeding the free tier limits. Options:</p>
+<ol>
+<li>Wait a few minutes for the rate limit to reset</li>
+<li>Enable billing on Google Cloud to unlock higher limits</li>
+<li>Switch to OpenRouter for higher volume needs</li>
+</ol>
+<h3>API key invalid</h3>
+<ol>
+<li>Verify your key at <a href="https://aistudio.google.com/apikey">Google AI Studio</a></li>
+<li>Ensure there are no extra spaces or newlines in your settings.json</li>
+<li>Try generating a new API key</li>
+</ol>
+<h3>Worker not processing observations</h3>
+<p>Check the worker logs:</p>
+<pre><code class="language-bash">bun run worker:logs
+</code></pre>
+<p>Look for error messages related to Gemini API calls.</p>
+<h2>Switching Providers Later</h2>
+<p>You can switch between Gemini, OpenRouter, and Claude SDK at any time by updating your settings. No restart required - changes take effect on the next observation.</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;
+}
+</code></pre>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/cursor/index">Cursor Integration Overview</a> - All Cursor features</li>
+<li><a href="/cursor/openrouter-setup">OpenRouter Setup</a> - Alternative provider with 100+ models</li>
+<li><a href="../configuration">Configuration Reference</a> - All settings options</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/cursor/gemini-setup.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

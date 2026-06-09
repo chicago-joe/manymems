@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting — manymems docs</title>
+  <meta name="description" content="Common issues and solutions for Claude-Mem" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Common issues and solutions for Claude-Mem</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Troubleshooting Guide</h1>
+<h2>Quick Diagnostic Tool</h2>
+<p>Describe any issues you're experiencing to Claude, and the troubleshoot skill will automatically activate to provide diagnosis and fixes.</p>
+<p>The troubleshoot skill will:</p>
+<ul>
+<li>✅ Check worker status and health</li>
+<li>✅ Verify database existence and integrity</li>
+<li>✅ Test worker service connectivity</li>
+<li>✅ Validate dependencies installation</li>
+<li>✅ Check port configuration and availability</li>
+<li>✅ Provide automated fixes for common issues</li>
+</ul>
+<p>The skill includes comprehensive diagnostics, automated repair sequences, and detailed troubleshooting workflows for all common issues. Simply describe the problem naturally to invoke it.</p>
+<hr />
+<h2>Common Issues</h2>
+<h3>Viewer UI Not Loading</h3>
+<p><strong>Symptoms</strong>: Cannot reach the viewer URL, page doesn't load, or browser shows a connection error.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Find the worker port. The default is <code>37700 + (uid % 100)</code>. The configured port is the value of <code>CLAUDE_MEM_WORKER_PORT</code> in <code>~/.claude-mem/settings.json</code>; the running worker also reports it on <code>/api/health</code>:</p>
+<pre><code class="language-bash">PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+lsof -i :$PORT
+npm run worker:status
+</code></pre>
+</li>
+<li><p>Verify worker is healthy:</p>
+<pre><code class="language-bash">curl http://127.0.0.1:$PORT/health
+</code></pre>
+</li>
+<li><p>Check worker logs for errors:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+</li>
+<li><p>Restart worker service:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+<li><p>Pin a fixed port if the auto-assigned one collides:</p>
+<pre><code class="language-bash">export CLAUDE_MEM_WORKER_PORT=38000
+npm run worker:restart
+</code></pre>
+</li>
+</ol>
+<h3>Theme Toggle Not Persisting</h3>
+<p><strong>Symptoms</strong>: Theme preference (light/dark mode) resets after browser refresh.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check browser localStorage is enabled:</p>
+<pre><code class="language-javascript">// In browser console
+localStorage.getItem('claude-mem-settings')
+</code></pre>
+</li>
+<li><p>Verify settings endpoint is working:</p>
+<pre><code class="language-bash">curl http://localhost:37777/api/settings
+</code></pre>
+</li>
+<li><p>Clear localStorage and try again:</p>
+<pre><code class="language-javascript">// In browser console
+localStorage.removeItem('claude-mem-settings')
+</code></pre>
+</li>
+<li><p>Check for browser privacy mode (blocks localStorage)</p>
+</li>
+</ol>
+<h3>SSE Connection Issues</h3>
+<p><strong>Symptoms</strong>: Viewer shows &quot;Disconnected&quot; status, updates not appearing in real-time.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check SSE endpoint is accessible:</p>
+<pre><code class="language-bash">curl -N http://localhost:37777/stream
+</code></pre>
+</li>
+<li><p>Check browser console for errors:</p>
+<ul>
+<li>Open DevTools (F12)</li>
+<li>Look for EventSource errors</li>
+<li>Check Network tab for failed /stream requests</li>
+</ul>
+</li>
+<li><p>Verify worker is running:</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p>Check for network/proxy issues blocking SSE</p>
+<ul>
+<li>Corporate firewalls may block SSE</li>
+<li>Try disabling VPN temporarily</li>
+</ul>
+</li>
+<li><p>Restart worker and refresh browser:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+</ol>
+<h3>Chroma/Python Dependency Issues (v5.0.0+)</h3>
+<p><strong>Symptoms</strong>: Installation fails with chromadb or Python-related errors.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Verify Python 3.8+ is installed:</p>
+<pre><code class="language-bash">python --version
+# or
+python3 --version
+</code></pre>
+</li>
+<li><p>Install chromadb manually:</p>
+<pre><code class="language-bash">cd ~/.claude/plugins/marketplaces/thedotmack
+npm install chromadb
+</code></pre>
+</li>
+<li><p>Check chromadb health:</p>
+<pre><code class="language-bash">npm run chroma:health
+</code></pre>
+</li>
+<li><p>Windows-specific: Ensure Python is in PATH:</p>
+<pre><code class="language-bash">where python
+# Should show Python installation path
+</code></pre>
+</li>
+<li><p>If Chroma continues to fail, hybrid search will gracefully degrade to SQLite FTS5 only</p>
+</li>
+</ol>
+<h3>Smart Install Caching Issues (v5.0.3+)</h3>
+<p><strong>Symptoms</strong>: Dependencies not updating after plugin update, stale version marker.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Clear install cache:</p>
+<pre><code class="language-bash">rm ~/.claude/plugins/marketplaces/thedotmack/.install-version
+</code></pre>
+</li>
+<li><p>Force reinstall:</p>
+<pre><code class="language-bash">cd ~/.claude/plugins/marketplaces/thedotmack
+npm install --force
+</code></pre>
+</li>
+<li><p>Check version marker:</p>
+<pre><code class="language-bash">cat ~/.claude/plugins/marketplaces/thedotmack/.install-version
+cat ~/.claude/plugins/marketplaces/thedotmack/package.json | grep version
+</code></pre>
+</li>
+<li><p>Restart Claude Code after manual install</p>
+</li>
+</ol>
+<h2>Worker Service Issues</h2>
+<h3>Worker Service Not Starting</h3>
+<p><strong>Symptoms</strong>: Worker doesn't start, or worker status shows it's not running.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check worker status:</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p>Try starting manually:</p>
+<pre><code class="language-bash">npm run worker:start
+</code></pre>
+</li>
+<li><p>Check worker logs for errors:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+</li>
+<li><p>Full reset:</p>
+<pre><code class="language-bash">npm run worker:stop
+npm run worker:start
+</code></pre>
+</li>
+<li><p>Verify Bun is installed:</p>
+<pre><code class="language-bash">which bun
+bun --version
+</code></pre>
+</li>
+</ol>
+<h3>Port Allocation Failed</h3>
+<p><strong>Symptoms</strong>: Worker fails to start with &quot;port already in use&quot; error.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check if port 37777 is in use:</p>
+<pre><code class="language-bash">lsof -i :37777
+</code></pre>
+</li>
+<li><p>Kill process using the port:</p>
+<pre><code class="language-bash">kill -9 $(lsof -t -i:37777)
+</code></pre>
+</li>
+<li><p>Or use a different port:</p>
+<pre><code class="language-bash">export CLAUDE_MEM_WORKER_PORT=38000
+npm run worker:restart
+</code></pre>
+</li>
+<li><p>Verify new port:</p>
+<pre><code class="language-bash">curl -s http://127.0.0.1:$CLAUDE_MEM_WORKER_PORT/api/health | jq .port
+</code></pre>
+</li>
+</ol>
+<h3>Worker Keeps Crashing</h3>
+<p><strong>Symptoms</strong>: Worker restarts repeatedly or fails to stay running.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check error logs:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+</li>
+<li><p>Check worker status:</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p>Check database for corruption:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;PRAGMA integrity_check;&quot;
+</code></pre>
+</li>
+<li><p>Verify Bun installation:</p>
+<pre><code class="language-bash">bun --version
+</code></pre>
+</li>
+</ol>
+<h3>Worker Not Processing Observations</h3>
+<p><strong>Symptoms</strong>: Observations saved but not processed, no summaries generated.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check worker is running:</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p>Check worker logs:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+</li>
+<li><p>Verify database has observations:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT COUNT(*) FROM observations;&quot;
+</code></pre>
+</li>
+<li><p>Restart worker:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+</ol>
+<h3>Manual Recovery for Stuck Observations</h3>
+<p><strong>Symptoms</strong>: Observations stuck in processing queue after worker crash or restart, no new summaries appearing despite worker running.</p>
+<p><strong>Background</strong>: As of v5.x, automatic queue recovery on worker startup is disabled. Users must manually trigger recovery to maintain explicit control over reprocessing and prevent unexpected duplicate observations.</p>
+<p><strong>Solutions</strong>:</p>
+<h4>Option 1: Use CLI Recovery Tool (Recommended)</h4>
+<p>The interactive CLI tool provides the safest and most user-friendly recovery experience:</p>
+<pre><code class="language-bash"># Check queue status and prompt for recovery
+bun scripts/check-pending-queue.ts
+
+# Auto-process without prompting
+bun scripts/check-pending-queue.ts --process
+
+# Process up to 5 sessions
+bun scripts/check-pending-queue.ts --process --limit 5
+</code></pre>
+<p><strong>What it does</strong>:</p>
+<ul>
+<li>✅ Checks worker health before proceeding</li>
+<li>✅ Shows detailed queue summary (pending, processing, failed, stuck)</li>
+<li>✅ Groups messages by session with age and status breakdown</li>
+<li>✅ Prompts user to confirm processing (unless <code>--process</code> flag used)</li>
+<li>✅ Shows recently processed messages for feedback</li>
+</ul>
+<p><strong>Interactive Example</strong>:</p>
+<pre><code>Worker is healthy ✓
+
+Queue Summary:
+  Pending: 12 messages
+  Processing: 2 messages (1 stuck)
+  Failed: 0 messages
+  Recently Processed: 5 messages in last 30 minutes
+
+Sessions with pending work: 3
+  Session 44: 5 pending, 1 processing (age: 2m)
+  Session 45: 4 pending, 1 processing (age: 7m - STUCK)
+  Session 46: 2 pending
+
+Would you like to process these pending queues? (y/n)
+</code></pre>
+<h4>Option 2: Use HTTP API Directly</h4>
+<p>For automation or scripting scenarios:</p>
+<ol>
+<li><p><strong>Check queue status</strong>:</p>
+<pre><code class="language-bash">curl http://localhost:37777/api/pending-queue
+</code></pre>
+<p>Response shows:</p>
+<ul>
+<li><code>queue.totalPending</code>: Messages waiting to process</li>
+<li><code>queue.totalProcessing</code>: Messages currently processing</li>
+<li><code>queue.stuckCount</code>: Processing messages &gt;5 minutes old</li>
+<li><code>sessionsWithPendingWork</code>: Session IDs needing recovery</li>
+</ul>
+</li>
+<li><p><strong>Trigger manual recovery</strong>:</p>
+<pre><code class="language-bash">curl -X POST http://localhost:37777/api/pending-queue/process \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;sessionLimit&quot;: 10}'
+</code></pre>
+<p>Response includes:</p>
+<ul>
+<li><code>totalPendingSessions</code>: Total sessions with pending messages</li>
+<li><code>sessionsStarted</code>: Number of sessions we started processing</li>
+<li><code>sessionsSkipped</code>: Sessions already processing (not restarted)</li>
+<li><code>startedSessionIds</code>: Database IDs of sessions started</li>
+</ul>
+</li>
+</ol>
+<h4>Understanding Queue States</h4>
+<p>Messages progress through these states:</p>
+<ol>
+<li><strong>pending</strong> - Queued, waiting to process</li>
+<li><strong>processing</strong> - Currently being processed by SDK agent</li>
+<li><strong>processed</strong> - Completed successfully</li>
+<li><strong>failed</strong> - Failed after 3 retry attempts</li>
+</ol>
+<p><strong>Stuck Detection</strong>: Messages in <code>processing</code> state for &gt;5 minutes are considered stuck and automatically reset to <code>pending</code> on worker startup (but not automatically reprocessed).</p>
+<h4>Recovery Strategy</h4>
+<p><strong>When to use manual recovery</strong>:</p>
+<ul>
+<li>After worker crashes or unexpected restarts</li>
+<li>When observations appear saved but no summaries generated</li>
+<li>When queue status shows stuck messages (processing &gt;5 minutes)</li>
+<li>After system crashes or forced shutdowns</li>
+</ul>
+<p><strong>Best practices</strong>:</p>
+<ol>
+<li>Always check queue status before triggering recovery</li>
+<li>Use the CLI tool for interactive sessions (provides feedback)</li>
+<li>Use the HTTP API for automation/scripting</li>
+<li>Start with a low session limit (5-10) to avoid overwhelming the worker</li>
+<li>Monitor worker logs during recovery: <code>npm run worker:logs</code></li>
+<li>Check recently processed messages to confirm recovery worked</li>
+</ol>
+<h4>Troubleshooting Recovery Issues</h4>
+<p>If recovery fails or messages remain stuck:</p>
+<ol>
+<li><p><strong>Verify worker is healthy</strong>:</p>
+<pre><code class="language-bash">curl http://localhost:37777/health
+# Should return: {&quot;status&quot;:&quot;ok&quot;,&quot;uptime&quot;:12345,&quot;port&quot;:37777}
+</code></pre>
+</li>
+<li><p><strong>Check database for corruption</strong>:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;PRAGMA integrity_check;&quot;
+</code></pre>
+</li>
+<li><p><strong>View stuck messages directly</strong>:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT id, session_db_id, status, retry_count,
+         (strftime('%s', 'now') * 1000 - started_processing_at_epoch) / 60000 as age_minutes
+  FROM pending_messages
+  WHERE status = 'processing'
+  ORDER BY started_processing_at_epoch;
+&quot;
+</code></pre>
+</li>
+<li><p><strong>Force reset stuck messages</strong> (nuclear option):</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  UPDATE pending_messages
+  SET status = 'pending', started_processing_at_epoch = NULL
+  WHERE status = 'processing';
+&quot;
+</code></pre>
+<p>Then trigger recovery:</p>
+<pre><code class="language-bash">bun scripts/check-pending-queue.ts --process
+</code></pre>
+</li>
+<li><p><strong>Check worker logs for SDK errors</strong>:</p>
+<pre><code class="language-bash">npm run worker:logs | grep -i error
+</code></pre>
+</li>
+</ol>
+<h4>Understanding the Queue Table</h4>
+<p>The <code>pending_messages</code> table tracks all messages with these key fields:</p>
+<pre><code class="language-sql">CREATE TABLE pending_messages (
+  id INTEGER PRIMARY KEY,
+  session_db_id INTEGER,          -- Foreign key to sdk_sessions
+  claude_session_id TEXT,          -- Claude session ID
+  message_type TEXT,               -- 'observation' | 'summarize'
+  status TEXT,                     -- 'pending' | 'processing' | 'processed' | 'failed'
+  retry_count INTEGER,             -- Current retry attempt (max: 3)
+  created_at_epoch INTEGER,        -- When message was queued
+  started_processing_at_epoch INTEGER,  -- When marked 'processing'
+  completed_at_epoch INTEGER       -- When completed/failed
+)
+</code></pre>
+<p><strong>Query examples</strong>:</p>
+<pre><code class="language-bash"># Count messages by status
+sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT status, COUNT(*)
+  FROM pending_messages
+  GROUP BY status;
+&quot;
+
+# Find sessions with pending work
+sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT session_db_id, COUNT(*) as pending_count
+  FROM pending_messages
+  WHERE status IN ('pending', 'processing')
+  GROUP BY session_db_id;
+&quot;
+
+# View recent failures
+sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT id, session_db_id, message_type, retry_count,
+         datetime(completed_at_epoch/1000, 'unixepoch') as failed_at
+  FROM pending_messages
+  WHERE status = 'failed'
+  ORDER BY completed_at_epoch DESC
+  LIMIT 10;
+&quot;
+</code></pre>
+<h2>Hook Issues</h2>
+<h3>Hooks Not Firing</h3>
+<p><strong>Symptoms</strong>: No context appears, observations not saved.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Verify hooks are configured:</p>
+<pre><code class="language-bash">cat plugin/hooks/hooks.json
+</code></pre>
+</li>
+<li><p>Test hooks manually:</p>
+<pre><code class="language-bash"># Test context hook
+echo '{&quot;session_id&quot;:&quot;test-123&quot;,&quot;cwd&quot;:&quot;'$(pwd)'&quot;,&quot;source&quot;:&quot;startup&quot;}' | node plugin/scripts/context-hook.js
+</code></pre>
+</li>
+<li><p>Check hook permissions:</p>
+<pre><code class="language-bash">ls -la plugin/scripts/*.js
+</code></pre>
+</li>
+<li><p>Verify hooks.json is valid JSON:</p>
+<pre><code class="language-bash">cat plugin/hooks/hooks.json | jq .
+</code></pre>
+</li>
+</ol>
+<h3>Context Not Appearing</h3>
+<p><strong>Symptoms</strong>: No session context when Claude starts.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check if summaries exist:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT COUNT(*) FROM session_summaries;&quot;
+</code></pre>
+</li>
+<li><p>View recent sessions:</p>
+<pre><code class="language-bash">npm run test:context:verbose
+</code></pre>
+</li>
+<li><p>Check database integrity:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;PRAGMA integrity_check;&quot;
+</code></pre>
+</li>
+<li><p>Manually test context hook:</p>
+<pre><code class="language-bash">npm run test:context
+</code></pre>
+</li>
+</ol>
+<h3>Hooks Timeout</h3>
+<p><strong>Symptoms</strong>: Hook execution times out, errors in Claude Code.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Increase timeout in <code>plugin/hooks/hooks.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;timeout&quot;: 180  // Increase from 120
+}
+</code></pre>
+</li>
+<li><p>Check worker is running (prevents timeout waiting for worker):</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p>Check database size (large database = slow queries):</p>
+<pre><code class="language-bash">ls -lh ~/.claude-mem/claude-mem.db
+</code></pre>
+</li>
+<li><p>Optimize database:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;VACUUM;&quot;
+</code></pre>
+</li>
+</ol>
+<h3>Dependencies Not Installing</h3>
+<p><strong>Symptoms</strong>: SessionStart hook fails with &quot;module not found&quot; errors.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Manually install dependencies:</p>
+<pre><code class="language-bash">cd ~/.claude/plugins/marketplaces/thedotmack
+npm install
+</code></pre>
+</li>
+<li><p>Check npm is available:</p>
+<pre><code class="language-bash">which npm
+npm --version
+</code></pre>
+</li>
+<li><p>Check package.json exists:</p>
+<pre><code class="language-bash">ls -la ~/.claude/plugins/marketplaces/thedotmack/package.json
+</code></pre>
+</li>
+</ol>
+<h2>Database Issues</h2>
+<h3>Database Locked</h3>
+<p><strong>Symptoms</strong>: &quot;database is locked&quot; errors in logs.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Close all connections:</p>
+<pre><code class="language-bash">npm run worker:stop
+</code></pre>
+</li>
+<li><p>Check for stale locks:</p>
+<pre><code class="language-bash">lsof ~/.claude-mem/claude-mem.db
+</code></pre>
+</li>
+<li><p>Kill processes holding locks:</p>
+<pre><code class="language-bash">kill -9 
+</code></pre>
+</li>
+<li><p>Restart worker:</p>
+<pre><code class="language-bash">npm run worker:start
+</code></pre>
+</li>
+</ol>
+<h3>Database Corruption</h3>
+<p><strong>Symptoms</strong>: Integrity check fails, weird errors.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check database integrity:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;PRAGMA integrity_check;&quot;
+</code></pre>
+</li>
+<li><p>Backup database:</p>
+<pre><code class="language-bash">cp ~/.claude-mem/claude-mem.db ~/.claude-mem/claude-mem.db.backup
+</code></pre>
+</li>
+<li><p>Try to repair:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;VACUUM;&quot;
+</code></pre>
+</li>
+<li><p>Nuclear option - recreate database:</p>
+<pre><code class="language-bash">rm ~/.claude-mem/claude-mem.db
+npm run worker:start  # Will recreate schema
+</code></pre>
+</li>
+</ol>
+<h3>FTS5 Search Not Working</h3>
+<p><strong>Symptoms</strong>: Search returns no results, FTS5 errors.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check FTS5 tables exist:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%_fts';&quot;
+</code></pre>
+</li>
+<li><p>Rebuild FTS5 tables:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  INSERT INTO observations_fts(observations_fts) VALUES('rebuild');
+  INSERT INTO session_summaries_fts(session_summaries_fts) VALUES('rebuild');
+  INSERT INTO user_prompts_fts(user_prompts_fts) VALUES('rebuild');
+&quot;
+</code></pre>
+</li>
+<li><p>Check triggers exist:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT name FROM sqlite_master WHERE type='trigger';&quot;
+</code></pre>
+</li>
+</ol>
+<h3>Database Too Large</h3>
+<p><strong>Symptoms</strong>: Slow performance, large database file.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check database size:</p>
+<pre><code class="language-bash">ls -lh ~/.claude-mem/claude-mem.db
+</code></pre>
+</li>
+<li><p>Vacuum database:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;VACUUM;&quot;
+</code></pre>
+</li>
+<li><p>Delete old sessions:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  DELETE FROM observations WHERE created_at_epoch &lt; $(date -v-30d +%s);
+  DELETE FROM session_summaries WHERE created_at_epoch &lt; $(date -v-30d +%s);
+  DELETE FROM sdk_sessions WHERE created_at_epoch &lt; $(date -v-30d +%s);
+&quot;
+</code></pre>
+</li>
+<li><p>Rebuild FTS5 after deletion:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  INSERT INTO observations_fts(observations_fts) VALUES('rebuild');
+  INSERT INTO session_summaries_fts(session_summaries_fts) VALUES('rebuild');
+&quot;
+</code></pre>
+</li>
+</ol>
+<h2>MCP Search Issues</h2>
+<h3>Search Tools Not Available</h3>
+<p><strong>Symptoms</strong>: MCP search tools not visible in Claude Code.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check MCP configuration:</p>
+<pre><code class="language-bash">cat plugin/.mcp.json
+</code></pre>
+</li>
+<li><p>Verify search server is built:</p>
+<pre><code class="language-bash">ls -l plugin/scripts/mcp-server.cjs
+</code></pre>
+</li>
+<li><p>Rebuild if needed:</p>
+<pre><code class="language-bash">npm run build
+</code></pre>
+</li>
+<li><p>Restart Claude Code</p>
+</li>
+</ol>
+<h3>Search Returns No Results</h3>
+<p><strong>Symptoms</strong>: Valid queries return empty results.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check database has data:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT COUNT(*) FROM observations;&quot;
+</code></pre>
+</li>
+<li><p>Verify FTS5 tables populated:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;SELECT COUNT(*) FROM observations_fts;&quot;
+</code></pre>
+</li>
+<li><p>Test simple query:</p>
+<pre><code class="language-bash"># Test MCP search tool
+search(query=&quot;test&quot;, limit=5)
+</code></pre>
+</li>
+<li><p>Check query syntax:</p>
+<pre><code class="language-bash"># Bad: Special characters may cause issues
+search(query=&quot;[test]&quot;)
+
+# Good: Simple words
+search(query=&quot;test&quot;)
+</code></pre>
+</li>
+</ol>
+<h3>Token Limit Errors</h3>
+<p><strong>Symptoms</strong>: &quot;exceeded token limit&quot; errors from MCP.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Follow 3-layer workflow (don't skip to get_observations):</p>
+<pre><code class="language-bash"># Start with search to get index
+search(query=&quot;...&quot;, limit=10)
+
+# Review IDs, then fetch only relevant ones
+get_observations(ids=[&lt;2-3 relevant IDs&gt;])
+</code></pre>
+</li>
+<li><p>Reduce limit in search:</p>
+<pre><code class="language-bash">search(query=&quot;...&quot;, limit=3)
+</code></pre>
+</li>
+<li><p>Use filters to narrow results:</p>
+<pre><code class="language-bash">search(query=&quot;...&quot;, type=&quot;decision&quot;, limit=5)
+</code></pre>
+</li>
+<li><p>Paginate results:</p>
+<pre><code class="language-bash"># First page
+search(query=&quot;...&quot;, limit=5, offset=0)
+
+# Second page
+search(query=&quot;...&quot;, limit=5, offset=5)
+</code></pre>
+</li>
+<li><p>Batch IDs in get_observations:</p>
+<pre><code class="language-bash"># Always batch multiple IDs in one call
+get_observations(ids=[123, 456, 789])
+
+# Don't make separate calls per ID
+</code></pre>
+</li>
+</ol>
+<h2>Performance Issues</h2>
+<h3>Slow Context Injection</h3>
+<p><strong>Symptoms</strong>: SessionStart hook takes too long.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Reduce context sessions:</p>
+<pre><code class="language-typescript">// In src/hooks/context.ts
+const CONTEXT_SESSIONS = 5;  // Reduce from 10
+</code></pre>
+</li>
+<li><p>Optimize database:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  ANALYZE;
+  VACUUM;
+&quot;
+</code></pre>
+</li>
+<li><p>Add indexes (if missing):</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  CREATE INDEX IF NOT EXISTS idx_sessions_project_created ON sdk_sessions(project, created_at_epoch DESC);
+&quot;
+</code></pre>
+</li>
+</ol>
+<h3>Slow Search Queries</h3>
+<p><strong>Symptoms</strong>: MCP search tools take too long.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li>Use more specific queries</li>
+<li>Add date range filters</li>
+<li>Add type/concept filters</li>
+<li>Reduce result limit</li>
+<li>Use index format instead of full format</li>
+</ol>
+<h3>High Memory Usage</h3>
+<p><strong>Symptoms</strong>: Worker uses too much memory.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Check current usage:</p>
+<pre><code class="language-bash">npm run worker:status
+</code></pre>
+</li>
+<li><p>Restart worker:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+</li>
+<li><p>Clean up old data (see &quot;Database Too Large&quot; above)</p>
+</li>
+</ol>
+<h2>Installation Issues</h2>
+<h3>Plugin Not Found</h3>
+<p><strong>Symptoms</strong>: <code>/plugin install claude-mem</code> fails.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Add marketplace first:</p>
+<pre><code class="language-bash">/plugin marketplace add thedotmack/claude-mem
+</code></pre>
+</li>
+<li><p>Then install:</p>
+<pre><code class="language-bash">/plugin install claude-mem
+</code></pre>
+</li>
+<li><p>Verify installation:</p>
+<pre><code class="language-bash">ls -la ~/.claude/plugins/marketplaces/thedotmack/
+</code></pre>
+</li>
+</ol>
+<h3>Build Failures</h3>
+<p><strong>Symptoms</strong>: <code>npm run build</code> fails.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Clean and reinstall:</p>
+<pre><code class="language-bash">rm -rf node_modules package-lock.json
+npm install
+</code></pre>
+</li>
+<li><p>Check Node.js version:</p>
+<pre><code class="language-bash">node --version  # Should be &gt;= 18.0.0
+</code></pre>
+</li>
+<li><p>Check for TypeScript errors:</p>
+<pre><code class="language-bash">npx tsc --noEmit
+</code></pre>
+</li>
+</ol>
+<h3>Missing Dependencies</h3>
+<p><strong>Symptoms</strong>: &quot;Cannot find module&quot; errors.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><p>Install dependencies:</p>
+<pre><code class="language-bash">npm install
+</code></pre>
+</li>
+<li><p>Check package.json:</p>
+<pre><code class="language-bash">cat package.json
+</code></pre>
+</li>
+<li><p>Verify node_modules exists:</p>
+<pre><code class="language-bash">ls -la node_modules/
+</code></pre>
+</li>
+</ol>
+<h2>Debugging</h2>
+<h3>Enable Verbose Logging</h3>
+<pre><code class="language-bash">
+npm run worker:restart
+npm run worker:logs
+</code></pre>
+<h3>Check Correlation IDs</h3>
+<p>Trace observations through the pipeline:</p>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db &quot;
+  SELECT correlation_id, tool_name, created_at
+  FROM observations
+  WHERE session_id = 'YOUR_SESSION_ID'
+  ORDER BY created_at;
+&quot;
+</code></pre>
+<h3>Inspect Worker State</h3>
+<pre><code class="language-bash"># Check if worker is running
+npm run worker:status
+
+# View logs
+npm run worker:logs
+
+# Check configured port (per-user default = 37700 + uid % 100)
+jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json
+
+# Test worker health (substitute PORT for the value above)
+curl &quot;http://127.0.0.1:$PORT/health&quot;
+</code></pre>
+<h3>Database Inspection</h3>
+<pre><code class="language-bash">sqlite3 ~/.claude-mem/claude-mem.db
+
+# View schema
+.schema
+
+# Check table counts
+SELECT 'sessions', COUNT(*) FROM sdk_sessions
+UNION ALL
+SELECT 'observations', COUNT(*) FROM observations
+UNION ALL
+SELECT 'summaries', COUNT(*) FROM session_summaries
+UNION ALL
+SELECT 'prompts', COUNT(*) FROM user_prompts;
+
+# View recent activity
+SELECT created_at, tool_name FROM observations ORDER BY created_at DESC LIMIT 10;
+</code></pre>
+<h2>Common Error Messages</h2>
+<h3>&quot;Worker service not responding&quot;</h3>
+<p><strong>Cause</strong>: Worker not running or port mismatch.</p>
+<p><strong>Solution</strong>: Restart worker with <code>npm run worker:restart</code>.</p>
+<h3>&quot;Database is locked&quot;</h3>
+<p><strong>Cause</strong>: Multiple processes accessing database.</p>
+<p><strong>Solution</strong>: Stop worker, kill stale processes, restart.</p>
+<h3>&quot;FTS5: syntax error&quot;</h3>
+<p><strong>Cause</strong>: Invalid search query syntax.</p>
+<p><strong>Solution</strong>: Use simpler query, avoid special characters.</p>
+<h3>&quot;SQLITE_CANTOPEN&quot;</h3>
+<p><strong>Cause</strong>: Database file permissions or missing directory.</p>
+<p><strong>Solution</strong>: Check <code>~/.claude-mem/</code> exists and is writable.</p>
+<h3>&quot;Module not found&quot;</h3>
+<p><strong>Cause</strong>: Missing dependencies.</p>
+<p><strong>Solution</strong>: Run <code>npm install</code>.</p>
+<h2>Getting Help</h2>
+<p>If none of these solutions work:</p>
+<ol>
+<li><p><strong>Check logs</strong>:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+</li>
+<li><p><strong>Create issue</strong>: <a href="https://github.com/thedotmack/claude-mem/issues">GitHub Issues</a></p>
+<ul>
+<li>Include error messages</li>
+<li>Include relevant logs</li>
+<li>Include steps to reproduce</li>
+</ul>
+</li>
+<li><p><strong>Check existing issues</strong>: Someone may have already solved your problem</p>
+</li>
+</ol>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="configuration">Configuration</a> - Customize Claude-Mem</li>
+<li><a href="development">Development</a> - Build from source</li>
+<li><a href="architecture/overview">Architecture</a> - Understand the system</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/troubleshooting.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

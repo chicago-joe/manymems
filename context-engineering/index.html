@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Context Engineering — manymems docs</title>
+  <meta name="description" content="Best practices for curating optimal token sets for AI agents" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Best practices for curating optimal token sets for AI agents</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Context Engineering for AI Agents</h1>
+<h2>Core Principle</h2>
+<p><strong>Find the smallest possible set of high-signal tokens that maximize the likelihood of your desired outcome.</strong></p>
+<hr />
+<h2>Context Engineering vs Prompt Engineering</h2>
+<p><strong>Prompt Engineering</strong>: Writing and organizing LLM instructions for optimal outcomes (one-time task)</p>
+<p><strong>Context Engineering</strong>: Curating and maintaining the optimal set of tokens during inference across multiple turns (iterative process)</p>
+<p>Context engineering manages:</p>
+<ul>
+<li>System instructions</li>
+<li>Tools</li>
+<li>Model Context Protocol (MCP)</li>
+<li>External data</li>
+<li>Message history</li>
+<li>Runtime data retrieval</li>
+</ul>
+<hr />
+<h2>The Problem: Context Rot</h2>
+<p><strong>Key Insight</strong>: LLMs have an &quot;attention budget&quot; that gets depleted as context grows</p>
+<ul>
+<li>Every token attends to every other token (n² relationships)</li>
+<li>As context length increases, model accuracy decreases</li>
+<li>Models have less training experience with longer sequences</li>
+<li>Context must be treated as a finite resource with diminishing marginal returns</li>
+</ul>
+<hr />
+<h2>System Prompts: Find the &quot;Right Altitude&quot;</h2>
+<h3>The Goldilocks Zone</h3>
+<p><strong>Too Prescriptive</strong> ❌</p>
+<ul>
+<li>Hardcoded if-else logic</li>
+<li>Brittle and fragile</li>
+<li>High maintenance complexity</li>
+</ul>
+<p><strong>Too Vague</strong> ❌</p>
+<ul>
+<li>High-level guidance without concrete signals</li>
+<li>Falsely assumes shared context</li>
+<li>Lacks actionable direction</li>
+</ul>
+<p><strong>Just Right</strong> ✅</p>
+<ul>
+<li>Specific enough to guide behavior effectively</li>
+<li>Flexible enough to provide strong heuristics</li>
+<li>Minimal set of information that fully outlines expected behavior</li>
+</ul>
+<h3>Best Practices</h3>
+<ul>
+<li>Use simple, direct language</li>
+<li>Organize into distinct sections (<code>&lt;background_information&gt;</code>, <code>&lt;instructions&gt;</code>, <code>## Tool guidance</code>, etc.)</li>
+<li>Use XML tags or Markdown headers for structure</li>
+<li>Start with minimal prompt, add based on failure modes</li>
+<li>Note: Minimal ≠ short (provide sufficient information upfront)</li>
+</ul>
+<hr />
+<h2>Tools: Minimal and Clear</h2>
+<h3>Design Principles</h3>
+<ul>
+<li><strong>Self-contained</strong>: Each tool has a single, clear purpose</li>
+<li><strong>Robust to error</strong>: Handle edge cases gracefully</li>
+<li><strong>Extremely clear</strong>: Intended use is unambiguous</li>
+<li><strong>Token-efficient</strong>: Returns relevant information without bloat</li>
+<li><strong>Descriptive parameters</strong>: Unambiguous input names (e.g., <code>user_id</code> not <code>user</code>)</li>
+</ul>
+<h3>Critical Rule</h3>
+<p><strong>If a human engineer can't definitively say which tool to use in a given situation, an AI agent can't be expected to do better.</strong></p>
+<h3>Common Failure Modes to Avoid</h3>
+<ul>
+<li>Bloated tool sets covering too much functionality</li>
+<li>Tools with overlapping purposes</li>
+<li>Ambiguous decision points about which tool to use</li>
+</ul>
+<hr />
+<h2>Examples: Diverse, Not Exhaustive</h2>
+<p><strong>Do</strong> ✅</p>
+<ul>
+<li>Curate a set of diverse, canonical examples</li>
+<li>Show expected behavior effectively</li>
+<li>Think &quot;pictures worth a thousand words&quot;</li>
+</ul>
+<p><strong>Don't</strong> ❌</p>
+<ul>
+<li>Stuff in a laundry list of edge cases</li>
+<li>Try to articulate every possible rule</li>
+<li>Overwhelm with exhaustive scenarios</li>
+</ul>
+<hr />
+<h2>Context Retrieval Strategies</h2>
+<h3>Just-In-Time Context (Recommended for Agents)</h3>
+<p><strong>Approach</strong>: Maintain lightweight identifiers (file paths, queries, links) and dynamically load data at runtime</p>
+<p><strong>Benefits</strong>:</p>
+<ul>
+<li>Avoids context pollution</li>
+<li>Enables progressive disclosure</li>
+<li>Mirrors human cognition (we don't memorize everything)</li>
+<li>Leverages metadata (file names, folder structure, timestamps)</li>
+<li>Agents discover context incrementally</li>
+</ul>
+<p><strong>Trade-offs</strong>:</p>
+<ul>
+<li>Slower than pre-computed retrieval</li>
+<li>Requires proper tool guidance to avoid dead-ends</li>
+</ul>
+<h3>Pre-Inference Retrieval (Traditional RAG)</h3>
+<p><strong>Approach</strong>: Use embedding-based retrieval to surface context before inference</p>
+<p><strong>When to Use</strong>: Static content that won't change during interaction</p>
+<h3>Hybrid Strategy (Best of Both)</h3>
+<p><strong>Approach</strong>: Retrieve some data upfront, enable autonomous exploration as needed</p>
+<p><strong>Example</strong>: Claude Code loads CLAUDE.md files upfront, uses glob/grep for just-in-time retrieval</p>
+<p><strong>Rule of Thumb</strong>: &quot;Do the simplest thing that works&quot;</p>
+<hr />
+<h2>Long-Horizon Tasks: Three Techniques</h2>
+<h3>1. Compaction</h3>
+<p><strong>What</strong>: Summarize conversation nearing context limit, reinitiate with summary</p>
+<p><strong>Implementation</strong>:</p>
+<ul>
+<li>Pass message history to model for compression</li>
+<li>Preserve critical details (architectural decisions, bugs, implementation)</li>
+<li>Discard redundant outputs</li>
+<li>Continue with compressed context + recently accessed files</li>
+</ul>
+<p><strong>Tuning Process</strong>:</p>
+<ol>
+<li><strong>First</strong>: Maximize recall (capture all relevant information)</li>
+<li><strong>Then</strong>: Improve precision (eliminate superfluous content)</li>
+</ol>
+<p><strong>Low-Hanging Fruit</strong>: Clear old tool calls and results</p>
+<p><strong>Best For</strong>: Tasks requiring extensive back-and-forth</p>
+<h3>2. Structured Note-Taking (Agentic Memory)</h3>
+<p><strong>What</strong>: Agent writes notes persisted outside context window, retrieved later</p>
+<p><strong>Examples</strong>:</p>
+<ul>
+<li>To-do lists</li>
+<li>NOTES.md files</li>
+<li>Game state tracking (Pokémon example: tracking 1,234 steps of training)</li>
+<li>Project progress logs</li>
+</ul>
+<p><strong>Benefits</strong>:</p>
+<ul>
+<li>Persistent memory with minimal overhead</li>
+<li>Maintains critical context across tool calls</li>
+<li>Enables multi-hour coherent strategies</li>
+</ul>
+<p><strong>Best For</strong>: Iterative development with clear milestones</p>
+<h3>3. Sub-Agent Architectures</h3>
+<p><strong>What</strong>: Specialized sub-agents handle focused tasks with clean context windows</p>
+<p><strong>How It Works</strong>:</p>
+<ul>
+<li>Main agent coordinates high-level plan</li>
+<li>Sub-agents perform deep technical work</li>
+<li>Sub-agents explore extensively (tens of thousands of tokens)</li>
+<li>Return condensed summaries (1,000-2,000 tokens)</li>
+</ul>
+<p><strong>Benefits</strong>:</p>
+<ul>
+<li>Clear separation of concerns</li>
+<li>Parallel exploration</li>
+<li>Detailed context remains isolated</li>
+</ul>
+<p><strong>Best For</strong>: Complex research and analysis tasks</p>
+<hr />
+<h2>Quick Decision Framework</h2>
+<table>
+<thead>
+<tr>
+  <th>Scenario</th>
+  <th>Recommended Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Static content</td>
+  <td>Pre-inference retrieval or hybrid</td>
+</tr>
+<tr>
+  <td>Dynamic exploration needed</td>
+  <td>Just-in-time context</td>
+</tr>
+<tr>
+  <td>Extended back-and-forth</td>
+  <td>Compaction</td>
+</tr>
+<tr>
+  <td>Iterative development</td>
+  <td>Structured note-taking</td>
+</tr>
+<tr>
+  <td>Complex research</td>
+  <td>Sub-agent architectures</td>
+</tr>
+<tr>
+  <td>Rapid model improvement</td>
+  <td>&quot;Do the simplest thing that works&quot;</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Key Takeaways</h2>
+<ol>
+<li><strong>Context is finite</strong>: Treat it as a precious resource with an attention budget</li>
+<li><strong>Think holistically</strong>: Consider the entire state available to the LLM</li>
+<li><strong>Stay minimal</strong>: More context isn't always better</li>
+<li><strong>Be iterative</strong>: Context curation happens each time you pass to the model</li>
+<li><strong>Design for autonomy</strong>: As models improve, let them act intelligently</li>
+<li><strong>Start simple</strong>: Test with minimal setup, add based on failure modes</li>
+</ol>
+<hr />
+<h2>Anti-Patterns to Avoid</h2>
+<ul>
+<li>❌ Cramming everything into prompts</li>
+<li>❌ Creating brittle if-else logic</li>
+<li>❌ Building bloated tool sets</li>
+<li>❌ Stuffing exhaustive edge cases as examples</li>
+<li>❌ Assuming larger context windows solve everything</li>
+<li>❌ Ignoring context pollution over long interactions</li>
+</ul>
+<hr />
+<h2>Remember</h2>
+<blockquote>
+<p>&quot;Even as models continue to improve, the challenge of maintaining coherence across extended interactions will remain central to building more effective agents.&quot;</p>
+</blockquote>
+<p>Context engineering will evolve, but the core principle stays the same: <strong>optimize signal-to-noise ratio in your token budget</strong>.</p>
+<hr />
+<p><em>Based on Anthropic's &quot;Effective context engineering for AI agents&quot; (September 2025)</em></p>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/context-engineering.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

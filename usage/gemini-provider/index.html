@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini Provider — manymems docs</title>
+  <meta name="description" content="Use Google&#39;s Gemini API as an alternative to Claude for observation extraction" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Use Google&#39;s Gemini API as an alternative to Claude for observation extraction</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Gemini Provider</h1>
+<p>Claude-mem supports Google's Gemini API as an alternative to the Claude Agent SDK for extracting observations from your sessions. This can significantly reduce costs since Gemini offers a generous free tier.</p>
+<h2>Why Use Gemini?</h2>
+<ul>
+<li><strong>Cost savings</strong>: The free tier covers most individual usage patterns</li>
+<li><strong>Same quality</strong>: Gemini extracts observations using the same XML format as Claude</li>
+<li><strong>Errors throw clearly</strong>: 429s, 5xx, and network failures throw — leaving messages pending so they can be retried</li>
+<li><strong>Hot-swappable</strong>: Switch providers without restarting the worker</li>
+</ul>
+<h2>Getting a Free API Key</h2>
+<ol>
+<li>Go to the <a href="https://aistudio.google.com/app/apikey">Google AI Studio API Key page</a></li>
+<li>Sign in with your Google account</li>
+<li>Accept the Terms of Service and privacy policies</li>
+<li>Click the <strong>Create API key</strong> button</li>
+<li>Choose a Google Cloud project or create a new one</li>
+<li>Copy and securely store the generated API key</li>
+</ol>
+<h2>Configuration</h2>
+<h3>Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Values</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_PROVIDER</code></td>
+  <td><code>claude</code>, <code>gemini</code></td>
+  <td><code>claude</code></td>
+  <td>AI provider for observation extraction</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_GEMINI_API_KEY</code></td>
+  <td>string</td>
+  <td>—</td>
+  <td>Your Gemini API key</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_GEMINI_MODEL</code></td>
+  <td><code>gemini-2.5-flash-lite</code>, <code>gemini-2.5-flash</code>, <code>gemini-3-flash-preview</code></td>
+  <td><code>gemini-2.5-flash-lite</code></td>
+  <td>Gemini model to use</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_GEMINI_BILLING_ENABLED</code></td>
+  <td><code>true</code>, <code>false</code></td>
+  <td><code>false</code></td>
+  <td>Skip rate limiting if billing is enabled on Google Cloud</td>
+</tr>
+</tbody>
+</table>
+<h3>Using the Settings UI</h3>
+<ol>
+<li>Open the viewer at http://localhost:37777</li>
+<li>Click the <strong>gear icon</strong> to open Settings</li>
+<li>Under <strong>AI Provider</strong>, select <strong>Gemini</strong></li>
+<li>Enter your Gemini API key</li>
+<li>Optionally select a different model</li>
+</ol>
+<p>Settings are applied immediately—no restart required.</p>
+<h3>Manual Configuration</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;gemini&quot;,
+  &quot;CLAUDE_MEM_GEMINI_API_KEY&quot;: &quot;your-api-key-here&quot;,
+  &quot;CLAUDE_MEM_GEMINI_MODEL&quot;: &quot;gemini-2.5-flash-lite&quot;,
+  &quot;CLAUDE_MEM_GEMINI_BILLING_ENABLED&quot;: &quot;true&quot;
+}
+</code></pre>
+<p>Alternatively, set the API key via environment variable:</p>
+<pre><code class="language-bash">
+</code></pre>
+<p>The settings file takes precedence over the environment variable.</p>
+<h2>Available Models</h2>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>Free Tier RPM</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>gemini-2.5-flash-lite</code></td>
+  <td>10</td>
+  <td>Default, recommended for free tier (highest RPM)</td>
+</tr>
+<tr>
+  <td><code>gemini-2.5-flash</code></td>
+  <td>5</td>
+  <td>Higher capability, lower rate limit</td>
+</tr>
+<tr>
+  <td><code>gemini-3-flash-preview</code></td>
+  <td>5</td>
+  <td>Latest model, lower rate limit</td>
+</tr>
+</tbody>
+</table>
+<h2>Provider Switching</h2>
+<p>You can switch between Claude and Gemini at any time:</p>
+<ul>
+<li><strong>No restart required</strong>: Changes take effect on the next observation</li>
+<li><strong>Conversation history preserved</strong>: When switching mid-session, the new provider sees the full conversation context</li>
+<li><strong>Seamless transition</strong>: Both providers use the same observation format</li>
+</ul>
+<h3>Switching via UI</h3>
+<ol>
+<li>Open Settings in the viewer</li>
+<li>Change the <strong>AI Provider</strong> dropdown</li>
+<li>The next observation will use the new provider</li>
+</ol>
+<h3>Switching via Settings File</h3>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;gemini&quot;
+}
+</code></pre>
+<h2>Error Behavior</h2>
+<p>If Gemini is selected and the API errors, claude-mem logs the failure and re-throws so the message stays pending for later retry. There is no Claude SDK fallback — earlier docs claimed automatic Claude fallback, but the wiring was never actually engaged in production (#2087). To switch providers, change <code>CLAUDE_MEM_PROVIDER</code> in settings.</p>
+<p><strong>Throwing conditions:</strong></p>
+<ul>
+<li>Rate limiting (HTTP 429)</li>
+<li>Server errors (HTTP 5xx)</li>
+<li>Network issues (connection refused, timeout)</li>
+<li>4xx errors other than 429</li>
+<li>Missing API key</li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>&quot;Gemini API key not configured&quot;</h3>
+<p>Either:</p>
+<ul>
+<li>Set <code>CLAUDE_MEM_GEMINI_API_KEY</code> in <code>~/.claude-mem/settings.json</code>, or</li>
+<li>Set the <code>GEMINI_API_KEY</code> environment variable</li>
+</ul>
+<h3>Rate Limiting</h3>
+<p>Google has two rate limit tiers for free usage:</p>
+<p><strong>Without billing (API key only):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>RPM</th>
+  <th>TPM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>gemini-2.5-flash-lite</td>
+  <td>10</td>
+  <td>250K</td>
+</tr>
+<tr>
+  <td>gemini-2.5-flash</td>
+  <td>5</td>
+  <td>250K</td>
+</tr>
+<tr>
+  <td>gemini-3-flash-preview</td>
+  <td>5</td>
+  <td>250K</td>
+</tr>
+</tbody>
+</table>
+<p>Claude-mem enforces these limits automatically with built-in delays between requests. Processing may be slower but stays within limits.</p>
+<p><strong>With billing enabled (still free tier):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>RPM</th>
+  <th>TPM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>gemini-2.5-flash-lite</td>
+  <td>4,000</td>
+  <td>4M</td>
+</tr>
+<tr>
+  <td>gemini-2.5-flash</td>
+  <td>1,000</td>
+  <td>1M</td>
+</tr>
+<tr>
+  <td>gemini-3-flash-preview</td>
+  <td>1,000</td>
+  <td>1M</td>
+</tr>
+</tbody>
+</table>
+<p>If you hit rate limits:</p>
+<ul>
+<li>Claude-mem automatically falls back to Claude SDK</li>
+<li>Or switch back to Claude as your primary provider</li>
+</ul>
+<h3>Observation Quality</h3>
+<p>If observations seem lower quality with Gemini:</p>
+<ul>
+<li>Note that Claude typically produces slightly higher quality observations</li>
+<li>Consider using Gemini for cost savings and Claude for important projects</li>
+</ul>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/configuration">Configuration</a> - Full settings reference</li>
+<li><a href="/usage/getting-started">Getting Started</a> - Basic usage guide</li>
+<li><a href="/troubleshooting">Troubleshooting</a> - Common issues</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/gemini-provider.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

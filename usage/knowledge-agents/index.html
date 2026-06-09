@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Agents — manymems docs</title>
+  <meta name="description" content="Build queryable AI brains from your observation history" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Build queryable AI brains from your observation history</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Knowledge Agents</h1>
+<p>Knowledge agents let you compile a slice of your claude-mem observation history into a <strong>queryable &quot;brain&quot;</strong> that answers questions conversationally. Instead of getting raw search results back, you get synthesized, grounded answers drawn from your actual project history -- decisions, discoveries, bugfixes, and features.</p>
+<h2>Quick Start</h2>
+<p>Three ways to use knowledge agents, from simplest to most powerful.</p>
+<h3>1. Create a Knowledge Agent</h3>
+<p>Use the <code>/knowledge-agent</code> skill or the MCP tools directly:</p>
+<pre><code>build_corpus name=&quot;hooks-expertise&quot; query=&quot;hooks architecture&quot; project=&quot;claude-mem&quot; limit=200
+</code></pre>
+<p>This searches your observation history, collects matching records, and saves them as a corpus file. Then prime it — this loads the corpus into a Claude session's context window:</p>
+<pre><code>prime_corpus name=&quot;hooks-expertise&quot;
+</code></pre>
+<p>Your knowledge agent is ready. The returned <code>session_id</code> <strong>is</strong> the agent — a Claude session with your history baked in.</p>
+<h3>2. Ask a Single Question</h3>
+<p>Once primed, ask any question and get a grounded answer:</p>
+<pre><code>query_corpus name=&quot;hooks-expertise&quot; question=&quot;What are the 5 lifecycle hooks and when does each fire?&quot;
+</code></pre>
+<p>The agent answers grounded in its corpus — responses are drawn from your actual project history, reducing hallucination and guessing. Each follow-up question builds on the prior conversation:</p>
+<pre><code>query_corpus name=&quot;hooks-expertise&quot; question=&quot;Which hook handles context injection?&quot;
+</code></pre>
+<h3>3. Start a Fresh Conversation</h3>
+<p>If the conversation drifts, or you want to ask an unrelated question against the same corpus, reprime to start clean:</p>
+<pre><code>reprime_corpus name=&quot;hooks-expertise&quot;
+</code></pre>
+<p>This creates a <strong>new session</strong> with the full corpus reloaded — like opening a fresh chat with the same &quot;brain.&quot; All prior Q&amp;A context is cleared, but the corpus knowledge remains. Use this when:</p>
+<ul>
+<li>The conversation went off-track and you want a clean slate</li>
+<li>You're switching topics within the same corpus</li>
+<li>You want to ask a question without prior answers biasing the response</li>
+</ul>
+<h3>Keeping It Current</h3>
+<p>When new observations are added to your project, rebuild the corpus to pull in the latest, then reprime:</p>
+<pre><code>rebuild_corpus name=&quot;hooks-expertise&quot;
+reprime_corpus name=&quot;hooks-expertise&quot;
+</code></pre>
+<p>Rebuild re-runs the original search filters. Reprime loads the refreshed data into a new session.</p>
+<hr />
+<h2>The Workflow: Build, Prime, Query</h2>
+<pre><code>BUILD  ──&gt;  PRIME  ──&gt;  QUERY
+</code></pre>
+<h3>1. Build a Corpus</h3>
+<p>A corpus is a filtered collection of observations saved as a JSON file. Use search filters to select exactly the slice of history you want.</p>
+<pre><code class="language-bash">curl -X POST http://localhost:37777/api/corpus \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{
+    &quot;name&quot;: &quot;hooks-expertise&quot;,
+    &quot;query&quot;: &quot;hooks architecture&quot;,
+    &quot;project&quot;: &quot;claude-mem&quot;,
+    &quot;types&quot;: [&quot;decision&quot;, &quot;discovery&quot;],
+    &quot;limit&quot;: 200
+  }'
+</code></pre>
+<p>Under the hood, <code>CorpusBuilder</code> searches your observations, hydrates full records, parses structured fields (facts, concepts, files), calculates stats, and writes everything to <code>~/.claude-mem/corpora/hooks-expertise.corpus.json</code>.</p>
+<h3>2. Prime the Knowledge Agent</h3>
+<p>Priming loads the entire corpus into a Claude session's context window.</p>
+<pre><code class="language-bash">curl -X POST http://localhost:37777/api/corpus/hooks-expertise/prime
+</code></pre>
+<p>The agent renders all observations into full-detail text and feeds them to the Claude Agent SDK. Claude reads the corpus and acknowledges the themes. The returned <code>session_id</code> <strong>is</strong> the knowledge agent -- a Claude session with your history baked in.</p>
+<h3>3. Query</h3>
+<p>Resume the primed session and ask questions.</p>
+<pre><code class="language-bash">curl -X POST http://localhost:37777/api/corpus/hooks-expertise/query \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{ &quot;question&quot;: &quot;What are the 5 lifecycle hooks?&quot; }'
+</code></pre>
+<p>Each follow-up question adds to the conversation naturally. If the session expires, the agent auto-reprimes from the corpus file and retries.</p>
+<hr />
+<h2>Filter Options</h2>
+<p>Use these parameters when building a corpus to control which observations are included:</p>
+<table>
+<thead>
+<tr>
+  <th>Parameter</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>name</code></td>
+  <td>string</td>
+  <td>Name for the corpus (used in all subsequent API calls)</td>
+</tr>
+<tr>
+  <td><code>project</code></td>
+  <td>string</td>
+  <td>Filter by project name</td>
+</tr>
+<tr>
+  <td><code>types</code></td>
+  <td>string[]</td>
+  <td>Filter by observation type (bugfix, feature, decision, discovery, refactor, change)</td>
+</tr>
+<tr>
+  <td><code>concepts</code></td>
+  <td>string[]</td>
+  <td>Filter by tagged concepts</td>
+</tr>
+<tr>
+  <td><code>files</code></td>
+  <td>string[]</td>
+  <td>Filter by files read or modified</td>
+</tr>
+<tr>
+  <td><code>query</code></td>
+  <td>string</td>
+  <td>Full-text search query</td>
+</tr>
+<tr>
+  <td><code>dateStart</code></td>
+  <td>string</td>
+  <td>Start date filter (YYYY-MM-DD)</td>
+</tr>
+<tr>
+  <td><code>dateEnd</code></td>
+  <td>string</td>
+  <td>End date filter (YYYY-MM-DD)</td>
+</tr>
+<tr>
+  <td><code>limit</code></td>
+  <td>number</td>
+  <td>Maximum observations to include</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Architecture</h2>
+<pre><code>                MCP Tools                    HTTP API
+            (mcp-server.ts)            (worker on :37777)
+                  |                          |
+   build_corpus ──┤                          |
+   list_corpora ──┤                          |
+   prime_corpus ──┤── callWorkerAPIPost() ──&gt;|
+   query_corpus ──┤                          |
+rebuild_corpus ──┤                          |
+reprime_corpus ──┘                          |
+                                             v
+                                       CorpusRoutes
+                                       (8 endpoints)
+                                        /    |    \
+                              CorpusBuilder  |  KnowledgeAgent
+                                  |          |       |
+                        SearchOrchestrator   |   Agent SDK V1
+                        SessionStore         |   query() + resume
+                                             |
+                                        CorpusStore
+                                    (~/.claude-mem/corpora/)
+</code></pre>
+<p><strong>Key insight:</strong> The Agent SDK's <code>resume</code> option lets you prime a session once (upload the corpus), save the <code>session_id</code>, and resume it for every future question. The corpus stays in context permanently -- no re-uploading, no prompt caching tricks. The 1M token context window makes this viable: 2,000 observations at ~300 tokens each fits comfortably.</p>
+<hr />
+<h2>When to Use <code>/knowledge-agent</code> vs <code>/mem-search</code></h2>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><code>/mem-search</code></th>
+  <th><code>/knowledge-agent</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Returns</strong></td>
+  <td>Raw observation records</td>
+  <td>Synthesized conversational answers</td>
+</tr>
+<tr>
+  <td><strong>Best for</strong></td>
+  <td>Finding specific observations, IDs, timelines</td>
+  <td>Asking questions about patterns, decisions, architecture</td>
+</tr>
+<tr>
+  <td><strong>Token model</strong></td>
+  <td>Pay-per-query (3-layer progressive disclosure)</td>
+  <td>Pay-once at prime time, then cheap follow-ups</td>
+</tr>
+<tr>
+  <td><strong>Interaction</strong></td>
+  <td>Search, filter, fetch</td>
+  <td>Ask questions in natural language</td>
+</tr>
+<tr>
+  <td><strong>Data freshness</strong></td>
+  <td>Always current (queries database live)</td>
+  <td>Snapshot at build time (rebuild to refresh)</td>
+</tr>
+<tr>
+  <td><strong>Setup</strong></td>
+  <td>None -- works immediately</td>
+  <td>Build + prime required before first query</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule of thumb:</strong> Use <code>/mem-search</code> when you need to find something specific. Use <code>/knowledge-agent</code> when you want to understand something broadly.</p>
+<hr />
+<h2>API Reference</h2>
+<table>
+<thead>
+<tr>
+  <th>Method</th>
+  <th>Path</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>POST</td>
+  <td><code>/api/corpus</code></td>
+  <td>Build a new corpus from filters</td>
+</tr>
+<tr>
+  <td>GET</td>
+  <td><code>/api/corpus</code></td>
+  <td>List all corpora with stats</td>
+</tr>
+<tr>
+  <td>GET</td>
+  <td><code>/api/corpus/:name</code></td>
+  <td>Get corpus metadata</td>
+</tr>
+<tr>
+  <td>DELETE</td>
+  <td><code>/api/corpus/:name</code></td>
+  <td>Delete a corpus</td>
+</tr>
+<tr>
+  <td>POST</td>
+  <td><code>/api/corpus/:name/rebuild</code></td>
+  <td>Rebuild from stored filters</td>
+</tr>
+<tr>
+  <td>POST</td>
+  <td><code>/api/corpus/:name/prime</code></td>
+  <td>Create AI session with corpus loaded</td>
+</tr>
+<tr>
+  <td>POST</td>
+  <td><code>/api/corpus/:name/query</code></td>
+  <td>Ask the knowledge agent a question</td>
+</tr>
+<tr>
+  <td>POST</td>
+  <td><code>/api/corpus/:name/reprime</code></td>
+  <td>Fresh session (wipe prior Q&amp;A)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Edge Cases</h2>
+<ul>
+<li><strong>Session expiry</strong>: If <code>resume</code> fails, the agent auto-reprimes from the corpus file and retries</li>
+<li><strong>SDK process exit</strong>: If the Claude process exits after yielding all messages, the agent treats it as success when the session_id or answer was already captured</li>
+<li><strong>Empty corpus</strong>: A corpus with 0 observations is valid (just empty)</li>
+<li><strong>Model from settings</strong>: Reads <code>CLAUDE_MEM_MODEL</code> from user settings -- no hardcoded model IDs</li>
+</ul>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/usage/search-tools">Memory Search</a> - The 3-layer search workflow for finding specific observations</li>
+<li><a href="/progressive-disclosure">Progressive Disclosure</a> - Philosophy behind token-efficient retrieval</li>
+<li><a href="/architecture/overview">Architecture Overview</a> - System components</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/knowledge-agents.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

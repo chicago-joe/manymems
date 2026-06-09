@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenRouter Provider — manymems docs</title>
+  <meta name="description" content="Access 100+ AI models through OpenRouter&#39;s unified API, including free models for cost-effective observation extraction" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Access 100+ AI models through OpenRouter&#39;s unified API, including free models for cost-effective observation extraction</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>OpenRouter Provider</h1>
+<p>Claude-mem supports <a href="https://openrouter.ai">OpenRouter</a> as an alternative provider for observation extraction. OpenRouter provides a unified API to access 100+ models from different providers including Google, Meta, Mistral, DeepSeek, and many others—often with generous free tiers.</p>
+<h2>Why Use OpenRouter?</h2>
+<ul>
+<li><strong>Access to 100+ models</strong>: Choose from models across multiple providers through one API</li>
+<li><strong>Free tier options</strong>: Several high-quality models are completely free to use</li>
+<li><strong>Cost flexibility</strong>: Pay-as-you-go pricing on premium models with no commitments</li>
+<li><strong>Errors throw clearly</strong>: 429s, 5xx, and network failures throw — leaving messages pending so they can be retried</li>
+<li><strong>Hot-swappable</strong>: Switch providers without restarting the worker</li>
+<li><strong>Multi-turn conversations</strong>: Full conversation history maintained across API calls</li>
+</ul>
+<h2>Free Models on OpenRouter</h2>
+<p>OpenRouter actively supports democratizing AI access by offering free models. These are production-ready models suitable for observation extraction.</p>
+<h3>Featured Free Models</h3>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>ID</th>
+  <th>Parameters</th>
+  <th>Context</th>
+  <th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Xiaomi MiMo-V2-Flash</strong></td>
+  <td><code>xiaomi/mimo-v2-flash:free</code></td>
+  <td>309B (15B active, MoE)</td>
+  <td>256K</td>
+  <td>Reasoning, coding, agents</td>
+</tr>
+<tr>
+  <td><strong>Gemini 2.0 Flash</strong></td>
+  <td><code>google/gemini-2.0-flash-exp:free</code></td>
+  <td>—</td>
+  <td>1M</td>
+  <td>General purpose</td>
+</tr>
+<tr>
+  <td><strong>Gemini 2.5 Flash</strong></td>
+  <td><code>google/gemini-2.5-flash-preview:free</code></td>
+  <td>—</td>
+  <td>1M</td>
+  <td>Latest capabilities</td>
+</tr>
+<tr>
+  <td><strong>DeepSeek R1</strong></td>
+  <td><code>deepseek/deepseek-r1:free</code></td>
+  <td>671B</td>
+  <td>64K</td>
+  <td>Reasoning, analysis</td>
+</tr>
+<tr>
+  <td><strong>Llama 3.1 70B</strong></td>
+  <td><code>meta-llama/llama-3.1-70b-instruct:free</code></td>
+  <td>70B</td>
+  <td>128K</td>
+  <td>General purpose</td>
+</tr>
+<tr>
+  <td><strong>Llama 3.1 8B</strong></td>
+  <td><code>meta-llama/llama-3.1-8b-instruct:free</code></td>
+  <td>8B</td>
+  <td>128K</td>
+  <td>Fast, lightweight</td>
+</tr>
+<tr>
+  <td><strong>Mistral Nemo</strong></td>
+  <td><code>mistralai/mistral-nemo:free</code></td>
+  <td>12B</td>
+  <td>128K</td>
+  <td>Efficient performance</td>
+</tr>
+</tbody>
+</table>
+<h3>Free Model Considerations</h3>
+<ul>
+<li><strong>Rate limits</strong>: Free models may have stricter rate limits than paid models</li>
+<li><strong>Availability</strong>: Free capacity depends on provider partnerships and demand</li>
+<li><strong>Queue times</strong>: During peak usage, requests may be queued briefly</li>
+<li><strong>Max tokens</strong>: Most free models support 65,536 completion tokens</li>
+</ul>
+<p>All free models support:</p>
+<ul>
+<li>Tool use and function calling</li>
+<li>Temperature and sampling controls</li>
+<li>Stop sequences</li>
+<li>Streaming responses</li>
+</ul>
+<h2>Getting an API Key</h2>
+<ol>
+<li>Go to <a href="https://openrouter.ai">OpenRouter</a></li>
+<li>Sign in with Google, GitHub, or email</li>
+<li>Navigate to <a href="https://openrouter.ai/keys">API Keys</a></li>
+<li>Click <strong>Create Key</strong></li>
+<li>Copy and securely store your API key</li>
+</ol>
+<h2>Configuration</h2>
+<h3>Settings</h3>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Values</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CLAUDE_MEM_PROVIDER</code></td>
+  <td><code>claude</code>, <code>gemini</code>, <code>openrouter</code></td>
+  <td><code>claude</code></td>
+  <td>AI provider for observation extraction</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_API_KEY</code></td>
+  <td>string</td>
+  <td>—</td>
+  <td>Your OpenRouter API key</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_MODEL</code></td>
+  <td>string</td>
+  <td><code>xiaomi/mimo-v2-flash:free</code></td>
+  <td>Model identifier (see list above)</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES</code></td>
+  <td>number</td>
+  <td><code>20</code></td>
+  <td>Max messages in conversation history</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_MAX_TOKENS</code></td>
+  <td>number</td>
+  <td><code>100000</code></td>
+  <td>Token budget safety limit</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_SITE_URL</code></td>
+  <td>string</td>
+  <td>—</td>
+  <td>Optional: URL for analytics attribution</td>
+</tr>
+<tr>
+  <td><code>CLAUDE_MEM_OPENROUTER_APP_NAME</code></td>
+  <td>string</td>
+  <td><code>claude-mem</code></td>
+  <td>Optional: App name for analytics</td>
+</tr>
+</tbody>
+</table>
+<h3>Using the Settings UI</h3>
+<ol>
+<li>Open the viewer at http://localhost:37777</li>
+<li>Click the <strong>gear icon</strong> to open Settings</li>
+<li>Under <strong>AI Provider</strong>, select <strong>OpenRouter</strong></li>
+<li>Enter your OpenRouter API key</li>
+<li>Optionally select a different model</li>
+</ol>
+<p>Settings are applied immediately—no restart required.</p>
+<h3>Manual Configuration</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_API_KEY&quot;: &quot;sk-or-v1-your-key-here&quot;,
+  &quot;CLAUDE_MEM_OPENROUTER_MODEL&quot;: &quot;xiaomi/mimo-v2-flash:free&quot;
+}
+</code></pre>
+<p>Alternatively, set the API key via environment variable:</p>
+<pre><code class="language-bash">
+</code></pre>
+<p>The settings file takes precedence over the environment variable.</p>
+<h2>Model Selection Guide</h2>
+<h3>For Free Usage (No Cost)</h3>
+<p><strong>Recommended</strong>: <code>xiaomi/mimo-v2-flash:free</code></p>
+<ul>
+<li>Best-in-class performance on coding benchmarks</li>
+<li>256K context window handles large observations</li>
+<li>65K max completion tokens</li>
+<li>Mixture-of-experts architecture (15B active parameters)</li>
+</ul>
+<p><strong>Alternatives</strong>:</p>
+<ul>
+<li><code>google/gemini-2.0-flash-exp:free</code> - 1M context, Google's flagship</li>
+<li><code>deepseek/deepseek-r1:free</code> - Excellent reasoning capabilities</li>
+<li><code>meta-llama/llama-3.1-70b-instruct:free</code> - Strong general purpose</li>
+</ul>
+<h3>For Paid Usage (Higher Quality/Speed)</h3>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>Price (per 1M tokens)</th>
+  <th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>anthropic/claude-3.5-sonnet</code></td>
+  <td>$3 in / $15 out</td>
+  <td>Highest quality observations</td>
+</tr>
+<tr>
+  <td><code>google/gemini-2.0-flash</code></td>
+  <td>$0.075 in / $0.30 out</td>
+  <td>Fast, cost-effective</td>
+</tr>
+<tr>
+  <td><code>openai/gpt-4o</code></td>
+  <td>$2.50 in / $10 out</td>
+  <td>GPT-4 quality</td>
+</tr>
+</tbody>
+</table>
+<h2>Context Window Management</h2>
+<p>OpenRouter agent implements intelligent context management to prevent runaway costs:</p>
+<h3>Automatic Truncation</h3>
+<p>The agent uses a sliding window strategy:</p>
+<ol>
+<li>Checks if message count exceeds <code>MAX_CONTEXT_MESSAGES</code> (default: 20)</li>
+<li>Checks if estimated tokens exceed <code>MAX_TOKENS</code> (default: 100,000)</li>
+<li>If limits exceeded, keeps most recent messages only</li>
+<li>Logs warnings with dropped message counts</li>
+</ol>
+<h3>Token Estimation</h3>
+<ul>
+<li>Conservative estimate: 1 token ≈ 4 characters</li>
+<li>Used for proactive context management</li>
+<li>Actual usage logged from API response</li>
+</ul>
+<h3>Cost Tracking</h3>
+<p>Logs include detailed usage information:</p>
+<pre><code>OpenRouter API usage: {
+  model: &quot;xiaomi/mimo-v2-flash:free&quot;,
+  inputTokens: 2500,
+  outputTokens: 1200,
+  totalTokens: 3700,
+  estimatedCostUSD: &quot;0.00&quot;,
+  messagesInContext: 8
+}
+</code></pre>
+<h2>Provider Switching</h2>
+<p>You can switch between providers at any time:</p>
+<ul>
+<li><strong>No restart required</strong>: Changes take effect on the next observation</li>
+<li><strong>Conversation history preserved</strong>: When switching mid-session, the new provider sees the full conversation context</li>
+<li><strong>Seamless transition</strong>: All providers use the same observation format</li>
+</ul>
+<h3>Switching via UI</h3>
+<ol>
+<li>Open Settings in the viewer</li>
+<li>Change the <strong>AI Provider</strong> dropdown</li>
+<li>The next observation will use the new provider</li>
+</ol>
+<h3>Switching via Settings File</h3>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;openrouter&quot;
+}
+</code></pre>
+<h2>Error Behavior</h2>
+<p>If OpenRouter errors, claude-mem logs the failure and re-throws so the message stays pending for later retry. There is no Claude SDK fallback — earlier docs claimed automatic Claude fallback, but the wiring was never actually engaged in production (#2087). To switch providers, change <code>CLAUDE_MEM_PROVIDER</code> in settings.</p>
+<p><strong>Throwing conditions:</strong></p>
+<ul>
+<li>Rate limiting (HTTP 429)</li>
+<li>Server errors (HTTP 500, 502, 503)</li>
+<li>Network issues (connection refused, timeout)</li>
+<li>4xx errors other than 429</li>
+<li>Missing API key</li>
+</ul>
+<h2>Multi-Turn Conversation Support</h2>
+<p>OpenRouter agent maintains full conversation history across API calls:</p>
+<pre><code>Session Created
+  ↓
+Load Pending Messages (observations from queue)
+  ↓
+For each message:
+  → Add to conversation history
+  → Call OpenRouter API with FULL history
+  → Parse XML response
+  → Store observations in database
+  → Sync to Chroma vector DB
+  ↓
+Session complete
+</code></pre>
+<p>This enables:</p>
+<ul>
+<li>Coherent multi-turn exchanges</li>
+<li>Context preservation across observations</li>
+<li>Seamless provider switching mid-session</li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>&quot;OpenRouter API key not configured&quot;</h3>
+<p>Either:</p>
+<ul>
+<li>Set <code>CLAUDE_MEM_OPENROUTER_API_KEY</code> in <code>~/.claude-mem/settings.json</code>, or</li>
+<li>Set the <code>OPENROUTER_API_KEY</code> environment variable</li>
+</ul>
+<h3>Rate Limiting</h3>
+<p>Free models may have rate limits during peak usage. If you hit rate limits:</p>
+<ul>
+<li>The agent throws and leaves the message pending — it will be retried later</li>
+<li>Consider switching to a different free model</li>
+<li>Add credits for premium model access</li>
+</ul>
+<h3>Model Not Found</h3>
+<p>Verify the model ID is correct:</p>
+<ul>
+<li>Check <a href="https://openrouter.ai/models">OpenRouter Models</a> for current availability</li>
+<li>Use the <code>:free</code> suffix for free model variants</li>
+<li>Model IDs are case-sensitive</li>
+</ul>
+<h3>High Token Usage Warning</h3>
+<p>If you see warnings about high token usage (&gt;50,000 per request):</p>
+<ul>
+<li>Reduce <code>CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES</code></li>
+<li>Reduce <code>CLAUDE_MEM_OPENROUTER_MAX_TOKENS</code></li>
+<li>Consider a model with larger context window</li>
+</ul>
+<h3>Connection Errors</h3>
+<p>If you see connection errors:</p>
+<ul>
+<li>Check your internet connection</li>
+<li>Verify OpenRouter service status at <a href="https://status.openrouter.ai">status.openrouter.ai</a></li>
+<li>The agent throws and leaves the message pending for later retry</li>
+</ul>
+<h2>API Details</h2>
+<p>OpenRouter uses an OpenAI-compatible REST API:</p>
+<p><strong>Endpoint</strong>: <code>https://openrouter.ai/api/v1/chat/completions</code></p>
+<p><strong>Headers</strong>:</p>
+<pre><code>Authorization: Bearer {apiKey}
+HTTP-Referer: https://github.com/thedotmack/claude-mem
+X-Title: claude-mem
+Content-Type: application/json
+</code></pre>
+<p><strong>Request Format</strong>:</p>
+<pre><code class="language-json">{
+  &quot;model&quot;: &quot;xiaomi/mimo-v2-flash:free&quot;,
+  &quot;messages&quot;: [
+    {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;...&quot;},
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;...&quot;}
+  ],
+  &quot;temperature&quot;: 0.3,
+  &quot;max_tokens&quot;: 4096
+}
+</code></pre>
+<h2>Comparing Providers</h2>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th>Claude (SDK)</th>
+  <th>Gemini</th>
+  <th>OpenRouter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Cost</strong></td>
+  <td>Pay per token</td>
+  <td>Free tier + paid</td>
+  <td>Free models + paid</td>
+</tr>
+<tr>
+  <td><strong>Models</strong></td>
+  <td>Claude only</td>
+  <td>Gemini only</td>
+  <td>100+ models</td>
+</tr>
+<tr>
+  <td><strong>Quality</strong></td>
+  <td>Highest</td>
+  <td>High</td>
+  <td>Varies by model</td>
+</tr>
+<tr>
+  <td><strong>Rate limits</strong></td>
+  <td>Based on tier</td>
+  <td>5-4000 RPM</td>
+  <td>Varies by model</td>
+</tr>
+<tr>
+  <td><strong>On error</strong></td>
+  <td>Throws</td>
+  <td>Throws</td>
+  <td>Throws</td>
+</tr>
+<tr>
+  <td><strong>Setup</strong></td>
+  <td>Automatic</td>
+  <td>API key required</td>
+  <td>API key required</td>
+</tr>
+</tbody>
+</table>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/configuration">Configuration</a> - Full settings reference</li>
+<li><a href="/usage/gemini-provider">Gemini Provider</a> - Alternative free provider</li>
+<li><a href="/usage/getting-started">Getting Started</a> - Basic usage guide</li>
+<li><a href="/troubleshooting">Troubleshooting</a> - Common issues</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/usage/openrouter-provider.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

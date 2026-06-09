@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hook Lifecycle — manymems docs</title>
+  <meta name="description" content="Complete guide to the 5-stage memory agent lifecycle for platform implementers" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Complete guide to the 5-stage memory agent lifecycle for platform implementers</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Hook Lifecycle</h1>
+<p>Claude-Mem implements a <strong>5-stage hook system</strong> that captures development work across Claude Code sessions. This document provides a complete technical reference for developers implementing this pattern on other platforms.</p>
+<h2>Architecture Overview</h2>
+<h3>System Architecture</h3>
+<p>This two-process architecture works in both Claude Code and VS Code:</p>
+<pre><code class="language-mermaid">graph TB
+    subgraph EXT[&quot;Extension Process (runs in IDE)&quot;]
+        direction TB
+        ACT[Extension Activation]
+        HOOKS[Hook Event Handlers]
+        ACT --&gt; HOOKS
+
+        subgraph HOOK_HANDLERS[&quot;5 Lifecycle Hooks&quot;]
+            H1[SessionStart&lt;br/&gt;activate function]
+            H2[UserPromptSubmit&lt;br/&gt;command handler]
+            H3[PostToolUse&lt;br/&gt;middleware]
+            H4[Stop&lt;br/&gt;idle timeout]
+            H5[SessionEnd&lt;br/&gt;deactivate function]
+        end
+
+        HOOKS --&gt; HOOK_HANDLERS
+    end
+
+    HOOK_HANDLERS --&gt;|&quot;HTTP&lt;br/&gt;(fire-and-forget&lt;br/&gt;2s timeout)&quot;| HTTP[Worker HTTP API&lt;br/&gt;Port 37777]
+
+    subgraph WORKER[&quot;Worker Process (separate Node.js)&quot;]
+        direction TB
+        HTTP --&gt; API[Express Server]
+        API --&gt; SESS[Session Manager]
+        API --&gt; AGENT[SDK Agent]
+        API --&gt; DB[Database Manager]
+
+        AGENT --&gt;|Event-Driven| CLAUDE[Claude Agent SDK]
+        CLAUDE --&gt; SQLITE[(SQLite + FTS5)]
+        CLAUDE --&gt; CHROMA[(Chroma Vectors)]
+    end
+
+    style EXT fill:#e1f5ff
+    style WORKER fill:#fff4e1
+    style HOOK_HANDLERS fill:#f0f0f0
+</code></pre>
+<p><strong>Key Principles:</strong></p>
+<ul>
+<li>Extension process never blocks (fire-and-forget HTTP)</li>
+<li>Worker processes observations asynchronously</li>
+<li>Session state persists across IDE restarts</li>
+</ul>
+<h3>VS Code Extension API Integration Points</h3>
+<p>For developers porting to VS Code, here's where to hook into the VS Code Extension API:</p>
+<pre><code class="language-mermaid">graph LR
+    subgraph VSCODE[&quot;VS Code Extension API&quot;]
+        direction TB
+        A[&quot;activate(context)&quot;]
+        B[&quot;commands.registerCommand()&quot;]
+        C[&quot;chat.createChatParticipant()&quot;]
+        D[&quot;workspace.onDidSaveTextDocument()&quot;]
+        E[&quot;window.onDidChangeActiveTextEditor()&quot;]
+        F[&quot;deactivate()&quot;]
+    end
+
+    subgraph HOOKS[&quot;Hook Equivalents&quot;]
+        direction TB
+        G[SessionStart]
+        H[UserPromptSubmit]
+        I[PostToolUse]
+        J[Stop/Summary]
+        K[SessionEnd]
+    end
+
+    subgraph WORKER_API[&quot;Worker HTTP Endpoints&quot;]
+        direction TB
+        L[GET /api/context/inject]
+        M[POST /sessions/init]
+        N[POST /sessions/observations]
+        O[POST /sessions/summarize]
+        P[POST /sessions/complete]
+    end
+
+    A --&gt; G
+    B --&gt; H
+    C --&gt; H
+    D --&gt; I
+    E --&gt; I
+    F --&gt; K
+
+    G --&gt; L
+    H --&gt; M
+    I --&gt; N
+    J --&gt; O
+    K --&gt; P
+
+    style VSCODE fill:#007acc,color:#fff
+    style HOOKS fill:#f0f0f0
+    style WORKER_API fill:#4caf50,color:#fff
+</code></pre>
+<p><strong>Implementation Examples:</strong></p>
+<pre><code class="language-typescript">// VS Code Extension - SessionStart Hook
+
+  const sessionId = generateSessionId()
+  const project = workspace.name || 'default'
+
+  // Fetch context from worker
+  const response = await fetch(`http://localhost:37777/api/context/inject?project=${project}`)
+  const context = await response.text()
+
+  // Inject into chat or UI panel
+  injectContextToChat(context)
+}
+
+// VS Code Extension - UserPromptSubmit Hook
+const command = vscode.commands.registerCommand('extension.command', async (prompt) =&gt; {
+  await fetch('http://localhost:37777/sessions/init', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId, project, userPrompt: prompt })
+  })
+})
+
+// VS Code Extension - PostToolUse Hook (middleware pattern)
+workspace.onDidSaveTextDocument(async (document) =&gt; {
+  await fetch('http://localhost:37777/api/sessions/observations', {
+    method: 'POST',
+    body: JSON.stringify({
+      claudeSessionId: sessionId,
+      tool_name: 'FileSave',
+      tool_input: { path: document.uri.path },
+      tool_response: 'File saved successfully'
+    })
+  })
+})
+</code></pre>
+<h3>Async Processing Pipeline</h3>
+<p>How observations flow from extension to database without blocking the IDE:</p>
+<pre><code class="language-mermaid">graph TB
+    A[&quot;Extension: Tool Use Event&quot;] --&gt; B{&quot;Skip List?&lt;br/&gt;(TodoWrite, AskUserQuestion, etc.)&quot;}
+    B --&gt;|&quot;Skip&quot;| X[&quot;Discard&quot;]
+    B --&gt;|&quot;Keep&quot;| C[&quot;Strip Privacy Tags&lt;br/&gt;&amp;lt;private&amp;gt;...&amp;lt;/private&amp;gt;&quot;]
+    C --&gt; D[&quot;HTTP POST to Worker&lt;br/&gt;Port 37777&quot;]
+    D --&gt; E[&quot;2s timeout&lt;br/&gt;fire-and-forget&quot;]
+    E --&gt; F[&quot;Extension continues&lt;br/&gt;(non-blocking)&quot;]
+
+    D -.Async Path.-&gt; G[&quot;Worker: Queue Observation&quot;]
+    G --&gt; H[&quot;SDK Agent picks up&lt;br/&gt;(event-driven)&quot;]
+    H --&gt; I[&quot;Call Claude API&lt;br/&gt;(compress observation)&quot;]
+    I --&gt; J[&quot;Parse XML response&quot;]
+    J --&gt; K[&quot;Save to SQLite&lt;br/&gt;(sdk_sessions table)&quot;]
+    K --&gt; L[&quot;Sync to Chroma&lt;br/&gt;(vector embeddings)&quot;]
+
+    style F fill:#90EE90,stroke:#2d6b2d,stroke-width:3px
+    style L fill:#87CEEB,stroke:#2d5f8d,stroke-width:3px
+    style E fill:#ffeb3b,stroke:#c6a700,stroke-width:2px
+</code></pre>
+<p><strong>Critical Pattern:</strong> The extension's HTTP call has a 2-second timeout and doesn't wait for AI processing. The worker handles compression asynchronously using an event-driven queue.</p>
+<h2>The 5 Lifecycle Stages</h2>
+<table>
+<thead>
+<tr>
+  <th>Stage</th>
+  <th>Hook</th>
+  <th>Trigger</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>1. SessionStart</strong></td>
+  <td><code>context-hook.js</code></td>
+  <td>User opens Claude Code</td>
+  <td>Inject prior context silently</td>
+</tr>
+<tr>
+  <td><strong>2. UserPromptSubmit</strong></td>
+  <td><code>new-hook.js</code></td>
+  <td>User submits a prompt</td>
+  <td>Create/get session, save prompt, init worker</td>
+</tr>
+<tr>
+  <td><strong>3. PostToolUse</strong></td>
+  <td><code>save-hook.js</code></td>
+  <td>Claude uses any tool</td>
+  <td>Queue observation for AI compression</td>
+</tr>
+<tr>
+  <td><strong>4. Stop</strong></td>
+  <td><code>summary-hook.js</code></td>
+  <td>User stops asking questions</td>
+  <td>Generate session summary</td>
+</tr>
+<tr>
+  <td><strong>5. SessionEnd</strong></td>
+  <td><code>cleanup-hook.js</code></td>
+  <td>Session closes</td>
+  <td>Mark session completed</td>
+</tr>
+</tbody>
+</table>
+<h2>Hook Configuration</h2>
+<p>Hooks are configured in <code>plugin/hooks/hooks.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;Setup&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;node ${CLAUDE_PLUGIN_ROOT}/scripts/version-check.js&quot;,
+        &quot;timeout&quot;: 60
+      }]
+    }],
+    &quot;SessionStart&quot;: [{
+      &quot;matcher&quot;: &quot;startup|clear|compact&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;bun ${CLAUDE_PLUGIN_ROOT}/scripts/worker-service.cjs start&quot;,
+        &quot;timeout&quot;: 60
+      }, {
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;bun ${CLAUDE_PLUGIN_ROOT}/scripts/context-hook.js&quot;,
+        &quot;timeout&quot;: 60
+      }]
+    }],
+    &quot;UserPromptSubmit&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;node ${CLAUDE_PLUGIN_ROOT}/scripts/new-hook.js&quot;,
+        &quot;timeout&quot;: 120
+      }]
+    }],
+    &quot;PostToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;*&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;node ${CLAUDE_PLUGIN_ROOT}/scripts/save-hook.js&quot;,
+        &quot;timeout&quot;: 120
+      }]
+    }],
+    &quot;Stop&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;node ${CLAUDE_PLUGIN_ROOT}/scripts/summary-hook.js&quot;,
+        &quot;timeout&quot;: 120
+      }]
+    }],
+    &quot;SessionEnd&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;node ${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-hook.js&quot;,
+        &quot;timeout&quot;: 120
+      }]
+    }]
+  }
+}
+</code></pre>
+<hr />
+<h2>Stage 1: SessionStart</h2>
+<p><strong>Timing</strong>: When user opens Claude Code or resumes session</p>
+<p><strong>Hooks Triggered</strong> (in order):</p>
+<ol>
+<li><code>worker-service.cjs start</code> - Starts the worker service</li>
+<li><code>context-hook.js</code> - Fetches and silently injects prior session context</li>
+</ol>
+<p>(Runtime setup is handled out-of-band by <code>npx claude-mem install</code> / <code>npx claude-mem repair</code>. The Setup phase runs a sub-100ms <code>version-check.js</code> that prompts the user to repair if the <code>.install-version</code> marker is stale.)</p>
+<h3>Sequence Diagram</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant IDE as IDE/Extension
+    participant ContextHook as context-hook.js
+    participant Worker as Worker Service
+    participant DB as SQLite Database
+
+    User-&gt;&gt;IDE: Opens workspace / resumes session
+    IDE-&gt;&gt;ContextHook: Trigger SessionStart hook
+    ContextHook-&gt;&gt;ContextHook: Generate/reuse session_id
+    ContextHook-&gt;&gt;Worker: Health check (max 10s retry)
+
+    alt Worker Ready
+        ContextHook-&gt;&gt;Worker: GET /api/context/inject?project=X
+        Worker-&gt;&gt;DB: SELECT * FROM observations&lt;br/&gt;WHERE project=X&lt;br/&gt;ORDER BY created_at DESC&lt;br/&gt;LIMIT 50
+        DB--&gt;&gt;Worker: Last 50 observations
+        Worker--&gt;&gt;ContextHook: Context markdown
+        ContextHook--&gt;&gt;IDE: hookSpecificOutput.additionalContext
+        IDE-&gt;&gt;IDE: Inject context to Claude's prompt
+        IDE--&gt;&gt;User: Session ready with context
+    else Worker Not Ready
+        ContextHook--&gt;&gt;IDE: Empty context (graceful degradation)
+        IDE--&gt;&gt;User: Session ready without context
+    end
+
+    Note over User,DB: Total time: &lt;300ms (with health check)
+</code></pre>
+<h3>Context Hook (<code>context-hook.js</code>)</h3>
+<p><strong>Purpose</strong>: Inject context from previous sessions into Claude's initial context.</p>
+<p><strong>Input</strong> (via stdin):</p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;claude-session-123&quot;,
+  &quot;cwd&quot;: &quot;/path/to/project&quot;,
+  &quot;source&quot;: &quot;startup&quot;
+}
+</code></pre>
+<p><strong>Processing</strong>:</p>
+<ol>
+<li>Wait for worker to be available (health check, max 10 seconds)</li>
+<li>Call: <code>GET http://127.0.0.1:37777/api/context/inject?project={project}</code></li>
+<li>Return formatted context as <code>additionalContext</code> in <code>hookSpecificOutput</code></li>
+</ol>
+<p><strong>Output</strong> (via stdout):</p>
+<pre><code class="language-json">{
+  &quot;hookSpecificOutput&quot;: {
+    &quot;hookEventName&quot;: &quot;SessionStart&quot;,
+    &quot;additionalContext&quot;: &quot;&lt;&lt;formatted context markdown&gt;&gt;&quot;
+  }
+}
+</code></pre>
+<p><strong>Implementation</strong>: <code>src/hooks/context-hook.ts</code></p>
+<hr />
+<h2>Stage 2: UserPromptSubmit</h2>
+<p><strong>Timing</strong>: When user submits any prompt in a session</p>
+<p><strong>Hook</strong>: <code>new-hook.js</code></p>
+<h3>Sequence Diagram</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant IDE as IDE/Extension
+    participant NewHook as new-hook.js
+    participant DB as Direct SQLite Access
+    participant Worker as Worker Service
+
+    User-&gt;&gt;IDE: Submits prompt: &quot;Add login feature&quot;
+    IDE-&gt;&gt;NewHook: Trigger UserPromptSubmit&lt;br/&gt;{ session_id, cwd, prompt }
+
+    NewHook-&gt;&gt;NewHook: Extract project = basename(cwd)
+    NewHook-&gt;&gt;NewHook: Strip privacy tags&lt;br/&gt;&amp;lt;private&amp;gt;...&amp;lt;/private&amp;gt;
+
+    alt Prompt fully private (empty after stripping)
+        NewHook--&gt;&gt;IDE: Skip (don't save)
+    else Prompt has content
+        NewHook-&gt;&gt;DB: INSERT OR IGNORE INTO sdk_sessions&lt;br/&gt;(claude_session_id, project, first_user_prompt)
+        DB--&gt;&gt;NewHook: sessionDbId (new or existing)
+
+        NewHook-&gt;&gt;DB: UPDATE sdk_sessions&lt;br/&gt;SET prompt_counter = prompt_counter + 1&lt;br/&gt;WHERE id = sessionDbId
+        DB--&gt;&gt;NewHook: promptNumber (e.g., 1 for first, 2 for continuation)
+
+        NewHook-&gt;&gt;DB: INSERT INTO user_prompts&lt;br/&gt;(session_id, prompt_number, prompt)
+
+        NewHook-&gt;&gt;Worker: POST /sessions/{sessionDbId}/init&lt;br/&gt;{ project, userPrompt, promptNumber }&lt;br/&gt;(fire-and-forget, 2s timeout)
+        Worker--&gt;&gt;NewHook: 200 OK (or timeout)
+
+        NewHook--&gt;&gt;IDE: { continue: true, suppressOutput: true }
+        IDE--&gt;&gt;User: Prompt accepted
+    end
+
+    Note over NewHook,DB: Idempotent: Same session_id → same sessionDbId
+</code></pre>
+<p><strong>Key Pattern:</strong> The <code>INSERT OR IGNORE</code> ensures the same <code>session_id</code> always maps to the same <code>sessionDbId</code>, enabling conversation continuations.</p>
+<p><strong>Input</strong> (via stdin):</p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;claude-session-123&quot;,
+  &quot;cwd&quot;: &quot;/path/to/project&quot;,
+  &quot;prompt&quot;: &quot;User's actual prompt text&quot;
+}
+</code></pre>
+<p><strong>Processing Steps</strong>:</p>
+<pre><code class="language-typescript">// 1. Extract project name from working directory
+project = path.basename(cwd)
+
+// 2. Create or get database session (IDEMPOTENT)
+sessionDbId = db.createSDKSession(session_id, project, prompt)
+// INSERT OR IGNORE: Creates new row if first prompt, returns existing if continuation
+
+// 3. Increment prompt counter
+promptNumber = db.incrementPromptCounter(sessionDbId)
+// Returns 1 for first prompt, 2 for continuation, etc.
+
+// 4. Strip privacy tags
+cleanedPrompt = stripMemoryTagsFromPrompt(prompt)
+// Removes &lt;private&gt;...&lt;/private&gt; and &lt;claude-mem-context&gt;...&lt;/claude-mem-context&gt;
+
+// 5. Skip if fully private
+if (!cleanedPrompt || cleanedPrompt.trim() === '') {
+  return  // Don't save, don't call worker
+}
+
+// 6. Save user prompt to database
+db.saveUserPrompt(session_id, promptNumber, cleanedPrompt)
+
+// 7. Initialize session via worker HTTP
+POST http://127.0.0.1:37777/sessions/{sessionDbId}/init
+Body: { project, userPrompt, promptNumber }
+</code></pre>
+<p><strong>Output</strong>:</p>
+<pre><code class="language-json">{ &quot;continue&quot;: true, &quot;suppressOutput&quot;: true }
+</code></pre>
+<p><strong>Implementation</strong>: <code>src/hooks/new-hook.ts</code></p>
+<hr />
+<h2>Stage 3: PostToolUse</h2>
+<p><strong>Timing</strong>: After Claude uses any tool (Read, Bash, Grep, Write, etc.)</p>
+<p><strong>Hook</strong>: <code>save-hook.js</code></p>
+<h3>Sequence Diagram</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Claude as Claude AI
+    participant IDE as IDE/Extension
+    participant SaveHook as save-hook.js
+    participant Worker as Worker Service
+    participant Agent as SDK Agent
+    participant DB as SQLite + Chroma
+
+    Claude-&gt;&gt;IDE: Uses tool: Read(&quot;/src/auth.ts&quot;)
+    IDE-&gt;&gt;SaveHook: PostToolUse hook triggered&lt;br/&gt;{ session_id, tool_name, tool_input, tool_response }
+
+    SaveHook-&gt;&gt;SaveHook: Check skip list&lt;br/&gt;(TodoWrite, AskUserQuestion, etc.)
+
+    alt Tool in skip list
+        SaveHook--&gt;&gt;IDE: Discard (low-value tool)
+    else Tool allowed
+        SaveHook-&gt;&gt;SaveHook: Strip privacy tags from input/response
+
+        SaveHook-&gt;&gt;SaveHook: Ensure worker running&lt;br/&gt;(health check)
+
+        SaveHook-&gt;&gt;Worker: POST /api/sessions/observations&lt;br/&gt;{ claudeSessionId, tool_name, tool_input, tool_response, cwd }&lt;br/&gt;(fire-and-forget, 2s timeout)
+
+        SaveHook--&gt;&gt;IDE: { continue: true, suppressOutput: true }
+        IDE--&gt;&gt;Claude: Tool execution complete
+
+        Note over Worker,DB: Async path (doesn't block IDE)
+
+        Worker-&gt;&gt;Worker: createSDKSession(claudeSessionId)&lt;br/&gt;→ returns sessionDbId
+        Worker-&gt;&gt;Worker: Check if prompt was private&lt;br/&gt;(skip if fully private)
+        Worker-&gt;&gt;Agent: Queue observation for processing
+        Agent-&gt;&gt;Agent: Call Claude SDK to compress&lt;br/&gt;observation into structured format
+        Agent-&gt;&gt;DB: Save compressed observation&lt;br/&gt;to sdk_sessions table
+        Agent-&gt;&gt;DB: Sync to Chroma vector DB
+    end
+
+    Note over SaveHook,DB: Total sync time: ~2ms&lt;br/&gt;AI processing: 1-3s (async)
+</code></pre>
+<p><strong>Key Pattern:</strong> The hook returns immediately after HTTP POST. AI compression happens asynchronously in the worker without blocking Claude's tool execution.</p>
+<p><strong>Input</strong> (via stdin):</p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;claude-session-123&quot;,
+  &quot;cwd&quot;: &quot;/path/to/project&quot;,
+  &quot;tool_name&quot;: &quot;Read&quot;,
+  &quot;tool_input&quot;: { &quot;file_path&quot;: &quot;/src/index.ts&quot; },
+  &quot;tool_response&quot;: &quot;file contents...&quot;
+}
+</code></pre>
+<p><strong>Processing Steps</strong>:</p>
+<pre><code class="language-typescript">// 1. Check blocklist - skip low-value tools
+const SKIP_TOOLS = {
+  'ListMcpResourcesTool',  // MCP infrastructure noise
+  'SlashCommand',          // Command invocation
+  'Skill',                 // Skill invocation
+  'TodoWrite',             // Task management meta-tool
+  'AskUserQuestion'        // User interaction
+}
+
+if (SKIP_TOOLS[tool_name]) return
+
+// 2. Ensure worker is running
+await ensureWorkerRunning()
+
+// 3. Send to worker (fire-and-forget HTTP)
+POST http://127.0.0.1:37777/api/sessions/observations
+Body: {
+  claudeSessionId: session_id,
+  tool_name,
+  tool_input,
+  tool_response,
+  cwd
+}
+Timeout: 2000ms
+</code></pre>
+<p><strong>Worker Processing</strong>:</p>
+<ol>
+<li>Looks up or creates session: <code>createSDKSession(claudeSessionId, '', '')</code></li>
+<li>Gets prompt counter</li>
+<li>Checks privacy (skips if user prompt was entirely private)</li>
+<li>Strips memory tags from <code>tool_input</code> and <code>tool_response</code></li>
+<li>Queues observation for SDK agent processing</li>
+<li>SDK agent calls Claude to compress into structured observation</li>
+<li>Stores observation in database and syncs to Chroma</li>
+</ol>
+<p><strong>Output</strong>:</p>
+<pre><code class="language-json">{ &quot;continue&quot;: true, &quot;suppressOutput&quot;: true }
+</code></pre>
+<p><strong>Implementation</strong>: <code>src/hooks/save-hook.ts</code></p>
+<hr />
+<h2>Stage 4: Stop</h2>
+<p><strong>Timing</strong>: When user stops or pauses asking questions</p>
+<p><strong>Hook</strong>: <code>summary-hook.js</code></p>
+<h3>Sequence Diagram</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant IDE as IDE/Extension
+    participant SummaryHook as summary-hook.js
+    participant Worker as Worker Service
+    participant Agent as SDK Agent
+    participant DB as SQLite Database
+
+    User-&gt;&gt;IDE: Stops asking questions&lt;br/&gt;(pause, idle, or explicit stop)
+    IDE-&gt;&gt;SummaryHook: Stop hook triggered&lt;br/&gt;{ session_id, cwd, transcript_path }
+
+    SummaryHook-&gt;&gt;SummaryHook: Read transcript JSONL file
+    SummaryHook-&gt;&gt;SummaryHook: Extract last user message&lt;br/&gt;(type: &quot;user&quot;)
+    SummaryHook-&gt;&gt;SummaryHook: Extract last assistant message&lt;br/&gt;(type: &quot;assistant&quot;, filter &amp;lt;system-reminder&amp;gt;)
+
+    SummaryHook-&gt;&gt;Worker: POST /api/sessions/summarize&lt;br/&gt;{ claudeSessionId, last_user_message, last_assistant_message }&lt;br/&gt;(fire-and-forget, 2s timeout)
+
+    SummaryHook-&gt;&gt;Worker: POST /api/processing&lt;br/&gt;{ isProcessing: false }&lt;br/&gt;(stop spinner)
+
+    SummaryHook--&gt;&gt;IDE: { continue: true, suppressOutput: true }
+    IDE--&gt;&gt;User: Session paused/stopped
+
+    Note over Worker,DB: Async path
+
+    Worker-&gt;&gt;Worker: Lookup sessionDbId from claudeSessionId
+    Worker-&gt;&gt;Agent: Queue summarization request
+    Agent-&gt;&gt;Agent: Call Claude SDK with prompt:&lt;br/&gt;&quot;Summarize: request, investigated, learned, completed, next_steps&quot;
+    Agent-&gt;&gt;Agent: Parse XML response
+    Agent-&gt;&gt;DB: INSERT INTO session_summaries&lt;br/&gt;{ session_id, request, investigated, learned, completed, next_steps }
+    Agent-&gt;&gt;DB: Sync to Chroma (for semantic search)
+
+    Note over SummaryHook,DB: Total sync time: ~2ms&lt;br/&gt;AI summarization: 2-5s (async)
+</code></pre>
+<p><strong>Key Pattern:</strong> The summary is generated asynchronously and doesn't block the user from resuming work or closing the session.</p>
+<p><strong>Input</strong> (via stdin):</p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;claude-session-123&quot;,
+  &quot;cwd&quot;: &quot;/path/to/project&quot;,
+  &quot;transcript_path&quot;: &quot;/path/to/transcript.jsonl&quot;
+}
+</code></pre>
+<p><strong>Processing Steps</strong>:</p>
+<pre><code class="language-typescript">// 1. Extract last messages from transcript JSONL
+const lines = fs.readFileSync(transcript_path, 'utf-8').split('\n')
+// Find last user message (type: &quot;user&quot;)
+// Find last assistant message (type: &quot;assistant&quot;, filter &lt;system-reminder&gt; tags)
+
+// 2. Ensure worker is running
+await ensureWorkerRunning()
+
+// 3. Send summarization request (fire-and-forget HTTP)
+POST http://127.0.0.1:37777/api/sessions/summarize
+Body: {
+  claudeSessionId: session_id,
+  last_user_message: string,
+  last_assistant_message: string
+}
+Timeout: 2000ms
+
+// 4. Stop processing spinner
+POST http://127.0.0.1:37777/api/processing
+Body: { isProcessing: false }
+</code></pre>
+<p><strong>Worker Processing</strong>:</p>
+<ol>
+<li>Queues summarization for SDK agent</li>
+<li>Agent calls Claude to generate structured summary</li>
+<li>Summary stored in database with fields: <code>request</code>, <code>investigated</code>, <code>learned</code>, <code>completed</code>, <code>next_steps</code></li>
+</ol>
+<p><strong>Output</strong>:</p>
+<pre><code class="language-json">{ &quot;continue&quot;: true, &quot;suppressOutput&quot;: true }
+</code></pre>
+<p><strong>Implementation</strong>: <code>src/hooks/summary-hook.ts</code></p>
+<hr />
+<h2>Stage 5: SessionEnd</h2>
+<p><strong>Timing</strong>: When Claude Code session closes (exit, clear, logout, etc.)</p>
+<p><strong>Hook</strong>: <code>cleanup-hook.js</code></p>
+<h3>Sequence Diagram</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant IDE as IDE/Extension
+    participant CleanupHook as cleanup-hook.js
+    participant Worker as Worker Service
+    participant DB as SQLite Database
+    participant SSE as SSE Clients (Viewer UI)
+
+    User-&gt;&gt;IDE: Closes session&lt;br/&gt;(exit, clear, logout)
+    IDE-&gt;&gt;CleanupHook: SessionEnd hook triggered&lt;br/&gt;{ session_id, cwd, transcript_path, reason }
+
+    CleanupHook-&gt;&gt;Worker: POST /api/sessions/complete&lt;br/&gt;{ claudeSessionId, reason }&lt;br/&gt;(fire-and-forget, 2s timeout)
+
+    CleanupHook--&gt;&gt;IDE: { continue: true, suppressOutput: true }
+    IDE--&gt;&gt;User: Session closed
+
+    Note over Worker,SSE: Async path
+
+    Worker-&gt;&gt;Worker: Lookup sessionDbId from claudeSessionId
+    Worker-&gt;&gt;DB: UPDATE sdk_sessions&lt;br/&gt;SET status = 'completed', completed_at = NOW()&lt;br/&gt;WHERE claude_session_id = claudeSessionId
+    Worker-&gt;&gt;SSE: Broadcast session completion event&lt;br/&gt;(for live viewer UI updates)
+
+    SSE--&gt;&gt;SSE: Update UI to show session as completed
+
+    Note over CleanupHook,SSE: Total sync time: ~2ms
+</code></pre>
+<p><strong>Key Pattern:</strong> Session completion is tracked for analytics and UI updates, but doesn't prevent the user from closing the IDE.</p>
+<p><strong>Input</strong> (via stdin):</p>
+<pre><code class="language-json">{
+  &quot;session_id&quot;: &quot;claude-session-123&quot;,
+  &quot;cwd&quot;: &quot;/path/to/project&quot;,
+  &quot;transcript_path&quot;: &quot;/path/to/transcript.jsonl&quot;,
+  &quot;reason&quot;: &quot;exit&quot;
+}
+</code></pre>
+<p><strong>Processing Steps</strong>:</p>
+<pre><code class="language-typescript">// Send session complete (fire-and-forget HTTP)
+POST http://127.0.0.1:37777/api/sessions/complete
+Body: {
+  claudeSessionId: session_id,
+  reason: string  // 'exit' | 'clear' | 'logout' | 'prompt_input_exit' | 'other'
+}
+Timeout: 2000ms
+</code></pre>
+<p><strong>Worker Processing</strong>:</p>
+<ol>
+<li>Finds session by <code>claudeSessionId</code></li>
+<li>Marks session as 'completed' in database</li>
+<li>Broadcasts session completion event to SSE clients</li>
+</ol>
+<p><strong>Output</strong>:</p>
+<pre><code class="language-json">{ &quot;continue&quot;: true, &quot;suppressOutput&quot;: true }
+</code></pre>
+<p><strong>Implementation</strong>: <code>src/hooks/cleanup-hook.ts</code></p>
+<hr />
+<h2>Session State Machine</h2>
+<p>Understanding session lifecycle and state transitions:</p>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; Initialized: SessionStart hook&lt;br/&gt;(generate session_id)
+
+    Initialized --&gt; Active: UserPromptSubmit&lt;br/&gt;(first prompt)
+
+    Active --&gt; Active: UserPromptSubmit&lt;br/&gt;(continuation prompts)&lt;br/&gt;promptNumber++
+
+    Active --&gt; ObservationQueued: PostToolUse hook&lt;br/&gt;(tool execution captured)
+
+    ObservationQueued --&gt; Active: Observation processed&lt;br/&gt;(async, non-blocking)
+
+    Active --&gt; Summarizing: Stop hook&lt;br/&gt;(user pauses/stops)
+
+    Summarizing --&gt; Active: User resumes&lt;br/&gt;(new prompt submitted)
+
+    Summarizing --&gt; Completed: SessionEnd hook&lt;br/&gt;(session closes)
+
+    Active --&gt; Completed: SessionEnd hook&lt;br/&gt;(session closes)
+
+    Completed --&gt; [*]
+
+    note right of Active
+        session_id: constant (e.g., &quot;claude-session-abc123&quot;)
+        sessionDbId: constant (e.g., 42)
+        promptNumber: increments (1, 2, 3, ...)
+        All operations use same sessionDbId
+    end note
+
+    note right of ObservationQueued
+        Fire-and-forget HTTP
+        AI compression happens async
+        IDE never blocks
+    end note
+</code></pre>
+<p><strong>Key Insights:</strong></p>
+<ul>
+<li><code>session_id</code> never changes during a conversation</li>
+<li><code>sessionDbId</code> is the database primary key for the session</li>
+<li><code>promptNumber</code> increments with each user prompt</li>
+<li>State transitions are non-blocking (fire-and-forget pattern)</li>
+</ul>
+<hr />
+<h2>Database Schema</h2>
+<p>The session-centric data model that enables cross-session memory:</p>
+<pre><code class="language-mermaid">erDiagram
+    SDK_SESSIONS ||--o{ USER_PROMPTS : &quot;has many&quot;
+    SDK_SESSIONS ||--o{ OBSERVATIONS : &quot;has many&quot;
+    SDK_SESSIONS ||--o{ SESSION_SUMMARIES : &quot;has many&quot;
+
+    SDK_SESSIONS {
+        integer id PK &quot;Auto-increment primary key&quot;
+        text claude_session_id UK &quot;From IDE (e.g., 'claude-session-123')&quot;
+        text project &quot;Project name from cwd basename&quot;
+        text first_user_prompt &quot;Initial prompt that started session&quot;
+        integer prompt_counter &quot;Increments with each UserPromptSubmit&quot;
+        text status &quot;initialized | active | completed&quot;
+        datetime created_at
+        datetime completed_at
+    }
+
+    USER_PROMPTS {
+        integer id PK
+        integer session_id FK &quot;References SDK_SESSIONS.id&quot;
+        integer prompt_number &quot;1, 2, 3, ... matches prompt_counter&quot;
+        text prompt &quot;User's actual prompt (tags stripped)&quot;
+        datetime created_at
+    }
+
+    OBSERVATIONS {
+        integer id PK
+        integer session_id FK &quot;References SDK_SESSIONS.id&quot;
+        integer prompt_number &quot;Which prompt this observation belongs to&quot;
+        text tool_name &quot;Read, Bash, Grep, Write, etc.&quot;
+        text tool_input_json &quot;Stripped of privacy tags&quot;
+        text tool_response_text &quot;Stripped of privacy tags&quot;
+        text compressed_observation &quot;AI-generated structured observation&quot;
+        datetime created_at
+    }
+
+    SESSION_SUMMARIES {
+        integer id PK
+        integer session_id FK &quot;References SDK_SESSIONS.id&quot;
+        text request &quot;What user requested&quot;
+        text investigated &quot;What was explored&quot;
+        text learned &quot;What was discovered&quot;
+        text completed &quot;What was accomplished&quot;
+        text next_steps &quot;What remains to be done&quot;
+        datetime created_at
+    }
+</code></pre>
+<p><strong>Idempotency Pattern:</strong></p>
+<pre><code class="language-sql">-- This ensures same session_id always maps to same sessionDbId
+INSERT OR IGNORE INTO sdk_sessions (claude_session_id, project, first_user_prompt)
+VALUES (?, ?, ?)
+RETURNING id;
+
+-- If already exists, returns existing row
+-- If new, creates and returns new row
+</code></pre>
+<p><strong>Foreign Key Cascade:</strong></p>
+<p>All child tables (user_prompts, observations, session_summaries) use <code>session_id</code> foreign key referencing <code>SDK_SESSIONS.id</code>. This ensures:</p>
+<ul>
+<li>All data for a session is queryable by sessionDbId</li>
+<li>Session deletions cascade to child tables</li>
+<li>Efficient joins for context injection</li>
+</ul>
+<hr />
+<h2>Privacy &amp; Tag Stripping</h2>
+<h3>Dual-Tag System</h3>
+<pre><code class="language-typescript">// User-Level Privacy Control (manual)
+&lt;private&gt;sensitive data&lt;/private&gt;
+
+// System-Level Recursion Prevention (auto-injected)
+&lt;claude-mem-context&gt;...&lt;/claude-mem-context&gt;
+</code></pre>
+<h3>Processing Pipeline</h3>
+<p><strong>Location</strong>: <code>src/utils/tag-stripping.ts</code></p>
+<pre><code class="language-typescript">// Called by: new-hook.js (user prompts)
+stripMemoryTagsFromPrompt(prompt: string): string
+
+// Called by: save-hook.js (tool_input, tool_response)
+stripMemoryTagsFromJson(jsonString: string): string
+</code></pre>
+<p><strong>Execution Order</strong> (Edge Processing):</p>
+<ol>
+<li><code>new-hook.js</code> strips tags from user prompt before saving</li>
+<li><code>save-hook.js</code> strips tags from tool data before sending to worker</li>
+<li>Worker strips tags again (defense in depth) before storing</li>
+</ol>
+<hr />
+<h2>SDK Agent Processing</h2>
+<h3>Query Loop (Event-Driven)</h3>
+<p><strong>Location</strong>: <code>src/services/worker/SDKAgent.ts</code></p>
+<pre><code class="language-typescript">async startSession(session: ActiveSession, worker?: any) {
+  // 1. Create event-driven message generator
+  const messageGenerator = this.createMessageGenerator(session)
+
+  // 2. Run Agent SDK query loop
+  const queryResult = query({
+    prompt: messageGenerator,
+    options: {
+      model: 'claude-sonnet-4-6',
+      disallowedTools: ['Bash', 'Read', 'Write', ...],  // Observer-only
+      abortController: session.abortController
+    }
+  })
+
+  // 3. Process responses
+  for await (const message of queryResult) {
+    if (message.type === 'assistant') {
+      await this.processSDKResponse(session, text, worker)
+    }
+  }
+}
+</code></pre>
+<h3>Message Types</h3>
+<p>The message generator yields three types of prompts:</p>
+<ol>
+<li><strong>Initial Prompt</strong> (prompt #1): Full instructions for starting observation</li>
+<li><strong>Continuation Prompt</strong> (prompt #2+): Context-only for continuing work</li>
+<li><strong>Observation Prompts</strong>: Tool use data to compress into observations</li>
+<li><strong>Summary Prompts</strong>: Session data to summarize</li>
+</ol>
+<hr />
+<h2>Implementation Checklist</h2>
+<p>For developers implementing this pattern on other platforms:</p>
+<h3>Hook Registration</h3>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Define hook entry points in platform config</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>5 hook types: SessionStart (2 hooks), UserPromptSubmit, PostToolUse, Stop, SessionEnd</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Pass <code>session_id</code>, <code>cwd</code>, and context-specific data</li>
+</ul>
+<h3>Database Schema</h3>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>SQLite with WAL mode</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>4 main tables: <code>sdk_sessions</code>, <code>user_prompts</code>, <code>observations</code>, <code>session_summaries</code></li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Indices for common queries</li>
+</ul>
+<h3>Worker Service</h3>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>HTTP server on configurable port (default 37777)</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Bun runtime for process management</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>3 core services: SessionManager, SDKAgent, DatabaseManager</li>
+</ul>
+<h3>Hook Implementation</h3>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>context-hook: <code>GET /api/context/inject</code> (with health check)</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>new-hook: createSDKSession, saveUserPrompt, <code>POST /sessions/{id}/init</code></li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>save-hook: Skip low-value tools, <code>POST /api/sessions/observations</code></li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>summary-hook: Parse transcript, <code>POST /api/sessions/summarize</code></li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>cleanup-hook: <code>POST /api/sessions/complete</code></li>
+</ul>
+<h3>Privacy &amp; Tags</h3>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Implement <code>stripMemoryTagsFromPrompt()</code> and <code>stripMemoryTagsFromJson()</code></li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Process tags at hook layer (edge processing)</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Max tag count = 100 (ReDoS protection)</li>
+</ul>
+<h3>SDK Integration</h3>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Call Claude Agent SDK to process observations/summaries</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Parse XML responses for structured data</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Store to database + sync to vector DB</li>
+</ul>
+<hr />
+<h2>Key Design Principles</h2>
+<ol>
+<li><strong>Session ID is Source of Truth</strong>: Never generate your own session IDs</li>
+<li><strong>Idempotent Database Operations</strong>: Use <code>INSERT OR IGNORE</code> for session creation</li>
+<li><strong>Edge Processing for Privacy</strong>: Strip tags at hook layer before data reaches worker</li>
+<li><strong>Fire-and-Forget for Non-Blocking</strong>: HTTP timeouts prevent IDE blocking</li>
+<li><strong>Event-Driven, Not Polling</strong>: Zero-latency queue notification to SDK agent</li>
+<li><strong>Everything Saves Always</strong>: No &quot;orphaned&quot; sessions</li>
+</ol>
+<hr />
+<h2>Common Pitfalls</h2>
+<table>
+<thead>
+<tr>
+  <th>Problem</th>
+  <th>Root Cause</th>
+  <th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Session ID mismatch</td>
+  <td>Different <code>session_id</code> used in different hooks</td>
+  <td>Always use ID from hook input</td>
+</tr>
+<tr>
+  <td>Duplicate sessions</td>
+  <td>Creating new session instead of using existing</td>
+  <td>Use <code>INSERT OR IGNORE</code> with <code>session_id</code> as key</td>
+</tr>
+<tr>
+  <td>Blocking IDE</td>
+  <td>Waiting for full response</td>
+  <td>Use fire-and-forget with short timeouts</td>
+</tr>
+<tr>
+  <td>Memory tags in DB</td>
+  <td>Stripping tags in wrong layer</td>
+  <td>Strip at hook layer, before HTTP send</td>
+</tr>
+<tr>
+  <td>Worker not found</td>
+  <td>Health check too fast</td>
+  <td>Add retry loop with exponential backoff</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Related Documentation</h2>
+<ul>
+<li><a href="/architecture/worker-service">Worker Service</a> - HTTP API and async processing</li>
+<li><a href="/architecture/database">Database Schema</a> - SQLite tables and FTS5 search</li>
+<li><a href="/usage/private-tags">Privacy Tags</a> - Using <code>&lt;private&gt;</code> tags</li>
+<li><a href="/troubleshooting">Troubleshooting</a> - Common hook issues</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/architecture/hooks.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursor Integration — manymems docs</title>
+  <meta name="description" content="Persistent AI memory for Cursor IDE - free tier options available" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Persistent AI memory for Cursor IDE - free tier options available</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>Cursor Integration</h1>
+<blockquote>
+<p><strong>Your AI stops forgetting. Give Cursor persistent memory.</strong></p>
+</blockquote>
+<p>Every Cursor session starts fresh - your AI doesn't remember what it worked on yesterday. Claude-mem changes that. Your agent builds cumulative knowledge about your codebase, decisions, and patterns over time.</p>
+<h2>How It Works</h2>
+<p>Claude-mem integrates with Cursor through native hooks:</p>
+<ol>
+<li><strong>Session hooks</strong> capture tool usage, file edits, and shell commands</li>
+<li><strong>AI extraction</strong> compresses observations into semantic summaries</li>
+<li><strong>Context injection</strong> loads relevant history into each new session</li>
+<li><strong>Memory viewer</strong> at http://localhost:37777 shows your knowledge base</li>
+</ol>
+<h2>Installation Paths</h2>
+<p>Choose the installation method that fits your setup:</p>
+<h3>Path A: Cursor-Only Users (No Claude Code)</h3>
+<p>If you're using Cursor without a Claude Code subscription:</p>
+<pre><code class="language-bash"># Clone and build
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem &amp;&amp; bun install &amp;&amp; bun run build
+
+# Run interactive setup wizard
+bun run cursor:setup
+</code></pre>
+<p>The setup wizard will:</p>
+<ul>
+<li>Detect you don't have Claude Code</li>
+<li>Help you choose and configure a free AI provider (Gemini recommended)</li>
+<li>Install hooks automatically</li>
+<li>Start the worker service</li>
+</ul>
+<p><strong>Detailed guides:</strong></p>
+<ul>
+<li><a href="/cursor/gemini-setup">Gemini Setup</a> - Recommended free option (1500 req/day)</li>
+<li><a href="/cursor/openrouter-setup">OpenRouter Setup</a> - 100+ models including free options</li>
+</ul>
+<h3>Path B: Claude Code Users</h3>
+<p>If you have Claude Code installed:</p>
+<pre><code class="language-bash"># Install the plugin (if not already)
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+
+# Install Cursor hooks
+claude-mem cursor install
+</code></pre>
+<p>The plugin uses Claude's SDK by default but you can switch to Gemini or OpenRouter anytime.</p>
+<h2>Prerequisites</h2>
+</AccordionGroup>
+
+<h2>Quick Commands Reference</h2>
+<p>After installation, these commands are available from the claude-mem directory:</p>
+<table>
+<thead>
+<tr>
+  <th>Command</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>bun run cursor:setup</code></td>
+  <td>Interactive setup wizard</td>
+</tr>
+<tr>
+  <td><code>bun run cursor:install</code></td>
+  <td>Install Cursor hooks</td>
+</tr>
+<tr>
+  <td><code>bun run cursor:uninstall</code></td>
+  <td>Remove Cursor hooks</td>
+</tr>
+<tr>
+  <td><code>bun run cursor:status</code></td>
+  <td>Check hook installation status</td>
+</tr>
+<tr>
+  <td><code>bun run worker:start</code></td>
+  <td>Start the worker service</td>
+</tr>
+<tr>
+  <td><code>bun run worker:stop</code></td>
+  <td>Stop the worker service</td>
+</tr>
+<tr>
+  <td><code>bun run worker:status</code></td>
+  <td>Check worker status</td>
+</tr>
+</tbody>
+</table>
+<h2>Verifying Installation</h2>
+<p>After setup, verify everything is working:</p>
+<ol>
+<li><p><strong>Check worker status:</strong></p>
+<pre><code class="language-bash">bun run worker:status
+</code></pre>
+</li>
+<li><p><strong>Check hook installation:</strong></p>
+<pre><code class="language-bash">bun run cursor:status
+</code></pre>
+</li>
+<li><p><strong>Open the memory viewer:</strong>
+Open http://localhost:37777 in your browser</p>
+</li>
+<li><p><strong>Restart Cursor</strong> and start a coding session - you should see context being captured</p>
+</li>
+</ol>
+<h2>Provider Comparison</h2>
+<table>
+<thead>
+<tr>
+  <th>Provider</th>
+  <th>Cost</th>
+  <th>Rate Limit</th>
+  <th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Gemini</td>
+  <td>Free tier</td>
+  <td>1500 req/day</td>
+  <td>Individual use, getting started</td>
+</tr>
+<tr>
+  <td>OpenRouter</td>
+  <td>Pay-per-use + free models</td>
+  <td>Varies by model</td>
+  <td>Model variety, high volume</td>
+</tr>
+<tr>
+  <td>Claude SDK</td>
+  <td>Included with Claude Code</td>
+  <td>Unlimited</td>
+  <td>Claude Code subscribers</td>
+</tr>
+</tbody>
+</table>
+<h2>Troubleshooting</h2>
+<h3>Worker not starting</h3>
+<pre><code class="language-bash"># Check if port is in use
+lsof -i :37777
+
+# Force restart
+bun run worker:stop &amp;&amp; bun run worker:start
+
+# Check logs
+bun run worker:logs
+</code></pre>
+<h3>Hooks not firing</h3>
+<ol>
+<li>Restart Cursor IDE after installation</li>
+<li>Check hooks are installed: <code>bun run cursor:status</code></li>
+<li>Verify hooks.json exists in <code>.cursor/</code> directory</li>
+</ol>
+<h3>No context appearing</h3>
+<ol>
+<li>Ensure worker is running: <code>bun run worker:status</code></li>
+<li>Check that you have observations: visit http://localhost:37777</li>
+<li>Verify your API key is configured correctly</li>
+</ol>
+<h2>Next Steps</h2>
+<ul>
+<li><a href="/cursor/gemini-setup">Gemini Setup Guide</a> - Detailed free tier setup</li>
+<li><a href="/cursor/openrouter-setup">OpenRouter Setup Guide</a> - Configure OpenRouter</li>
+<li><a href="../configuration">Configuration Reference</a> - All settings options</li>
+<li><a href="../troubleshooting">Troubleshooting</a> - Common issues and solutions</li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/cursor.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiteLLM Gateway — manymems docs</title>
+  <meta name="description" content="Route claude-mem&#39;s Claude Agent SDK worker through LiteLLM while keeping one agentic execution path" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-logo" aria-label="manymems home">
+        <span class="logo-mark">M</span>
+        <span class="logo-name">manymems</span>
+        <span class="logo-tag">docs</span>
+      </a>
+      <nav class="topbar-actions">
+        <a href="http://localhost:37778" class="btn-dashboard" target="_blank" rel="noopener">
+          Open Dashboard &rarr;
+        </a>
+        <a href="https://github.com/chicago-joe/manymems" class="topbar-icon-link" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="main-content">
+      
+<article class="doc-article">
+  <header class="doc-header">
+    
+    <p class="doc-description">Route claude-mem&#39;s Claude Agent SDK worker through LiteLLM while keeping one agentic execution path</p>
+    
+  </header>
+  <div class="doc-body prose">
+    <h1>LiteLLM Gateway</h1>
+<p>claude-mem can route its background memory agent through a LiteLLM proxy. This lets teams keep claude-mem's Claude Agent SDK workflow while using LiteLLM for model routing, centralized credentials, usage tracking, budgets, audit logs, and provider failover.</p>
+<p>The important detail: claude-mem does <strong>not</strong> call LiteLLM with the OpenAI client directly. claude-mem still uses the Claude Agent SDK, and the SDK sends Anthropic-format requests to LiteLLM. LiteLLM then translates those requests to the upstream model provider you configured.</p>
+<pre><code class="language-text">Claude Code session
+  -&gt; claude-mem hooks
+  -&gt; claude-mem worker
+  -&gt; Claude Agent SDK subprocess
+  -&gt; ANTHROPIC_BASE_URL=http://localhost:4000
+  -&gt; LiteLLM proxy
+  -&gt; OpenAI / Azure / Vertex / Bedrock / OpenRouter / local model
+</code></pre>
+<p>This keeps the memory agent on one implementation path. The Claude provider, knowledge agents, session resume behavior, XML observation prompts, and queue retry logic all continue to use the same SDK code path whether the upstream model is Anthropic or routed through LiteLLM.</p>
+<h2>When to Use This</h2>
+<p>Use LiteLLM gateway mode when you want:</p>
+<ul>
+<li>A single organization-level LLM gateway for claude-mem traffic</li>
+<li>Provider routing without changing claude-mem source code</li>
+<li>Centralized API keys instead of storing provider keys in each developer's claude-mem settings</li>
+<li>LiteLLM budgets, rate limits, logging, fallback routing, or virtual keys</li>
+<li>A non-Anthropic upstream model while preserving the Claude Agent SDK execution path used by claude-mem</li>
+</ul>
+<p>Use the native <a href="../usage/openrouter-provider">OpenRouter Provider</a> or <a href="../usage/gemini-provider">Gemini Provider</a> instead if you want claude-mem's REST providers directly and do not need the Claude Agent SDK path.</p>
+<h2>Architecture</h2>
+<h3>One Agent Path</h3>
+<p>The LiteLLM integration is intentionally small. There is no custom LiteLLM provider, no Python handler, and no OpenAI-compatible server embedded in claude-mem.</p>
+<p>At runtime:</p>
+<ol>
+<li>The installer or user writes gateway settings to <code>~/.claude-mem/.env</code>.</li>
+<li><code>~/.claude-mem/settings.json</code> keeps <code>CLAUDE_MEM_PROVIDER</code> set to <code>claude</code>.</li>
+<li>The worker starts the Claude Agent SDK with an isolated environment.</li>
+<li>The SDK reads <code>ANTHROPIC_BASE_URL</code> and <code>ANTHROPIC_AUTH_TOKEN</code>.</li>
+<li>LiteLLM receives the SDK's Anthropic-format request.</li>
+<li>LiteLLM maps the request to the upstream provider and model configured in LiteLLM.</li>
+<li>The SDK response is parsed by the normal claude-mem observation pipeline.</li>
+</ol>
+<p>The code paths involved are:</p>
+<table>
+<thead>
+<tr>
+  <th>Layer</th>
+  <th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>src/npx-cli/commands/install.ts</code></td>
+  <td>Prompts for &quot;LiteLLM or custom gateway&quot;, stores the gateway URL/token, and allows custom gateway model names</td>
+</tr>
+<tr>
+  <td><code>src/shared/EnvManager.ts</code></td>
+  <td>Stores credentials in <code>~/.claude-mem/.env</code>, blocks shell-leaked auth vars, and injects only explicit claude-mem credentials</td>
+</tr>
+<tr>
+  <td><code>src/services/worker/ClaudeProvider.ts</code></td>
+  <td>Starts the Claude Agent SDK for observation extraction with the isolated environment</td>
+</tr>
+<tr>
+  <td><code>src/services/worker/knowledge/KnowledgeAgent.ts</code></td>
+  <td>Uses the same isolated SDK path for knowledge corpus Q&amp;A</td>
+</tr>
+</tbody>
+</table>
+<h3>Why <code>CLAUDE_MEM_PROVIDER</code> Stays <code>claude</code></h3>
+<p>LiteLLM is a gateway for the Claude Agent SDK path, not a fourth claude-mem provider.</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;claude&quot;,
+  &quot;CLAUDE_MEM_CLAUDE_AUTH_METHOD&quot;: &quot;gateway&quot;,
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;claude-haiku-4-5-20251001&quot;
+}
+</code></pre>
+<p>Keeping the provider as <code>claude</code> matters because the worker should continue to use <code>ClaudeProvider</code>, not the native Gemini or OpenRouter REST providers. The gateway URL changes where the SDK sends model traffic; it does not change how claude-mem manages memory sessions.</p>
+<h2>Configure LiteLLM</h2>
+<p>LiteLLM must expose an Anthropic-compatible endpoint for Claude Code / Claude Agent SDK traffic. Anthropic's gateway guidance recommends the unified LiteLLM endpoint as the normal setup:</p>
+<pre><code class="language-bash">
+</code></pre>
+<p>For claude-mem, that value goes in <code>~/.claude-mem/.env</code>, not your shell, so the background worker uses it consistently across restarts.</p>
+<h3>Minimal LiteLLM Example</h3>
+<p>Create a LiteLLM config that defines the model name claude-mem will request:</p>
+<pre><code class="language-yaml"># litellm-config.yaml
+model_list:
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  master_key: sk-litellm-local
+</code></pre>
+<p>Start LiteLLM:</p>
+<pre><code class="language-bash">OPENAI_API_KEY=sk-your-openai-key \
+litellm --config litellm-config.yaml --host 127.0.0.1 --port 4000
+</code></pre>
+<p>In this example, claude-mem asks the SDK for <code>claude-haiku-4-5-20251001</code>, LiteLLM accepts that model alias, and LiteLLM forwards the request to <code>openai/gpt-4o-mini</code>.</p>
+<h2>Configure claude-mem</h2>
+<h3>Option 1: Installer</h3>
+<p>Run the installer:</p>
+<pre><code class="language-bash">npx claude-mem install
+</code></pre>
+<p>Choose:</p>
+<ol>
+<li><code>Claude Agent SDK</code></li>
+<li><code>API key or gateway</code></li>
+<li><code>LiteLLM or custom gateway</code></li>
+<li>Your LiteLLM URL, for example <code>http://127.0.0.1:4000</code></li>
+<li>Your LiteLLM key/token if the proxy requires one</li>
+<li>The model alias LiteLLM should receive</li>
+</ol>
+<p>The installer stores provider settings in <code>~/.claude-mem/settings.json</code> and gateway credentials in <code>~/.claude-mem/.env</code>.</p>
+<h3>Option 2: Manual Files</h3>
+<p>Edit <code>~/.claude-mem/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_PROVIDER&quot;: &quot;claude&quot;,
+  &quot;CLAUDE_MEM_CLAUDE_AUTH_METHOD&quot;: &quot;gateway&quot;,
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;claude-haiku-4-5-20251001&quot;
+}
+</code></pre>
+<p>Edit <code>~/.claude-mem/.env</code>:</p>
+<pre><code class="language-bash"># ~/.claude-mem/.env
+ANTHROPIC_BASE_URL=http://127.0.0.1:4000
+ANTHROPIC_AUTH_TOKEN=sk-litellm-local
+</code></pre>
+<p>If your LiteLLM proxy does not require authentication, omit <code>ANTHROPIC_AUTH_TOKEN</code>.</p>
+<p>Restart the worker after manual edits:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+<h2>Environment Isolation</h2>
+<p>claude-mem deliberately does not trust whatever Anthropic credentials happen to be exported in your shell or project <code>.env</code> file.</p>
+<p>The worker blocks inherited <code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_AUTH_TOKEN</code>, and stale <code>CLAUDE_CODE_OAUTH_TOKEN</code> values. It then re-injects only the credentials stored in <code>~/.claude-mem/.env</code>.</p>
+<p>This avoids two common failure modes:</p>
+<ul>
+<li>A project-level <code>ANTHROPIC_API_KEY</code> silently bypasses LiteLLM and bills the public Anthropic API.</li>
+<li>An expired Claude Code OAuth token overrides a configured gateway token and causes confusing auth failures.</li>
+</ul>
+<p>If <code>ANTHROPIC_BASE_URL</code>, <code>ANTHROPIC_AUTH_TOKEN</code>, or <code>ANTHROPIC_API_KEY</code> is present in <code>~/.claude-mem/.env</code>, the worker treats that as explicit gateway/API configuration and skips Claude OAuth lookup. This prevents a configured gateway from falling back to <code>api.anthropic.com</code>.</p>
+<h2>Model Names</h2>
+<p><code>CLAUDE_MEM_MODEL</code> is passed through to the Claude Agent SDK. In gateway mode, claude-mem allows any non-empty model string because the valid model list is owned by LiteLLM.</p>
+<p>Recommended pattern:</p>
+<pre><code class="language-yaml">model_list:
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+</code></pre>
+<p>Then keep:</p>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;claude-haiku-4-5-20251001&quot;
+}
+</code></pre>
+<p>Alternatively, use a descriptive custom alias:</p>
+<pre><code class="language-yaml">model_list:
+  - model_name: memory-compressor
+    litellm_params:
+      model: azure/gpt-4o-mini-memory
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: &quot;2024-10-21&quot;
+</code></pre>
+<pre><code class="language-json">{
+  &quot;CLAUDE_MEM_MODEL&quot;: &quot;memory-compressor&quot;
+}
+</code></pre>
+<h2>Request Flow</h2>
+<p>When a Claude Code session produces transcript events, claude-mem's worker queues them for observation extraction. In gateway mode the extraction flow is:</p>
+<ol>
+<li>The worker loads pending messages for a memory session.</li>
+<li><code>ClaudeProvider</code> builds the observation prompt and selected model.</li>
+<li><code>buildIsolatedEnvWithFreshOAuth()</code> loads <code>~/.claude-mem/.env</code>.</li>
+<li>The SDK subprocess starts with <code>ANTHROPIC_BASE_URL</code> pointing at LiteLLM.</li>
+<li>LiteLLM receives the Anthropic-format request.</li>
+<li>LiteLLM routes to the configured upstream model.</li>
+<li>The SDK streams the assistant response back to the worker.</li>
+<li>claude-mem parses observations, stores them in SQLite, and syncs searchable embeddings.</li>
+</ol>
+<p>The knowledge-agent APIs use the same gateway environment, so corpus priming and corpus Q&amp;A route through LiteLLM too.</p>
+<h2>What LiteLLM Does and Does Not Replace</h2>
+<p>LiteLLM replaces:</p>
+<ul>
+<li>Upstream model selection</li>
+<li>Provider credentials</li>
+<li>Gateway-level budgets and rate limits</li>
+<li>Gateway-level logging and auditing</li>
+<li>Optional routing/fallback policies inside LiteLLM</li>
+</ul>
+<p>LiteLLM does not replace:</p>
+<ul>
+<li>claude-mem's worker process</li>
+<li>The Claude Agent SDK subprocess</li>
+<li>claude-mem's observation XML format</li>
+<li>SQLite storage</li>
+<li>Chroma/vector sync</li>
+<li>Hook installation</li>
+<li>Session resume handling inside claude-mem</li>
+</ul>
+<h2>Verification</h2>
+<p>Check claude-mem's worker logs:</p>
+<pre><code class="language-bash">npm run worker:logs
+</code></pre>
+<p>You should see SDK startup logs that report gateway auth, followed by normal observation processing.</p>
+<p>Check LiteLLM's logs for a corresponding request to the configured model alias. If LiteLLM never receives traffic, confirm:</p>
+<ul>
+<li><code>CLAUDE_MEM_PROVIDER</code> is <code>claude</code></li>
+<li><code>CLAUDE_MEM_CLAUDE_AUTH_METHOD</code> is <code>gateway</code></li>
+<li><code>ANTHROPIC_BASE_URL</code> is in <code>~/.claude-mem/.env</code></li>
+<li>The worker was restarted after manual edits</li>
+<li>The LiteLLM URL does not include an extra <code>/v1</code> suffix for the unified Anthropic endpoint</li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>LiteLLM returns &quot;model not found&quot;</h3>
+<p>The model name sent by claude-mem does not match a LiteLLM <code>model_name</code>. Make <code>CLAUDE_MEM_MODEL</code> and the LiteLLM alias match exactly.</p>
+<h3>claude-mem still uses Anthropic directly</h3>
+<p>Check <code>~/.claude-mem/.env</code>. Gateway settings must be stored there. Shell exports are not the reliable configuration source for the worker.</p>
+<p>Also make sure <code>ANTHROPIC_BASE_URL</code> is present. A token alone authenticates a gateway, but the base URL is what redirects traffic away from the default Anthropic endpoint.</p>
+<h3>Authentication fails</h3>
+<p>If LiteLLM uses a master key or virtual key, store it as <code>ANTHROPIC_AUTH_TOKEN</code> in <code>~/.claude-mem/.env</code>. The Claude Agent SDK sends this value as gateway authorization.</p>
+<p>If you previously configured a direct Anthropic API key, remove <code>ANTHROPIC_API_KEY</code> from <code>~/.claude-mem/.env</code> for gateway mode unless your gateway explicitly expects that variable.</p>
+<h3>Requests fail after changing files</h3>
+<p>Restart the worker:</p>
+<pre><code class="language-bash">npm run worker:restart
+</code></pre>
+<p>The SDK environment is built when SDK subprocesses are spawned. Restarting guarantees the next memory agent process sees the new gateway values.</p>
+<h3>Tool use behaves differently than full Claude Code</h3>
+<p>claude-mem's memory worker disables file and shell tools for observation extraction. The LiteLLM gateway is only handling the model call used to compress and summarize memory; it is not a replacement for your interactive Claude Code tool loop.</p>
+<h2>Related</h2>
+<ul>
+<li><a href="custom-anthropic-backends">Custom Anthropic-Compatible Backends</a></li>
+<li><a href="../configuration">Configuration</a></li>
+<li><a href="../architecture/worker-service">Worker Service Architecture</a></li>
+<li><a href="https://docs.anthropic.com/en/docs/claude-code/llm-gateway">Anthropic LLM gateway configuration</a></li>
+<li><a href="https://docs.litellm.ai/">LiteLLM documentation</a></li>
+</ul>
+
+  </div>
+  <footer class="doc-footer">
+    <a href="https://github.com/chicago-joe/manymems/blob/main/docs/public/configuration/litellm-gateway.mdx"
+       class="doc-edit-link" target="_blank" rel="noopener">
+      Edit this page on GitHub &rarr;
+    </a>
+  </footer>
+</article>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
