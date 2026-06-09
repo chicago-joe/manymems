@@ -5,6 +5,8 @@ import { ContextSettingsModal } from './components/ContextSettingsModal';
 import { LogsDrawer } from './components/LogsModal';
 import { TeamsPanel } from './components/TeamsPanel';
 import { DashboardView } from './components/DashboardView';
+import { ApiExplorerPanel } from './components/ApiExplorerPanel';
+import type { DrillDownFilter } from './components/DashboardView';
 import { WelcomeCard, getStoredWelcomeDismissed, setStoredWelcomeDismissed } from './components/WelcomeCard';
 import { useSSE } from './hooks/useSSE';
 import { useSettings } from './hooks/useSettings';
@@ -20,7 +22,7 @@ export function App() {
   const [currentFilter, setCurrentFilter] = useState('');
   const [contextPreviewOpen, setContextPreviewOpen] = useState(false);
   const [logsModalOpen, setLogsModalOpen] = useState(false);
-  const [activeView, setActiveView] = useState<'dashboard' | 'feed'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'feed' | 'api'>('dashboard');
   const [teamsPanelOpen, setTeamsPanelOpen] = useState(false);
   const [modelFilter, setModelFilter] = useState('');
   const [welcomeDismissed, setWelcomeDismissed] = useState<boolean>(getStoredWelcomeDismissed);
@@ -69,6 +71,11 @@ export function App() {
     const paginated = paginatedPrompts.filter(matchesSelection);
     return mergeAndDeduplicateByProject(live, paginated);
   }, [prompts, paginatedPrompts, matchesSelection]);
+
+  const handleDrillDown = useCallback((filter: DrillDownFilter) => {
+    setActiveView('feed');
+    if (filter.type === 'model') setModelFilter(filter.model);
+  }, []);
 
   const toggleContextPreview = useCallback(() => {
     setContextPreviewOpen(prev => !prev);
@@ -141,7 +148,10 @@ export function App() {
           settings={settings}
           onFileClick={(filePath: string) => openProvenance({ file: filePath, line: 1 })}
           onTeamsPanelOpen={() => setTeamsPanelOpen(true)}
+          onDrillDown={handleDrillDown}
         />
+      ) : activeView === 'api' ? (
+        <ApiExplorerPanel />
       ) : (
         <Feed
           observations={allObservations}

@@ -4,9 +4,10 @@ import { formatDate } from '../utils/formatters';
 
 interface SessionsWidgetProps {
   commits: CommitRecord[];
+  onBucketClick?: (bucket: 'active' | 'idle' | 'ended') => void;
 }
 
-export function SessionsWidget({ commits }: SessionsWidgetProps) {
+export function SessionsWidget({ commits, onBucketClick }: SessionsWidgetProps) {
   const stats = useMemo(() => {
     const now = Date.now();
     const oneHour = 60 * 60 * 1000;
@@ -34,17 +35,17 @@ export function SessionsWidget({ commits }: SessionsWidgetProps) {
         <span className="widget-count">{stats.total}</span>
       </div>
       <div className="widget-body">
-        <div className="session-row">
+        <div className={`session-row${onBucketClick ? ' session-row--clickable' : ''}`} onClick={() => onBucketClick?.('active')} title={onBucketClick ? 'Show recent commits' : undefined}>
           <span className="session-dot active-dot">●</span>
           <span className="session-label">Recent</span>
           <span className="session-value">{stats.active}</span>
         </div>
-        <div className="session-row">
+        <div className={`session-row${onBucketClick ? ' session-row--clickable' : ''}`} onClick={() => onBucketClick?.('idle')} title={onBucketClick ? 'Show today\'s commits' : undefined}>
           <span className="session-dot idle-dot">○</span>
           <span className="session-label">Today</span>
           <span className="session-value">{stats.idle}</span>
         </div>
-        <div className="session-row">
+        <div className={`session-row${onBucketClick ? ' session-row--clickable' : ''}`} onClick={() => onBucketClick?.('ended')} title={onBucketClick ? 'Show older commits' : undefined}>
           <span className="session-dot ended-dot">─</span>
           <span className="session-label">Older</span>
           <span className="session-value">{stats.ended}</span>

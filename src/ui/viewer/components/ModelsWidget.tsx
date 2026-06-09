@@ -2,7 +2,11 @@ import React from 'react';
 import { useModels } from '../hooks/useModels';
 import { modelColor } from './CommitGraph';
 
-export function ModelsWidget() {
+interface ModelsWidgetProps {
+  onModelClick?: (model: string) => void;
+}
+
+export function ModelsWidget({ onModelClick }: ModelsWidgetProps) {
   const { models, isLoading } = useModels();
 
   const totalObs = models.reduce((sum, m) => sum + m.count, 0);
@@ -26,7 +30,7 @@ export function ModelsWidget() {
             : '(unknown)';
           const color = modelColor(m.generated_by_model ?? 'unknown');
           return (
-            <div key={i} className="model-widget-row">
+            <div key={i} className={`model-widget-row${onModelClick ? ' model-row--clickable' : ''}`} onClick={() => onModelClick?.(m.generated_by_model ?? '')} title={onModelClick ? `Filter to ${m.generated_by_model ?? 'unknown'}` : undefined}>
               <span className="model-widget-dot" style={{ color }}> ● </span>
               <span className="model-widget-name" title={m.generated_by_model ?? ''}>{name}</span>
               <div className="model-widget-bar-wrap">
