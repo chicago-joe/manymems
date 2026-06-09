@@ -139,6 +139,15 @@ export interface CommitRecord {
   actors: string[];        // actor_ids
   session_count: number;
   prompt_preview: string | null;
+  attribution?: {
+    agentPercent: number;
+    agentLines: number;
+    totalLines: number;
+  };
+  sessionPhase?: 'active' | 'idle' | 'ended';
+  checkpointType?: 'temporary' | 'committed';
+  worktreeId?: string;
+  subagentCount?: number;
 }
 
 export interface TeamInfo {

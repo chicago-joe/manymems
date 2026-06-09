@@ -18,10 +18,8 @@ interface HeaderProps {
   currentModelFilter: string;
   onModelFilterChange: (model: string) => void;
   availableModels: string[];
-  onModelsPanelToggle: () => void;
-  onCommitsPanelToggle: () => void;
-  onTeamsPanelToggle: () => void;
-  serverBetaEnabled?: boolean;
+  activeView: 'dashboard' | 'feed';
+  onViewChange: (view: 'dashboard' | 'feed') => void;
 }
 
 export function Header({
@@ -38,10 +36,8 @@ export function Header({
   currentModelFilter,
   onModelFilterChange,
   availableModels,
-  onModelsPanelToggle,
-  onCommitsPanelToggle,
-  onTeamsPanelToggle,
-  serverBetaEnabled = false
+  activeView,
+  onViewChange,
 }: HeaderProps) {
   useSpinningFavicon(isProcessing);
 
@@ -59,6 +55,20 @@ export function Header({
           </div>
           <span className="logo-text" style={{ color: 'var(--mm-accent-amber)' }}>manymems</span>
         </h1>
+        <nav className="view-tabs">
+          <button
+            className={`view-tab${activeView === 'dashboard' ? ' active' : ''}`}
+            onClick={() => onViewChange('dashboard')}
+          >
+            Dashboard
+          </button>
+          <button
+            className={`view-tab${activeView === 'feed' ? ' active' : ''}`}
+            onClick={() => onViewChange('feed')}
+          >
+            Feed
+          </button>
+        </nav>
       </div>
       <div className="status">
         <a
@@ -107,46 +117,6 @@ export function Header({
               <option key={m} value={m}>{m}</option>
             ))}
           </select>
-        )}
-        <button
-          className="settings-btn nav-panel-btn"
-          onClick={onModelsPanelToggle}
-          title="Models & providers"
-          aria-label="Models panel"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="7" height="7" rx="1"/>
-            <rect x="9" y="3" width="7" height="7" rx="1"/>
-            <rect x="16" y="3" width="6" height="7" rx="1"/>
-            <rect x="2" y="14" width="20" height="7" rx="1"/>
-          </svg>
-        </button>
-        <button
-          className="settings-btn nav-panel-btn"
-          onClick={onCommitsPanelToggle}
-          title="Commits & provenance"
-          aria-label="Commits panel"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <line x1="3" y1="12" x2="9" y2="12"/>
-            <line x1="15" y1="12" x2="21" y2="12"/>
-          </svg>
-        </button>
-        {serverBetaEnabled && (
-          <button
-            className="settings-btn nav-panel-btn"
-            onClick={onTeamsPanelToggle}
-            title="Team & identity"
-            aria-label="Teams panel"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </button>
         )}
         <select
           value={currentFilter}

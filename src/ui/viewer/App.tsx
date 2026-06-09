@@ -3,11 +3,8 @@ import { Header } from './components/Header';
 import { Feed } from './components/Feed';
 import { ContextSettingsModal } from './components/ContextSettingsModal';
 import { LogsDrawer } from './components/LogsModal';
-import { ModelsPanel } from './components/ModelsPanel';
-import { CommitsPanel } from './components/CommitsPanel';
 import { TeamsPanel } from './components/TeamsPanel';
-import { CheckpointFeed } from './components/CheckpointFeed';
-import { useCheckpoints } from './hooks/useCheckpoints';
+import { DashboardView } from './components/DashboardView';
 import { WelcomeCard, getStoredWelcomeDismissed, setStoredWelcomeDismissed } from './components/WelcomeCard';
 import { useSSE } from './hooks/useSSE';
 import { useSettings } from './hooks/useSettings';
@@ -23,8 +20,7 @@ export function App() {
   const [currentFilter, setCurrentFilter] = useState('');
   const [contextPreviewOpen, setContextPreviewOpen] = useState(false);
   const [logsModalOpen, setLogsModalOpen] = useState(false);
-  const [modelsPanelOpen, setModelsPanelOpen] = useState(false);
-  const [commitsPanelOpen, setCommitsPanelOpen] = useState(false);
+  const [activeView, setActiveView] = useState<'dashboard' | 'feed'>('dashboard');
   const [teamsPanelOpen, setTeamsPanelOpen] = useState(false);
   const [modelFilter, setModelFilter] = useState('');
   const [welcomeDismissed, setWelcomeDismissed] = useState<boolean>(getStoredWelcomeDismissed);
@@ -37,7 +33,6 @@ export function App() {
   const { refreshStats } = useStats();
   const { preference, setThemePreference } = useTheme();
   const { target: provTarget, entries: provEntries, isLoading: provLoading, error: provError, open: openProvenance, close: closeProvenance } = useProvenance();
-  const { checkpoints } = useCheckpoints();
   const pagination = usePagination(currentFilter);
 
   const availableModels = useMemo(() => {
@@ -137,21 +132,28 @@ export function App() {
         currentModelFilter={modelFilter}
         onModelFilterChange={setModelFilter}
         availableModels={availableModels}
-        onModelsPanelToggle={() => setModelsPanelOpen(prev => !prev)}
-        onCommitsPanelToggle={() => setCommitsPanelOpen(prev => !prev)}
-        onTeamsPanelToggle={() => setTeamsPanelOpen(v => !v)}
-        serverBetaEnabled={!!settings.CLAUDE_MEM_SERVER_BETA_URL}
+        activeView={activeView}
+        onViewChange={setActiveView}
       />
 
-      <Feed
-        observations={allObservations}
-        summaries={allSummaries}
-        prompts={allPrompts}
-        onLoadMore={handleLoadMore}
-        isLoading={pagination.observations.isLoading || pagination.summaries.isLoading || pagination.prompts.isLoading}
-        hasMore={pagination.observations.hasMore || pagination.summaries.hasMore || pagination.prompts.hasMore}
-        onFileClick={openProvenance}
-      />
+      {activeView === 'dashboard' ? (
+        <DashboardView
+          settings={settings}
+          onFileClick={(filePath: string) => openProvenance({ file: filePath, line: 1 })}
+          onTeamsPanelOpen={() => setTeamsPanelOpen(true)}
+        />
+      ) : (
+        <Feed
+          observations={allObservations}
+          summaries={allSummaries}
+          prompts={allPrompts}
+          onLoadMore={handleLoadMore}
+          isLoading={pagination.observations.isLoading || pagination.summaries.isLoading || pagination.prompts.isLoading}
+          hasMore={pagination.observations.hasMore || pagination.summaries.hasMore || pagination.prompts.hasMore}
+          onFileClick={openProvenance}
+        />
+      )}
+      <TeamsPanel isOpen={teamsPanelOpen} onClose={() => setTeamsPanelOpen(false)} settings={settings} />
 
       {!welcomeDismissed && (
         <WelcomeCard onDismiss={() => setWelcomeDismissed(true)} />
@@ -181,14 +183,6 @@ export function App() {
         isOpen={logsModalOpen}
         onClose={toggleLogsModal}
       />
-
-      <ModelsPanel isOpen={modelsPanelOpen} onClose={() => setModelsPanelOpen(false)} />
-
-      <CommitsPanel isOpen={commitsPanelOpen} onClose={() => setCommitsPanelOpen(false)} />
-      <TeamsPanel isOpen={teamsPanelOpen} onClose={() => setTeamsPanelOpen(false)} settings={settings} />
-      {commitsPanelOpen && (
-        <CheckpointFeed commits={checkpoints} onFileClick={(filePath) => openProvenance({ file: filePath, line: 1 })} />
-      )}
 
       <ProvenanceDrawer
         target={provTarget}

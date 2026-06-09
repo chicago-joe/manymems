@@ -4,13 +4,13 @@ import type { CommitRecord, ProvenanceEntry } from '../types';
 
 // ── color palette ────────────────────────────────────────────────────────────
 const LANE_COLORS: Record<string, string> = {
-  'claude':      '#00d4d4',
-  'claude-code': '#00d4d4',
-  'gemini':      '#4285f4',
-  'gemini-cli':  '#4285f4',
-  'openrouter':  '#a78bfa',
+  'claude':      '#3b82f6',
+  'claude-code': '#3b82f6',
+  'gemini':      '#06b6d4',
+  'gemini-cli':  '#06b6d4',
+  'openrouter':  '#8b5cf6',
   'cursor':      '#f59e0b',
-  'codex':       '#34d399',
+  'codex':       '#10b981',
   'windsurf':    '#38bdf8',
   'raw':         '#94a3b8',
   'unknown':     '#6b7280',
@@ -82,8 +82,18 @@ export function CommitGraph({ commits, expandedSha, detailCache, detailLoading, 
     }
   }
 
+  // Check for concurrent sessions: commits with session_count > 1 in last 24h
+  const now = Date.now();
+  const concurrentCommits = commits.filter(c => c.session_count > 1 && now - c.earliest_epoch < 24 * 60 * 60 * 1000);
+  const concurrentCount = concurrentCommits.length;
+
   return (
     <div className="commit-graph-container">
+      {concurrentCount > 0 && (
+        <div className="concurrent-warning">
+          ⚠ {concurrentCount} commit{concurrentCount > 1 ? 's' : ''} with concurrent sessions
+        </div>
+      )}
       {/* Legend */}
       <div className="commit-graph-legend">
         {laneOrder.map(m => (
@@ -153,7 +163,19 @@ export function CommitGraph({ commits, expandedSha, detailCache, detailLoading, 
               + (commit.files.length > 2 ? ` +${commit.files.length - 2}` : '');
 
             return (
-              <div key={commit.commit_sha} className="commit-graph-row">
+              <div
+                key={commit.commit_sha}
+                className="commit-graph-row"
+                style={{
+                  borderLeft: `3px solid ${
+                    commit.sessionPhase === 'active' ? '#10b981' :
+                    commit.sessionPhase === 'idle' ? '#f59e0b' :
+                    commit.sessionPhase === 'ended' ? '#475569' :
+                    'transparent'
+                  }`,
+                  paddingLeft: commit.sessionPhase ? '0.5rem' : undefined,
+                }}
+              >
                 <button
                   className={`commit-graph-row-header${expanded ? ' expanded' : ''}`}
                   onClick={() => onToggle(commit.commit_sha)}
@@ -161,11 +183,35 @@ export function CommitGraph({ commits, expandedSha, detailCache, detailLoading, 
                 >
                   <div className="commit-graph-row-top">
                     <code className="commit-sha" style={{ color }}>{commit.commit_sha.slice(0, 8)}</code>
+                    {commit.checkpointType && (
+                      <span
+                        className="checkpoint-type-icon"
+                        title={commit.checkpointType === 'temporary' ? 'Temporary checkpoint (shadow branch)' : 'Committed checkpoint (permanent)'}
+                        style={{ marginLeft: '0.25rem', fontSize: '0.7rem', color: '#94a3b8' }}
+                      >
+                        {commit.checkpointType === 'temporary' ? '⬡' : '●'}
+                      </span>
+                    )}
                     <span className="commit-date">{formatDate(commit.earliest_epoch)}</span>
                     <span className="commit-edits">{commit.edit_count} edit{commit.edit_count !== 1 ? 's' : ''}</span>
                     <span className="commit-files-preview">{shortFiles}</span>
                     {commit.session_count > 1 && (
                       <span className="commit-sessions">{commit.session_count} sessions</span>
+                    )}
+                    {commit.attribution && (
+                      <span className="attribution-badge" style={{
+                        color: commit.attribution.agentPercent > 70 ? '#3b82f6' : '#94a3b8',
+                        fontSize: '0.68rem',
+                        marginLeft: '0.5rem',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        {commit.attribution.agentPercent}% AI
+                      </span>
+                    )}
+                    {commit.worktreeId && (
+                      <span className="worktree-badge" title={`Worktree: ${commit.worktreeId}`}>
+                        🌿 {commit.worktreeId.slice(0, 8)}
+                      </span>
                     )}
                     <span className="commit-chevron">{expanded ? '▾' : '▸'}</span>
                   </div>
@@ -178,6 +224,34 @@ export function CommitGraph({ commits, expandedSha, detailCache, detailLoading, 
 
                 {expanded && (
                   <div className="commit-graph-detail">
+                    {/* Lifecycle event mini-timeline */}
+                    <div className="lifecycle-timeline">
+                      <div className="lifecycle-event">
+                        <span className="lifecycle-dot lifecycle-start">→</span>
+                        <span className="lifecycle-label">SessionStart</span>
+                        <span className="lifecycle-model">{primaryModel(commit.models)}</span>
+                      </div>
+                      {commit.session_count > 0 && (
+                        <div className="lifecycle-event">
+                          <span className="lifecycle-dot lifecycle-turn">→</span>
+                          <span className="lifecycle-label">TurnEnd</span>
+                          <span className="lifecycle-meta">{commit.session_count} session{commit.session_count !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      {(commit.subagentCount ?? 0) > 0 && (
+                        <div className="lifecycle-event">
+                          <span className="lifecycle-dot lifecycle-subagent">→</span>
+                          <span className="lifecycle-label">SubagentEnd</span>
+                          <span className="lifecycle-meta">{commit.subagentCount} subagent{(commit.subagentCount ?? 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      <div className="lifecycle-event">
+                        <span className="lifecycle-dot lifecycle-commit">●</span>
+                        <span className="lifecycle-label">GitCommit</span>
+                        <span className="lifecycle-meta committed">{commit.checkpointType === 'temporary' ? 'shadow' : 'committed'}</span>
+                      </div>
+                    </div>
+
                     {isLoading && <div className="commit-detail-loading">Loading…</div>}
                     {!isLoading && entries.length === 0 && (
                       <div className="commit-detail-empty">No entries</div>

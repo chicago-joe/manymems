@@ -66,6 +66,14 @@ export function ObservationCard({ observation, onFileClick }: ObservationCardPro
               {observation.agent_type}
             </span>
           )}
+          {((observation.narrative ?? '') + (observation.facts ?? '') + (observation.text ?? '')).includes('REDACTED') && (
+            <span
+              className="redaction-badge"
+              title="Content contains redacted secrets (API keys detected)"
+            >
+              🔒
+            </span>
+          )}
         </div>
         <div className="view-mode-toggles">
           {hasFactsContent && (
