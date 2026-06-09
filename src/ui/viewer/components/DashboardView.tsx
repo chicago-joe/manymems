@@ -8,13 +8,19 @@ import { TeamWidget } from './TeamWidget';
 import { ConfigWidget } from './ConfigWidget';
 import type { Settings } from '../types';
 
+export type DrillDownFilter =
+  | { type: 'agent'; agentName: string }
+  | { type: 'model'; model: string }
+  | { type: 'bucket'; bucket: 'active' | 'idle' | 'ended' };
+
 interface DashboardViewProps {
   settings: Settings;
   onFileClick: (filePath: string) => void;
   onTeamsPanelOpen?: () => void;
+  onDrillDown: (filter: DrillDownFilter) => void;
 }
 
-export function DashboardView({ settings, onFileClick: _onFileClick, onTeamsPanelOpen }: DashboardViewProps) {
+export function DashboardView({ settings, onFileClick: _onFileClick, onTeamsPanelOpen, onDrillDown }: DashboardViewProps) {
   const { commits, isLoading, error, refresh, expandedSha, toggleExpand, detailCache, detailLoading } = useCommits();
 
   return (
@@ -51,9 +57,9 @@ export function DashboardView({ settings, onFileClick: _onFileClick, onTeamsPane
 
       {/* Widget Row */}
       <div className="dashboard-widgets">
-        <SessionsWidget commits={commits} />
-        <ModelsWidget />
-        <AgentsWidget commits={commits} />
+        <SessionsWidget commits={commits} onBucketClick={b => onDrillDown({ type: 'bucket', bucket: b })} />
+        <ModelsWidget onModelClick={m => onDrillDown({ type: 'model', model: m })} />
+        <AgentsWidget commits={commits} onAgentClick={name => onDrillDown({ type: 'agent', agentName: name })} />
         <TeamWidget settings={settings} onOpenPanel={onTeamsPanelOpen} />
       </div>
 

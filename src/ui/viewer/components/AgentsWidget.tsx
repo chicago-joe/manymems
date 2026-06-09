@@ -4,6 +4,7 @@ import { modelColor } from './CommitGraph';
 
 interface AgentsWidgetProps {
   commits: CommitRecord[];
+  onAgentClick?: (agentName: string) => void;
 }
 
 function toAgentName(model: string): string {
@@ -17,7 +18,7 @@ function toAgentName(model: string): string {
   return model || 'unknown';
 }
 
-export function AgentsWidget({ commits }: AgentsWidgetProps) {
+export function AgentsWidget({ commits, onAgentClick }: AgentsWidgetProps) {
   const agents = useMemo(() => {
     const map = new Map<string, { model: string; commitCount: number; lastEpoch: number; sessionCount: number }>();
     const now = Date.now();
@@ -64,7 +65,7 @@ export function AgentsWidget({ commits }: AgentsWidgetProps) {
           <span className="widget-empty">No agents detected yet</span>
         )}
         {agents.map((agent) => (
-          <div key={agent.name} className="agent-row">
+          <div key={agent.name} className={`agent-row${onAgentClick ? ' agent-row--clickable' : ''}`} onClick={() => onAgentClick?.(agent.name)} title={onAgentClick ? `Filter to ${agent.name}` : undefined}>
             <span className="agent-dot" style={{ color: modelColor(agent.model) }}>●</span>
             <span className="agent-name">{agent.name}</span>
             {agent.isActive && <span className="agent-active-badge">active</span>}
