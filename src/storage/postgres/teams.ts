@@ -103,6 +103,27 @@ export class PostgresTeamsRepository {
     );
     return row ? mapTeamMemberRow(row) : null;
   }
+
+  async listForUser(userId: string): Promise<PostgresTeam[]> {
+    const result = await this.client.query<TeamRow>(
+      `SELECT t.* FROM teams t
+       JOIN team_members tm ON t.id = tm.team_id
+       WHERE tm.user_id = $1
+       ORDER BY t.created_at DESC`,
+      [userId]
+    );
+    return result.rows.map(mapTeamRow);
+  }
+
+  async listMembers(teamId: string): Promise<PostgresTeamMember[]> {
+    const result = await this.client.query<TeamMemberRow>(
+      `SELECT * FROM team_members
+       WHERE team_id = $1
+       ORDER BY created_at DESC`,
+      [teamId]
+    );
+    return result.rows.map(mapTeamMemberRow);
+  }
 }
 
 function mapTeamRow(row: TeamRow): PostgresTeam {

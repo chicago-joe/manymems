@@ -5,6 +5,7 @@ import { ContextSettingsModal } from './components/ContextSettingsModal';
 import { LogsDrawer } from './components/LogsModal';
 import { ModelsPanel } from './components/ModelsPanel';
 import { CommitsPanel } from './components/CommitsPanel';
+import { TeamsPanel } from './components/TeamsPanel';
 import { CheckpointFeed } from './components/CheckpointFeed';
 import { useCheckpoints } from './hooks/useCheckpoints';
 import { WelcomeCard, getStoredWelcomeDismissed, setStoredWelcomeDismissed } from './components/WelcomeCard';
@@ -24,6 +25,7 @@ export function App() {
   const [logsModalOpen, setLogsModalOpen] = useState(false);
   const [modelsPanelOpen, setModelsPanelOpen] = useState(false);
   const [commitsPanelOpen, setCommitsPanelOpen] = useState(false);
+  const [teamsPanelOpen, setTeamsPanelOpen] = useState(false);
   const [modelFilter, setModelFilter] = useState('');
   const [welcomeDismissed, setWelcomeDismissed] = useState<boolean>(getStoredWelcomeDismissed);
   const [paginatedObservations, setPaginatedObservations] = useState<Observation[]>([]);
@@ -137,6 +139,8 @@ export function App() {
         availableModels={availableModels}
         onModelsPanelToggle={() => setModelsPanelOpen(prev => !prev)}
         onCommitsPanelToggle={() => setCommitsPanelOpen(prev => !prev)}
+        onTeamsPanelToggle={() => setTeamsPanelOpen(v => !v)}
+        serverBetaEnabled={!!settings.CLAUDE_MEM_SERVER_BETA_URL}
       />
 
       <Feed
@@ -181,6 +185,7 @@ export function App() {
       <ModelsPanel isOpen={modelsPanelOpen} onClose={() => setModelsPanelOpen(false)} />
 
       <CommitsPanel isOpen={commitsPanelOpen} onClose={() => setCommitsPanelOpen(false)} />
+      <TeamsPanel isOpen={teamsPanelOpen} onClose={() => setTeamsPanelOpen(false)} settings={settings} />
       {commitsPanelOpen && (
         <CheckpointFeed commits={checkpoints} onFileClick={(filePath) => openProvenance({ file: filePath, line: 1 })} />
       )}

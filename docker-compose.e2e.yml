@@ -1,7 +1,13 @@
 # Phase 10 — E2E driver overlay. Adds a one-shot Node container that hits
 # the server-beta HTTP service across the compose network. Pairs with
 # scripts/e2e-server-beta-docker.sh.
+#
+# Overrides the base postgres image with ankane/pgvector:latest so that the
+# vector extension is available for B5 semantic-search E2E coverage (phase3).
 services:
+  postgres:
+    image: ankane/pgvector:latest
+
   server-beta-e2e:
     image: node:20-alpine
     depends_on:

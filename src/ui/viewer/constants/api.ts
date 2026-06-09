@@ -9,4 +9,7 @@ export const API_ENDPOINTS = {
   MODELS_STATS: '/api/models/stats',
   PROVENANCE_COMMITS: '/api/provenance/commits',
   PROVENANCE_BY_LINE: '/api/provenance/by-line',
+  TEAMS: '/v1/teams',
+  TEAM_MEMBERS: (teamId: string) => `/v1/teams/${teamId}/members`,
+  API_KEYS: '/v1/api-keys',
 } as const;

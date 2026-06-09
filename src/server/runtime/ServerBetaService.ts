@@ -16,6 +16,7 @@ import {
 } from '../../supervisor/process-registry.js';
 import { sanitizeEnv } from '../../supervisor/env-sanitizer.js';
 import { ServerV1PostgresRoutes } from '../routes/v1/ServerV1PostgresRoutes.js';
+import { ServerV1TeamsRoutes } from '../routes/v1/ServerV1TeamsRoutes.js';
 import { SessionsObservationsAdapter } from '../compat/SessionsObservationsAdapter.js';
 import { SessionsSummarizeAdapter } from '../compat/SessionsSummarizeAdapter.js';
 import { ActiveServerBetaQueueManager } from './ActiveServerBetaQueueManager.js';
@@ -186,6 +187,12 @@ export class ServerBetaService {
       // CLAUDE_MEM_SERVER_SESSION_POLICY). We do not duplicate it here.
     });
     server.registerRoutes(v1Routes);
+
+    // UI6-B1 — team and API-key read routes
+    server.registerRoutes(new ServerV1TeamsRoutes({
+      pool: this.graph.postgres.pool,
+      authMode: this.graph.authMode === 'disabled' ? 'api-key' : this.graph.authMode,
+    }));
 
     // Phase 9 — legacy compatibility adapters. These translate the old
     // `/api/sessions/observations` and `/api/sessions/summarize` worker

@@ -141,6 +141,24 @@ export interface CommitRecord {
   prompt_preview: string | null;
 }
 
+export interface TeamInfo {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface TeamMember {
+  actor_id: string;
+  role: string;
+  joined_at: string;
+}
+
+export interface ApiKeyInfo {
+  id: string;
+  created_at: string;
+  revoked_at: string | null;
+}
+
 export interface ProvenanceEntry {
   id: string;
   file_path: string;

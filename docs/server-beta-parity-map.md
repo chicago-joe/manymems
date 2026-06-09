@@ -180,3 +180,12 @@ Compat adapters live in `src/server/compat/` and call only:
 
 They never reach into worker route classes, the worker DatabaseManager, or
 the WorkerService — which is the load-bearing decoupling Phase 9 enforces.
+
+## Teams & Identity (UI-6)
+
+| Endpoint | Status | Notes |
+|---|---|---|
+| `GET /v1/teams` | ✅ Added (UI6-B1) | Returns teams for authenticated actor |
+| `GET /v1/teams/:teamId` | ✅ Added (UI6-B1) | Team detail + 404 if not member |
+| `GET /v1/teams/:teamId/members` | ✅ Added (UI6-B1) | Members list |
+| `GET /v1/api-keys` | ✅ Added (UI6-B1) | API keys for team (non-revoked) |

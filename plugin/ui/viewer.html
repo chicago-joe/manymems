@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>claude-mem viewer</title>
+  <title>manymems</title>
   <link rel="icon" type="image/webp" href="claude-mem-logomark.webp">
   <style>
     @font-face {
@@ -13,6 +13,41 @@
         url('assets/fonts/monaspace-radon-var.woff') format('woff-variations');
       font-weight: 200 900;
       font-display: swap;
+    }
+
+    /* manymems dark theme — CSS variables */
+    :root {
+      --mm-bg-primary: #0d0f12;
+      --mm-bg-secondary: #13161b;
+      --mm-bg-card: #1a1e25;
+      --mm-bg-hover: #21262f;
+      --mm-border: #2a3040;
+      --mm-text-primary: #e6eaf2;
+      --mm-text-secondary: #8b95a8;
+      --mm-text-muted: #4a5568;
+      --mm-accent-amber: #f59e0b;
+      --mm-accent-teal: #2dd4bf;
+      --mm-accent-blue: #60a5fa;
+      --mm-accent-red: #f87171;
+      --mm-commit-chip-bg: #1e2a1e;
+      --mm-commit-chip-text: #4ade80;
+    }
+
+    [data-theme="light"] {
+      --mm-bg-primary: #f8f9fb;
+      --mm-bg-secondary: #ffffff;
+      --mm-bg-card: #ffffff;
+      --mm-bg-hover: #f1f3f7;
+      --mm-border: #e2e6ed;
+      --mm-text-primary: #1a202c;
+      --mm-text-secondary: #4a5568;
+      --mm-text-muted: #a0aec0;
+      --mm-accent-amber: #d97706;
+      --mm-accent-teal: #0d9488;
+      --mm-accent-blue: #2563eb;
+      --mm-accent-red: #dc2626;
+      --mm-commit-chip-bg: #f0fdf4;
+      --mm-commit-chip-text: #16a34a;
     }
 
     /* Theme Variables - Light Mode */
@@ -3270,6 +3305,16 @@
       color: var(--color-text-secondary, #8b949e);
     }
 
+    .model-bar-secondary {
+      font-size: 10px;
+      color: #888;
+    }
+    .model-bar-dates {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
     /* ── ObservationCard model/agent badges ─────────────────────── */
     .card-model-badge,
     .card-agent-badge {
@@ -3440,6 +3485,97 @@
       letter-spacing: 0.06em;
     }
 
+    .commit-entry-stale { opacity: 0.8; }
+    .commit-entry-dup-badge {
+      font-size: 10px;
+      background: #2a2a3a;
+      color: #8888cc;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      cursor: help;
+    }
+    .commit-entry-obs-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 5px 0 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .commit-entry-obs-type {
+      font-size: 10px;
+      font-weight: 500;
+      background: #1e3a3a;
+      color: #00d4d4;
+      padding: 1px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+    .commit-entry-obs-narrative {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin: 3px 0 4px;
+      padding-left: 8px;
+      border-left: 2px solid #334;
+    }
+    .commit-entry-facts {
+      margin: 4px 0 4px 0;
+      padding-left: 16px;
+      list-style: disc;
+    }
+    .commit-entry-facts li {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .commit-entry-facts-more {
+      color: #556 !important;
+      list-style: none;
+      margin-left: -16px;
+      padding-left: 16px;
+    }
+    .commit-entry-prompt-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-right: 5px;
+      font-weight: 600;
+    }
+    .commit-entry-stale-badge {
+      font-size: 10px;
+      background: #7c3a3a;
+      color: #ffaaaa;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .commit-entry-hash {
+      font-family: monospace;
+      font-size: 10px;
+      color: #556688;
+      background: #111a22;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .commit-entry-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 3px;
+    }
+    .commit-entry-obs-id, .commit-entry-session {
+      font-size: 10px;
+      color: #666;
+      font-family: monospace;
+    }
+
     .commit-entry-prompt {
       font-size: 11px;
       color: var(--color-text-secondary, #8b949e);
@@ -3459,6 +3595,85 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
       width: fit-content;
+    }
+
+    /* ── commit graph ── */
+    .commit-graph-container { padding: 8px 4px; }
+
+    .commit-graph-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 8px 10px;
+      border-bottom: 1px solid #222;
+      margin-bottom: 6px;
+    }
+    .commit-graph-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #aaa;
+    }
+    .commit-graph-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .commit-graph-body { position: relative; }
+    .commit-graph-svg { flex-shrink: 0; }
+
+    .commit-graph-row { display: block; }
+    .commit-graph-row-header {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      text-align: left;
+      border-radius: 4px;
+      transition: background 0.12s;
+    }
+    .commit-graph-row-header:hover { background: #1e1e1e; }
+    .commit-graph-row-header.expanded { background: #1a1f1f; }
+
+    .commit-graph-row-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .commit-graph-prompt-preview {
+      font-size: 11px;
+      font-style: italic;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.85;
+    }
+
+    .commit-sessions {
+      font-size: 10px;
+      color: #888;
+      background: #2a2a2a;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .commit-graph-detail {
+      padding: 4px 8px 8px;
+      border-left: 2px solid #333;
+      margin: 0 0 4px 8px;
+      background: #111;
+      border-radius: 0 4px 4px 0;
     }
 
     /* ── Provenance drawer ──────────────────────────────────────── */
@@ -3587,6 +3802,19 @@
     }
 
     .nav-panel-btn:hover { opacity: 1; color: #58a6ff; }
+
+    /* CheckpointFeed */
+    .checkpoint-feed { padding: 8px 0; }
+    .checkpoint-row { border-bottom: 1px solid var(--mm-border); padding: 8px 12px; cursor: pointer; }
+    .checkpoint-row:hover { background: var(--mm-bg-hover); }
+    .checkpoint-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sha-chip { font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--mm-commit-chip-bg); color: var(--mm-commit-chip-text); }
+    .checkpoint-model-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(45,212,191,0.15); color: var(--mm-accent-teal); }
+    .checkpoint-prompt { font-size: 12px; color: var(--mm-text-secondary); margin-top: 4px; font-style: italic; }
+    .checkpoint-files { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .checkpoint-file-chip { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(245,158,11,0.12); color: var(--mm-accent-amber); cursor: pointer; }
+    .checkpoint-meta { font-size: 10px; color: var(--mm-text-muted); margin-top: 4px; }
+    .checkpoint-empty { padding: 32px; text-align: center; color: var(--mm-text-muted); font-size: 13px; }
   </style>
 </head>
 

@@ -20,6 +20,8 @@ interface HeaderProps {
   availableModels: string[];
   onModelsPanelToggle: () => void;
   onCommitsPanelToggle: () => void;
+  onTeamsPanelToggle: () => void;
+  serverBetaEnabled?: boolean;
 }
 
 export function Header({
@@ -37,7 +39,9 @@ export function Header({
   onModelFilterChange,
   availableModels,
   onModelsPanelToggle,
-  onCommitsPanelToggle
+  onCommitsPanelToggle,
+  onTeamsPanelToggle,
+  serverBetaEnabled = false
 }: HeaderProps) {
   useSpinningFavicon(isProcessing);
 
@@ -129,6 +133,21 @@ export function Header({
             <line x1="15" y1="12" x2="21" y2="12"/>
           </svg>
         </button>
+        {serverBetaEnabled && (
+          <button
+            className="settings-btn nav-panel-btn"
+            onClick={onTeamsPanelToggle}
+            title="Team & identity"
+            aria-label="Teams panel"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </button>
+        )}
         <select
           value={currentFilter}
           onChange={e => onFilterChange(e.target.value)}

@@ -170,6 +170,27 @@ echo "[e2e] running phase2 persistence and revoked-key checks in test container"
   -e E2E_PROJECT_ID="$FULL_PROJECT_ID" \
   server-beta-e2e
 
+echo "[e2e] running phase3: pgvector semantic search reachability"
+POSTGRES_CONTAINER="$("${COMPOSE[@]}" ps -q postgres 2>/dev/null | head -1)"
+PGVECTOR_ACTIVE="$(docker exec "$POSTGRES_CONTAINER" \
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM pg_extension WHERE extname='vector';" 2>/dev/null | tr -d ' \n' || echo "0")"
+
+if [ "$PGVECTOR_ACTIVE" != "1" ]; then
+  echo "[e2e] SKIP: pgvector extension not active — check postgres image (use ankane/pgvector:latest)"
+else
+  # POST with empty embedding — should get 400 (validation) not 404/500
+  SEMANTIC_STATUS="$(curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "http://127.0.0.1:37877/v1/context/semantic" \
+    -H "Authorization: Bearer ${FULL_KEY}" \
+    -H "Content-Type: application/json" \
+    -d '{"embedding":[],"teamId":"t1","projectId":"p1"}')"
+  if [ "$SEMANTIC_STATUS" = "404" ] || [ "$SEMANTIC_STATUS" = "500" ]; then
+    echo "[e2e] FAIL — POST /v1/context/semantic returned unexpected $SEMANTIC_STATUS" >&2
+    exit 1
+  fi
+  echo "[e2e] PASS: /v1/context/semantic reachable (HTTP ${SEMANTIC_STATUS})"
+fi
+
 echo "[e2e] verifying anti-pattern guards"
 assert_local_dev_rejected_in_docker
 
