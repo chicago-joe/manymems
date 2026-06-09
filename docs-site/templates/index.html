@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}manymems — AI-native team memory for Claude Code{% endblock %}
+{% block description %}Persistent, searchable memory that captures intent, decisions, and code provenance across every Claude Code session.{% endblock %}
+
+{% block content %}
+<div class="landing">
+  <section class="hero">
+    <div class="hero-badge">Open Source &middot; Apache-2.0</div>
+    <h1 class="hero-title">
+      Team memory for
+      <span class="accent">Claude Code</span>
+    </h1>
+    <p class="hero-subtitle">
+      manymems captures intent, decisions, and code provenance across every session —
+      so your team never re-discovers what it already knows.
+    </p>
+    <div class="hero-cta">
+      <a href="http://localhost:37778" class="btn-primary" target="_blank" rel="noopener">
+        Open Dashboard &rarr;
+      </a>
+      <a href="/introduction" class="btn-secondary">
+        Read the Docs
+      </a>
+    </div>
+  </section>
+
+  <section class="features">
+    <h2 class="features-heading">What it does</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9881;</div>
+        <h3>Persistent memory</h3>
+        <p>Every session is captured and indexed. Ask what changed last week — get a real answer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128269;</div>
+        <h3>Semantic search</h3>
+        <p>Find past decisions, bug fixes, and architectural choices with natural-language queries.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128101;</div>
+        <h3>Team provenance</h3>
+        <p>Every code change linked to the intent behind it — who decided what, and why.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3>Zero-friction capture</h3>
+        <p>Automatic observation capture via Claude Code hooks — no manual notes required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128336;</div>
+        <h3>Timeline view</h3>
+        <p>Browse the full history of a file, feature, or decision with provenance drill-down.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128279;</div>
+        <h3>Multi-platform</h3>
+        <p>Works with Claude Code, Cursor, Gemini CLI, and any AI coding assistant via MCP.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="quickstart">
+    <h2>Quick start</h2>
+    <div class="code-block">
+      <pre><code>claude mcp add manymems npx @chicago-joe/manymems</code></pre>
+    </div>
+    <p>Then open the dashboard at <a href="http://localhost:37778" target="_blank" rel="noopener">localhost:37778</a> or read the <a href="/installation">installation guide</a>.</p>
+  </section>
+
+  <section class="doc-links">
+    <h2>Explore the docs</h2>
+    <div class="doc-link-grid">
+      {% for group in nav %}
+      <div class="doc-link-group">
+        <h3>{{ group.group }}</h3>
+        <ul>
+          {% for page_slug in group.pages[:4] %}
+          {% set page_title = catalogue[page_slug].title if page_slug in catalogue else page_slug.split('/')[-1].replace('-', ' ').title() %}
+          <li><a href="/{{ page_slug }}">{{ page_title }}</a></li>
+          {% endfor %}
+          {% if group.pages | length > 4 %}
+          <li><a href="/{{ group.pages[0] }}" class="see-more">See all &rarr;</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
