@@ -105,7 +105,7 @@ app.get('/api/commits', this.handleCommits.bind(this));
 Query `code_provenance` grouped by `commit_sha`, join `user_prompts` for prompt text, return sorted by `committed_at_epoch DESC`. Limit defaults to 50.
 
 **Verification — Phase SK-1:**
-- `curl http://127.0.0.1:37777/api/commits | jq .` returns JSON array
+- `curl http://127.0.0.1:37778/api/commits | jq .` returns JSON array  (37778 = manymems dev worker; never 37777)
 - L3 integration test: `tests/integration/ProvenanceRoutes.test.ts` — add a `GET /api/commits` case
 - `bun test tests/integration/ --timeout 30000` passes
 
@@ -352,9 +352,9 @@ Add `getRecentCommits(db, limit)` function that queries `code_provenance GROUP B
 
 **F1 — Type check:** `tsc --noEmit` — zero errors after all UI changes
 
-**F2 — Build + restart:**
+**F2 — Build only (never build-and-sync — that overwrites stock claude-mem at 37777):**
 ```bash
-npm run build-and-sync
+npm run build
 ```
 
 **F3 — Branding sweep:**
@@ -364,7 +364,7 @@ grep -r "claude-mem" plugin/skills/    # expect 0 results
 ```
 
 **F4 — Skills smoke test:**
-- Install built plugin: `npm run build-and-sync`
+- Build plugin: `npm run build` (do NOT run `build-and-sync` — it overwrites stock claude-mem at 37777)
 - Open a Claude Code session with manymems active
 - Say: "search for prior work on provenance" → `search` skill triggers
 - Say: "explain src/services/provenance/store.ts:142" → `explain` skill triggers

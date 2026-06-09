@@ -216,7 +216,7 @@ Filter every observation/provenance query: `team_id = requester.team_id AND (vis
 3. **Multi-tool:** capture the same edit from Claude Code AND Cursor adapters → both produce correct `agent_tool_id` + provenance rows.
 4. **No write-path regressions:** confirm conflict/dedup runs in BullMQ, not inline (grep ingest path for synchronous LLM calls — should be none).
 5. **Anti-pattern grep:** no raw-line-only anchors as primary; no `tool_use_id` assumptions; `AgentEvent` generic path intact (Claude Code is one adapter, not the core model).
-6. **Build & types:** `npm run build-and-sync`, `npm run typecheck`, `bun test` (esp. `tests/provenance/`, `tests/server/`). Verify worker restarts and migrations apply on a fresh DB.
+6. **Build & types:** `npm run build` (never `build-and-sync` — that overwrites stock claude-mem at 37777), `npm run typecheck`, `bun test` (esp. `tests/provenance/`, `tests/server/`). Verify worker restarts and migrations apply on a fresh DB at 37778.
 7. **Server-beta parity:** update `docs/server-beta-parity-map.md` — semantic search now supported via pgvector.
 
 ---
